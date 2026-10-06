@@ -1,0 +1,2476 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
+
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+
+<title>NIVEL 9 - Sistema de Gestión Logística</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
+
+:root {
+
+--brand: #ea580c;
+
+--brand-light: #ffedd5;
+
+--dark: #111113;
+
+--bg: #e4e4e7;
+
+--posible: #71717a;
+
+--confirmada: #ea580c;
+
+--finalizada: #10b981;
+
+--autocotizacion: #facc15;
+
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+
+body { background: var(--bg); color: var(--dark); min-height: 100vh; -webkit-text-size-adjust: 100%; }
+
+.app-container { max-width: 1300px; margin: 0 auto; padding: 12px; }
+
+.brand-logo-svg { height: 42px; width: auto; vertical-align: middle; }
+
+
+.portal-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; text-align: center; gap: 25px; padding: 15px; }
+
+.portal-header-box { background: var(--dark); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-bottom: 4px solid var(--brand); max-width: 600px; width: 100%; }
+
+.portal-title { font-size: 1.8rem; font-weight: 700; color: white; margin-top: 15px; }
+
+.portal-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; width: 100%; max-width: 900px; }
+
+.portal-card { background: white; padding: 25px 15px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 12px; border: 2px solid #d4d4d8; }
+
+.portal-card:hover { border-color: var(--brand); transform: translateY(-3px); }
+
+.portal-card i { font-size: 2.3rem; color: var(--brand); }
+
+.portal-card h3 { font-size: 1.2rem; font-weight: 700; color: var(--dark); }
+
+
+
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--dark); padding: 12px 18px; border-radius: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 10px; color: white; }
+
+.top-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+
+
+.btn { padding: 9px 14px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; }
+
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.btn-dark { background: #27272a; color: white; }
+
+.btn-brand { background: var(--brand); color: white; }
+
+.btn-success { background: #25D366; color: white; }
+
+.btn-outline { background: transparent; border: 1px solid #52525b; color: white; }
+
+
+
+.cotizador-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+@media (max-width: 850px) { .cotizador-grid { grid-template-columns: 1fr; } }
+
+.panel-box { background: white; padding: 18px; border-radius: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 12px; border: 1px solid #d4d4d8; margin-bottom: 15px;}
+
+.panel-title { font-size: 0.95rem; font-weight: 700; color: var(--brand); border-bottom: 2px solid var(--brand-light); padding-bottom: 5px; text-transform: uppercase; }
+
+#map { width: 100%; height: 330px; border-radius: 10px; border: 1px solid #d4d4d8; z-index: 1; overflow: hidden; }
+
+
+.calendar-wrapper { background: white; border-radius: 14px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); border: 1px solid #d4d4d8; overflow-x: auto; }
+
+.calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(40px, 1fr)); gap: 6px; }
+
+.day-header { text-align: center; font-weight: 700; color: #52525b; padding-bottom: 6px; font-size: 0.8rem; }
+
+.day-cell { min-height: 95px; border: 1px solid #e4e4e7; border-radius: 8px; padding: 5px; cursor: pointer; transition: all 0.2s; background: #fafafa; display: flex; flex-direction: column; gap: 3px; position: relative; overflow: hidden; }
+
+.day-cell:hover { border-color: var(--brand); }
+
+.day-cell.today { border-color: var(--brand); font-weight: bold; }
+
+
+.event-chip { padding: 2px 4px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 2; display: flex; align-items: center; justify-content: space-between; }
+
+.status-Posible { background-color: var(--posible) !important; }
+
+.status-Confirmada { background-color: var(--confirmada) !important; }
+
+.status-Finalizada { background-color: var(--finalizada) !important; }
+
+.status-Autocotización { background-color: var(--autocotizacion) !important; color: #111113 !important; font-weight: 800; }
+
+
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 12px; }
+
+.modal-overlay.active { display: flex; }
+
+.modal-content { background: white; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+
+.modal-header { padding: 12px 18px; border-bottom: 1px solid #e4e4e7; display: flex; justify-content: space-between; align-items: center; background: #fafafa; border-radius: 16px 16px 0 0; position: sticky; top: 0; z-index: 10; }
+
+.modal-body { padding: 18px; }
+
+.modal-footer { padding: 12px 18px; border-top: 1px solid #e4e4e7; display: flex; justify-content: flex-end; gap: 8px; background: #fafafa; border-radius: 0 0 16px 16px; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.form-group { display: flex; flex-direction: column; gap: 3px; }
+
+.form-group.full { grid-column: span 2; }
+
+label { font-size: 0.75rem; font-weight: 700; color: #52525b; text-transform: uppercase; }
+
+input, select, textarea { padding: 8px 10px; border: 1px solid #d4d4d8; border-radius: 6px; font-size: 0.88rem; font-family: inherit; }
+
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--brand); }
+
+textarea { resize: vertical; min-height: 65px; }
+
+
+.currency-wrapper { position: relative; display: flex; align-items: center; }
+
+.currency-symbol { position: absolute; left: 10px; font-weight: 700; color: #71717a; font-size: 0.88rem; pointer-events: none; }
+
+.currency-wrapper input { padding-left: 24px; width: 100%; }
+
+
+
+.contact-card { background: white; border: 1px solid #d4d4d8; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 8px; }
+
+.contact-badge { font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; background: var(--brand-light); color: var(--brand); width: fit-content; }
+
+.vehicle-specs { background: #f4f4f5; border-radius: 8px; padding: 10px; margin-top: 6px; font-size: 0.82rem; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+
+
+.event-card { border: 1px solid #e4e4e7; border-left: 5px solid var(--posible); border-radius: 8px; padding: 10px; margin-bottom: 10px; background: #fafafa; }
+
+.event-card.Confirmada { border-left-color: var(--confirmada); }
+
+.event-card.Finalizada { border-left-color: var(--finalizada); }
+
+.event-card.Autocotización { border-left-color: var(--autocotizacion); }
+
+.event-card-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+
+.event-card-title { font-size: 0.95rem; font-weight: 700; }
+
+.event-card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.82rem; color: #3f3f46; }
+
+
+
+/* Estilos para Informes KPI */
+
+.kpi-cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px; }
+
+.kpi-card-box { background: white; padding: 18px; border-radius: 12px; border: 1px solid #d4d4d8; box-shadow: 0 4px 6px rgba(0,0,0,0.04); text-align: center; }
+
+.kpi-card-box h4 { color: #52525b; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 8px; font-weight: 700;}
+
+.kpi-card-box .kpi-value { font-size: 1.8rem; font-weight: 800; color: var(--brand); }
+
+.checkbox-group { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #3f3f46; cursor: pointer; }
+
+.table-responsive { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid #d4d4d8; }
+
+.report-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+
+.report-table th, .report-table td { padding: 12px 15px; border-bottom: 1px solid #e4e4e7; text-align: left; font-size: 0.85rem; }
+
+.report-table th { background: #f4f4f5; color: #111113; font-weight: 700; text-transform: uppercase; }
+
+.report-table tr:hover { background: #fafafa; }
+
+
+@media print {
+
+body * { visibility: hidden; }
+
+#printArea, #printArea * { visibility: visible; }
+
+#printArea { position: absolute; left: 0; top: 0; width: 100%; }
+
+.app-container, .modal-overlay { display: none !important; }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+
+<div class="app-container">
+
+
+
+<div id="viewPortal" class="portal-container">
+
+<div class="portal-header-box">
+
+<svg class="brand-logo-svg" viewBox="0 0 500 120" style="height:60px;">
+
+<text x="10" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="70" fill="#ffffff">NIVEL</text>
+
+<text x="210" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="75" fill="#ea580c">9</text>
+
+<rect x="10" y="85" width="260" height="4" fill="#ea580c" />
+
+<text x="10" y="105" font-family="'Outfit', sans-serif" font-weight="600" font-size="14" fill="#a1a1aa" letter-spacing="4">LOGISTICA DE EXCELENCIA</text>
+
+</svg>
+
+<div class="portal-title">Sistema de Gestión</div>
+
+</div>
+
+<div class="portal-menu">
+
+<div class="portal-card" onclick="showView('Agenda')">
+
+<i class="fas fa-calendar-alt"></i>
+
+<h3>Agenda de Movimientos</h3>
+
+</div>
+
+<div class="portal-card" onclick="showView('Cotizador')">
+
+<i class="fas fa-calculator"></i>
+
+<h3>Cotizador de Rutas</h3>
+
+</div>
+
+<div class="portal-card" onclick="showView('Contactos')">
+
+<i class="fas fa-address-book"></i>
+
+<h3>Directorio de Contactos</h3>
+
+</div>
+
+<div class="portal-card" onclick="showView('Informes')">
+
+<i class="fas fa-chart-pie"></i>
+
+<h3>Informes y KPIs</h3>
+
+</div>
+
+<div class="portal-card" onclick="openConfigModal()">
+
+<i class="fas fa-cog"></i>
+
+<h3>Ajustes de Parámetros</h3>
+
+</div>
+
+</div>
+
+<div id="status-indicator" style="margin-top:20px; font-size:0.8rem; color:#10b981;"><i class="fas fa-check-circle"></i> Interfaz Operativa Global</div>
+
+</div>
+
+
+
+<div id="appHeader" class="header" style="display: none;">
+
+<div style="display:flex; align-items:center; gap:12px;">
+
+<svg class="brand-logo-svg" viewBox="0 0 500 120">
+
+<text x="10" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="70" fill="#ffffff">NIVEL</text>
+
+<text x="210" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="75" fill="#ea580c">9</text>
+
+<rect x="10" y="85" width="260" height="4" fill="#ea580c" />
+
+<text x="10" y="105" font-family="'Outfit', sans-serif" font-weight="600" font-size="14" fill="#a1a1aa" letter-spacing="4">LOGISTICA DE EXCELENCIA</text>
+
+</svg>
+
+</div>
+
+<div class="top-nav">
+
+<button class="btn btn-outline" onclick="showView('Portal')"><i class="fas fa-home"></i> Inicio</button>
+
+<button class="btn btn-outline" onclick="showView('Agenda')"><i class="fas fa-calendar"></i> Agenda</button>
+
+<button class="btn btn-outline" onclick="showView('Cotizador')"><i class="fas fa-calculator"></i> Cotizador</button>
+
+<button class="btn btn-outline" onclick="showView('Contactos')"><i class="fas fa-address-book"></i> Contactos</button>
+
+<button class="btn btn-outline" onclick="showView('Informes')"><i class="fas fa-chart-pie"></i> Informes</button>
+
+<button class="btn btn-outline" onclick="openConfigModal()"><i class="fas fa-cog"></i></button>
+
+</div>
+
+</div>
+
+
+
+<!-- VISTA AGENDA -->
+
+<div id="viewAgenda" style="display: none;">
+
+<div class="header" style="background: white; color: var(--dark); margin-bottom:12px;">
+
+<div class="nav-controls" style="display:flex; gap:6px; align-items:center;">
+
+<button class="btn btn-dark" onclick="navigateMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+
+<div class="nav-title" id="currentMonthYear" style="font-weight:700; min-width:130px; text-align:center;">Mes Año</div>
+
+<button class="btn btn-dark" onclick="navigateMonth(1)"><i class="fas fa-chevron-right"></i></button>
+
+<button class="btn btn-dark" onclick="goToday()">Hoy</button>
+
+</div>
+
+<div style="display: flex; gap: 6px;">
+
+<button class="btn btn-brand" onclick="openAddEventModal()"><i class="fas fa-plus"></i> Nuevo Movimiento</button>
+
+</div>
+
+</div>
+
+<div class="calendar-wrapper">
+
+<div class="calendar-grid" id="calendarDaysHeader">
+
+<div class="day-header">Dom</div><div class="day-header">Lun</div><div class="day-header">Mar</div>
+
+<div class="day-header">Mié</div><div class="day-header">Jue</div><div class="day-header">Vie</div><div class="day-header">Sáb</div>
+
+</div>
+
+<div class="calendar-grid" id="calendarGrid"></div>
+
+</div>
+
+</div>
+
+
+
+<!-- VISTA COTIZADOR -->
+
+<div id="viewCotizador" style="display: none;">
+
+<div class="cotizador-grid">
+
+<div class="panel-box">
+
+<div class="panel-title"><i class="fas fa-sliders-h"></i> Datos del Movimiento</div>
+
+
+<div class="form-group">
+
+<label>Cliente / Nombre</label>
+
+<input type="text" id="cot-cliente" placeholder="Ej: Juan Pérez">
+
+</div>
+
+
+
+<div class="form-grid">
+
+<div class="form-group">
+
+<label>Tipo de Movimiento</label>
+
+<select id="cot-tipomov">
+
+<option value="Mudanza Local">Mudanza Local</option>
+
+<option value="Mudanza Larga">Mudanza Larga</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Unidad</label>
+
+<select id="cot-unidad" onchange="calcularCotizacion()">
+
+<option value="Sprinter Furgon">Sprinter Furgon</option>
+
+<option value="Sprinter Chasis">Sprinter Chasis</option>
+
+<option value="Camión 712 Gustavo">Camión 712 Gustavo</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+
+<div class="form-group">
+
+<label>Fecha Estimativa</label>
+
+<input type="date" id="cot-fecha-estimativa">
+
+</div>
+
+
+
+<div class="form-group">
+
+<label>Origen (Ej: Rómula Carbia 3381, Córdoba)</label>
+
+<input type="text" id="cot-origen" placeholder="Calle y Número, Localidad">
+
+</div>
+
+
+
+<div class="form-group">
+
+<div style="display:flex; justify-content:space-between; align-items:center;">
+
+<label>Destino(s) (Ej: San Martin 150, Mendoza)</label>
+
+<button class="btn btn-dark" style="padding:3px 8px; font-size:0.75rem;" onclick="agregarDestinoIntermedio()"><i class="fas fa-plus"></i> Añadir Parada</button>
+
+</div>
+
+<div id="destinosContainer">
+
+<input type="text" class="cot-destino-input" placeholder="Calle y Número, Localidad">
+
+</div>
+
+</div>
+
+
+
+<button class="btn btn-brand" onclick="calcularRutaOSRM()"><i class="fas fa-route"></i> Calcular Ruta y Distancia</button>
+
+
+<div class="form-group">
+
+<label>Distancia Simple Ida (Km)</label>
+
+<div style="display:flex; gap:8px; align-items:center;">
+
+<input type="number" id="cot-kms" value="0" step="any" oninput="calcularCotizacion()">
+
+<span style="font-weight:bold;">Km</span>
+
+</div>
+
+</div>
+
+
+
+<div class="form-group">
+
+<label>Detalles / Inventario Recibido</label>
+
+<textarea id="cot-detalles-recibidos" placeholder="Pegar información recibida..."></textarea>
+
+</div>
+
+</div>
+
+
+
+<div class="panel-box">
+
+<div class="panel-title"><i class="fas fa-map-marked-alt"></i> Mapa de Ruta Completa</div>
+
+<div id="map"></div>
+
+
+
+<div class="panel-title" style="margin-top:8px;"><i class="fas fa-calculator"></i> Desglose y Costos Manuales</div>
+
+
+<div class="form-grid">
+
+<div class="form-group">
+
+<label>Tarifa Presupuestada ($)</label>
+
+<div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-tarifa" placeholder="0" style="font-weight:bold; color:var(--brand);" oninput="calcularCotizacionManual()"></div>
+
+</div>
+
+
+
+<div class="form-group">
+
+<label>Combustible ($ Ida/Vuelta)</label>
+
+<div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-combustible" value="0" step="any" oninput="calcularCotizacionManual()"></div>
+
+</div>
+
+
+
+<div class="form-grid" style="grid-column: span 2;">
+
+<div class="form-group">
+
+<label>Cant. Peajes</label>
+
+<input type="number" id="cot-res-peajes-cant" value="0" min="0" oninput="calcularCotizacionManual()">
+
+</div>
+
+<div class="form-group">
+
+<label>Peajes Total ($)</label>
+
+<div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-peajes-costo" value="0" step="any" oninput="calcularCotizacionManual()"></div>
+
+</div>
+
+</div>
+
+
+
+<div class="form-group">
+
+<label>Gastos / Viáticos ($)</label>
+
+<div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-viaticos" value="0" step="any" oninput="calcularCotizacionManual()"></div>
+
+</div>
+
+
+
+<div class="form-group">
+
+<label>Ayudante ($ Extra)</label>
+
+<div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-ayudante" value="0" step="any" oninput="calcularCotizacionManual()"></div>
+
+</div>
+
+
+
+<div class="form-group">
+
+<label>Costos Totales ($)</label>
+
+<div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-costostotales" readonly style="color:red;"></div>
+
+</div>
+
+
+
+<div class="form-group full">
+
+<label>Utilidad Neta ($)</label>
+
+<div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-utilidad" readonly style="color:green; font-weight:bold; font-size:1.1rem;"></div>
+
+</div>
+
+</div>
+
+
+
+<div style="display:flex; gap:8px; margin-top:8px;">
+
+<button class="btn btn-brand" style="flex:1;" onclick="generarPresupuestoCliente()"><i class="fas fa-file-invoice"></i> Agendar y Guardar</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- VISTA CONTACTOS -->
+
+<div id="viewContactos" style="display: none;">
+
+<div class="panel-box" style="margin-bottom:15px;">
+
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+
+<div class="panel-title" style="border:none; margin:0;"><i class="fas fa-address-book"></i> Directorio de Contactos</div>
+
+<button class="btn btn-brand" onclick="openContactModal()"><i class="fas fa-user-plus"></i> Nuevo Contacto</button>
+
+</div>
+
+
+
+<div class="form-grid" style="margin-top:10px;">
+
+<div class="form-group">
+
+<label>Buscar por Texto</label>
+
+<input type="text" id="cnt-filter-search" placeholder="Nombre, teléfono..." oninput="renderContactList()">
+
+</div>
+
+<div class="form-group">
+
+<label>Categoría</label>
+
+<select id="cnt-filter-categoria" onchange="renderContactList()">
+
+<option value="Todas">Todas las Categorías</option>
+
+<option value="Clientes - Empresa">Clientes - Empresa</option>
+
+<option value="Clientes - Particular">Clientes - Particular</option>
+
+<option value="Terceros - Ayudante">Terceros - Ayudante</option>
+
+<option value="Terceros - Camioneta/Furgon">Terceros - Camioneta/Furgón</option>
+
+<option value="Terceros - Camion">Terceros - Camión</option>
+
+</select>
+
+</div>
+
+<div class="form-group">
+
+<label>Provincia / Región</label>
+
+<input type="text" id="cnt-filter-region" placeholder="Ej: Córdoba" oninput="renderContactList()">
+
+</div>
+
+<div class="form-group">
+
+<label>Localidad</label>
+
+<input type="text" id="cnt-filter-localidad" placeholder="Ej: Villa Allende" oninput="renderContactList()">
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div id="contactListContainer"></div>
+
+</div>
+
+
+<!-- VISTA: INFORMES Y KPIS -->
+
+<div id="viewInformes" style="display: none;">
+
+
+<div class="panel-box">
+
+<div class="panel-title"><i class="fas fa-filter"></i> 1. Filtros del Informe</div>
+
+<div class="form-grid">
+
+<div class="form-group"><label>Fecha Inicio</label><input type="date" id="rep-start"></div>
+
+<div class="form-group"><label>Fecha Fin</label><input type="date" id="rep-end"></div>
+
+<div class="form-group"><label>Filtrar por Estado</label>
+
+<select id="rep-estado">
+
+<option value="Todos">Todos los Estados</option>
+
+<option value="Finalizada">Solo Finalizadas (Cierres)</option>
+
+<option value="Confirmada">Confirmadas</option>
+
+<option value="Posible">Posibles</option>
+
+<option value="Autocotización">Autocotizaciones</option>
+
+</select>
+
+</div>
+
+<div class="form-group"><label>Unidad / Vehículo</label>
+
+<select id="rep-unidad">
+
+<option value="Todas">Todas las Unidades</option>
+
+<option value="Sprinter Furgon">Sprinter Furgon</option>
+
+<option value="Sprinter Chasis">Sprinter Chasis</option>
+
+<option value="Camión 712 Gustavo">Camión 712 Gustavo</option>
+
+</select>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="panel-box">
+
+<div class="panel-title"><i class="fas fa-columns"></i> 2. Datos a Incluir en el Listado</div>
+
+<div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; margin-bottom: 15px;">
+
+<label class="checkbox-group"><input type="checkbox" id="col-fecha" checked> Fecha</label>
+
+<label class="checkbox-group"><input type="checkbox" id="col-cliente" checked> Cliente</label>
+
+<label class="checkbox-group"><input type="checkbox" id="col-estado" checked> Estado</label>
+
+<label class="checkbox-group"><input type="checkbox" id="col-ruta"> Origen / Destino</label>
+
+<label class="checkbox-group"><input type="checkbox" id="col-vehiculo"> Vehículo</label>
+
+<label class="checkbox-group"><input type="checkbox" id="col-ingreso" checked> Tarifa (Ingreso)</label>
+
+<label class="checkbox-group"><input type="checkbox" id="col-costo" checked> Costos Operativos</label>
+
+<label class="checkbox-group"><input type="checkbox" id="col-utilidad" checked> Utilidad Neta</label>
+
+</div>
+
+
+<div style="display:flex; gap:10px;">
+
+<button class="btn btn-brand" onclick="generarReporteUI()"><i class="fas fa-sync"></i> Generar / Actualizar Pantalla</button>
+
+<button class="btn btn-dark" onclick="imprimirReporte()"><i class="fas fa-print"></i> Imprimir Informe PDF</button>
+
+</div>
+
+</div>
+
+
+
+<!-- Tarjetas KPI -->
+
+<div class="kpi-cards-grid" id="kpiDashboardContainer" style="display: none;">
+
+<div class="kpi-card-box">
+
+<h4>Total de Viajes</h4>
+
+<div class="kpi-value" id="kpi-tot-viajes">0</div>
+
+</div>
+
+<div class="kpi-card-box">
+
+<h4>Facturación Bruta</h4>
+
+<div class="kpi-value" id="kpi-tot-ingresos" style="color: #3b82f6;">$0</div>
+
+</div>
+
+<div class="kpi-card-box">
+
+<h4>Costos Operativos</h4>
+
+<div class="kpi-value" id="kpi-tot-costos" style="color: #ef4444;">$0</div>
+
+</div>
+
+<div class="kpi-card-box">
+
+<h4>Utilidad Neta Real</h4>
+
+<div class="kpi-value" id="kpi-tot-utilidad" style="color: #10b981;">$0</div>
+
+</div>
+
+</div>
+
+
+
+<!-- Tabla de Resultados -->
+
+<div class="table-responsive" id="reportTableContainer" style="display: none;">
+
+<table class="report-table" id="reportTable"></table>
+
+</div>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+<!-- MODALES -->
+
+<div class="modal-overlay" id="modalConfig">
+
+<div class="modal-content" style="max-width:500px;">
+
+<div class="modal-header">
+
+<h2>Ajustes de Fórmulas y Costos</h2>
+
+<button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button>
+
+</div>
+
+<div class="modal-body form-grid">
+
+<div class="form-group full">
+
+<label>Precio Litro Diésel ($)</label>
+
+<input type="number" id="cfg-diesel" value="2450">
+
+</div>
+
+<div class="form-group">
+
+<label>Consumo Sprinter Furgón (L/100km)</label>
+
+<input type="number" id="cfg-cons-furgon" value="14">
+
+</div>
+
+<div class="form-group">
+
+<label>Consumo Sprinter Chasis (L/100km)</label>
+
+<input type="number" id="cfg-cons-chasis" value="16">
+
+</div>
+
+<div class="form-group full">
+
+<label>Consumo Camión 712 (L/100km)</label>
+
+<input type="number" id="cfg-cons-camion" value="22">
+
+</div>
+
+<div class="form-group">
+
+<label>Tarifa Base Furgón/Chasis ($/Km)</label>
+
+<input type="number" id="cfg-tarifa-furgon" value="2200">
+
+</div>
+
+<div class="form-group">
+
+<label>Tarifa Base Camión 712 ($/Km)</label>
+
+<input type="number" id="cfg-tarifa-camion" value="2400">
+
+</div>
+
+</div>
+
+<div class="modal-footer">
+
+<button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button>
+
+<button class="btn btn-brand" onclick="saveConfig()"><i class="fas fa-save"></i> Guardar Ajustes</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="modal-overlay" id="modalDayView">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h2 id="dayViewTitle">Movimientos del Día</h2>
+
+<button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button>
+
+</div>
+
+<div class="modal-body" id="dayViewBody"></div>
+
+<div class="modal-footer">
+
+<button class="btn btn-brand" onclick="openAddEventModal(selectedDate)"><i class="fas fa-plus"></i> Agregar Nuevo</button>
+
+<button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cerrar</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="modal-overlay" id="modalEventForm">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h2 id="formModalTitle">Cargar / Editar Movimiento</h2>
+
+<button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button>
+
+</div>
+
+<div class="modal-body">
+
+<form id="eventForm" class="form-grid" onsubmit="return false;">
+
+<input type="hidden" id="ev-id">
+
+<input type="hidden" id="ev-telefono">
+
+<div class="form-group"><label>Fecha</label><input type="date" id="ev-fecha" required></div>
+
+<div class="form-group"><label>Estado</label>
+
+<select id="ev-estado" required>
+
+<option value="Posible">Posible</option>
+
+<option value="Confirmada">Confirmada</option>
+
+<option value="Finalizada">Finalizada</option>
+
+<option value="Autocotización">Autocotización</option>
+
+</select>
+
+</div>
+
+<div class="form-group"><label>Hora Inicio</label><input type="time" id="ev-hinicio"></div>
+
+<div class="form-group"><label>Hora Fin</label><input type="time" id="ev-hfin"></div>
+
+
+
+<div class="form-group"><label>Tipo de Movimiento</label>
+
+<select id="ev-tipomov">
+
+<option value="Mudanza Local">Mudanza Local</option>
+
+<option value="Mudanza Larga">Mudanza Larga</option>
+
+<option value="Flete">Flete</option>
+
+<option value="Trabajos Especiales">Trabajos Especiales</option>
+
+</select>
+
+</div>
+
+
+
+<div class="form-group"><label>Unidad Asignada</label>
+
+<select id="ev-asignacion">
+
+<option value="Sprinter Furgon">Sprinter Furgon</option>
+
+<option value="Sprinter Chasis">Sprinter Chasis</option>
+
+<option value="Camión 712 Gustavo">Camión 712 Gustavo</option>
+
+</select>
+
+</div>
+
+
+
+<div class="form-group"><label>Tipo de Jornada</label>
+
+<select id="ev-jornada">
+
+<option value="Completa">Jornada Completa</option>
+
+<option value="Media Jornada">Media Jornada</option>
+
+</select>
+
+</div>
+
+<div class="form-group"><label>Nombre del Cliente</label><input type="text" id="ev-cliente" required></div>
+
+
+
+<div class="form-group"><label>Origen</label><input type="text" id="ev-origen"></div>
+
+<div class="form-group"><label>Destino</label><input type="text" id="ev-destino"></div>
+
+<div class="form-group full"><label>Distancia (Km Simple)</label><input type="number" id="ev-distancia" step="any"></div>
+
+<div class="form-group full"><label>Detalles Carga</label><textarea id="ev-detalles"></textarea></div>
+
+
+<div class="form-group"><label>Presupuesto / Tarifa ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-presupuesto" value="0" oninput="calculateTotal()" required></div></div>
+
+<div class="form-group"><label>Seña Abonada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-sena" value="0" oninput="calculateTotal()"></div></div>
+
+
+<div class="form-group"><label>Combustible ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-combustible" value="0" oninput="calculateTotal()"></div></div>
+
+<div class="form-group"><label>Peajes ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-peajes-costo" value="0" oninput="calculateTotal()"></div></div>
+
+
+<div class="form-group"><label>Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-gastosviaticos" value="0" oninput="calculateTotal()"></div></div>
+
+<div class="form-group"><label>Costo Ayudante ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-ayudante-monto" value="0" oninput="calculateTotal()"></div></div>
+
+<div class="form-group"><label>Comisión ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-comision" value="0" oninput="calculateTotal()"></div></div>
+
+
+<div class="form-group"><label>Utilidad Neta Real ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-total" readonly style="font-weight:bold; color:var(--brand);"></div></div>
+
+</form>
+
+</div>
+
+<div class="modal-footer">
+
+<button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button>
+
+<button class="btn btn-brand" onclick="saveEvent()"><i class="fas fa-save"></i> Guardar Movimiento</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="modal-overlay" id="modalContactForm">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h2>Contacto</h2>
+
+<button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button>
+
+</div>
+
+<div class="modal-body">
+
+<form id="contactForm" class="form-grid" onsubmit="return false;">
+
+<input type="hidden" id="cnt-id">
+
+<div class="form-group full">
+
+<label>Categoría</label>
+
+<select id="cnt-categoria" required onchange="toggleVehicleFields()">
+
+<option value="Clientes - Particular">Clientes - Particular</option>
+
+<option value="Clientes - Empresa">Clientes - Empresa</option>
+
+<option value="Terceros - Ayudante">Terceros - Ayudante</option>
+
+<option value="Terceros - Camioneta/Furgon">Terceros - Camioneta/Furgón</option>
+
+<option value="Terceros - Camion">Terceros - Camión</option>
+
+</select>
+
+</div>
+
+<div class="form-group"><label>Nombre</label><input type="text" id="cnt-nombre" required></div>
+
+<div class="form-group"><label>Teléfono</label><input type="text" id="cnt-tel" required></div>
+
+<div class="form-group"><label>Provincia / Región</label><input type="text" id="cnt-region"></div>
+
+<div class="form-group"><label>Localidad</label><input type="text" id="cnt-localidad"></div>
+
+
+
+<div id="vehicleFields" class="form-grid full" style="display:none; border-top:1px solid #e4e4e7; padding-top:10px;">
+
+<div class="form-group"><label>Modelo Vehículo</label><input type="text" id="cnt-veh-modelo"></div>
+
+<div class="form-group"><label>Capacidad m³</label><input type="number" id="cnt-veh-m3"></div>
+
+<div class="form-group"><label>Dimensiones Caja</label><input type="text" id="cnt-veh-dimensiones"></div>
+
+<div class="form-group"><label>Peso Máx (Kg)</label><input type="number" id="cnt-veh-peso"></div>
+
+<div class="form-group full"><label>URL Foto Vehículo</label><input type="text" id="cnt-veh-foto"></div>
+
+</div>
+
+</form>
+
+</div>
+
+<div class="modal-footer">
+
+<button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button>
+
+<button class="btn btn-brand" onclick="saveContact()"><i class="fas fa-save"></i> Guardar Contacto</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- CONTENEDOR OCULTO PARA IMPRESIÓN PDF -->
+
+<div id="printArea"></div>
+
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+<script>
+
+const webAppUrl = 'https://script.google.com/macros/s/AKfycbyc36N891Ujy9b_t1VgbHj7V4bACtpMIAIWKmn6I4ymdpmclkYI16XKqK_IY6FxrhrP/exec';
+
+const dbKey = 'nivel9_mudanzas_data';
+
+const dbContactsKey = 'nivel9_contactos_data';
+
+const dbConfigKey = 'nivel9_config_data';
+
+
+let events = [];
+
+let contacts = [];
+
+let lastDataHash = '';
+
+let config = { diesel: 2450, consFurgon: 14, consChasis: 16, consCamion: 22, tarifaFurgon: 2200, tarifaCamion: 2400 };
+
+let currentDate = new Date();
+
+let selectedDate = null;
+
+const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+let map = null, routingControl = null, isSyncing = false;
+
+
+
+function initApp() {
+
+try {
+
+loadConfig();
+
+loadContactsLocal();
+
+loadLocalEvents();
+
+renderCalendar();
+
+fetchCloudData();
+
+setInterval(() => { fetchCloudData(true); }, 15000);
+
+} catch(e) {}
+
+}
+
+
+
+function loadConfig() {
+
+try {
+
+const raw = localStorage.getItem(dbConfigKey);
+
+if (raw) config = JSON.parse(raw);
+
+} catch(e) {}
+
+}
+
+
+
+function loadLocalEvents() {
+
+try {
+
+const raw = localStorage.getItem(dbKey);
+
+if (raw) {
+
+events = JSON.parse(raw).map(e => ({ ...e, fecha: parseDateStr(e.fecha) }));
+
+}
+
+} catch(e) {}
+
+}
+
+
+
+function saveConfig() {
+
+config = {
+
+diesel: parseFloat(document.getElementById('cfg-diesel').value) || 2450,
+
+consFurgon: parseFloat(document.getElementById('cfg-cons-furgon').value) || 14,
+
+consChasis: parseFloat(document.getElementById('cfg-cons-chasis').value) || 16,
+
+consCamion: parseFloat(document.getElementById('cfg-cons-camion').value) || 22,
+
+tarifaFurgon: parseFloat(document.getElementById('cfg-tarifa-furgon').value) || 2200,
+
+tarifaCamion: parseFloat(document.getElementById('cfg-tarifa-camion').value) || 2400
+
+};
+
+try { localStorage.setItem(dbConfigKey, JSON.stringify(config)); } catch(e) {}
+
+closeModals();
+
+alert("Parámetros actualizados con éxito.");
+
+}
+
+
+
+function openConfigModal() {
+
+document.getElementById('cfg-diesel').value = config.diesel;
+
+document.getElementById('cfg-cons-furgon').value = config.consFurgon;
+
+document.getElementById('cfg-cons-chasis').value = config.consChasis;
+
+document.getElementById('cfg-cons-camion').value = config.consCamion;
+
+document.getElementById('cfg-tarifa-furgon').value = config.tarifaFurgon;
+
+document.getElementById('cfg-tarifa-camion').value = config.tarifaCamion;
+
+document.getElementById('modalConfig').classList.add('active');
+
+}
+
+
+
+function generarReporteUI() {
+
+const start = document.getElementById('rep-start').value;
+
+const end = document.getElementById('rep-end').value;
+
+const estado = document.getElementById('rep-estado').value;
+
+const unidad = document.getElementById('rep-unidad').value;
+
+
+let filt = events;
+
+if (start) filt = filt.filter(e => e.fecha >= start);
+
+if (end) filt = filt.filter(e => e.fecha <= end);
+
+if (estado !== 'Todos') filt = filt.filter(e => e.estado === estado);
+
+if (unidad !== 'Todas') filt = filt.filter(e => e.asignacion === unidad);
+
+
+
+let sumUtilidad = 0;
+
+let sumIngresos = 0;
+
+let sumCostos = 0;
+
+
+filt.forEach(e => {
+
+const pres = parseFloat(e.presupuesto) || 0;
+
+const util = parseFloat(e.total) || 0;
+
+const cost = pres - util;
+
+
+sumIngresos += pres;
+
+sumUtilidad += util;
+
+sumCostos += cost;
+
+});
+
+
+
+document.getElementById('kpiDashboardContainer').style.display = 'grid';
+
+document.getElementById('kpi-tot-viajes').textContent = filt.length;
+
+document.getElementById('kpi-tot-ingresos').textContent = '$' + sumIngresos.toLocaleString('es-AR');
+
+document.getElementById('kpi-tot-costos').textContent = '$' + sumCostos.toLocaleString('es-AR');
+
+document.getElementById('kpi-tot-utilidad').textContent = '$' + sumUtilidad.toLocaleString('es-AR');
+
+
+
+const colFecha = document.getElementById('col-fecha').checked;
+
+const colCliente = document.getElementById('col-cliente').checked;
+
+const colEstado = document.getElementById('col-estado').checked;
+
+const colRuta = document.getElementById('col-ruta').checked;
+
+const colVehiculo = document.getElementById('col-vehiculo').checked;
+
+const colIngreso = document.getElementById('col-ingreso').checked;
+
+const colCosto = document.getElementById('col-costo').checked;
+
+const colUtilidad = document.getElementById('col-utilidad').checked;
+
+
+
+let tableHTML = `
+
+<thead>
+
+<tr>
+
+${colFecha ? '<th>Fecha</th>' : ''}
+
+${colCliente ? '<th>Cliente</th>' : ''}
+
+${colEstado ? '<th>Estado</th>' : ''}
+
+${colRuta ? '<th>Origen / Destino</th>' : ''}
+
+${colVehiculo ? '<th>Unidad</th>' : ''}
+
+${colIngreso ? '<th>Tarifa</th>' : ''}
+
+${colCosto ? '<th>Costos Op.</th>' : ''}
+
+${colUtilidad ? '<th>Utilidad</th>' : ''}
+
+</tr>
+
+</thead>
+
+<tbody>
+
+`;
+
+
+
+if (filt.length === 0) {
+
+tableHTML += `<tr><td colspan="8" style="text-align:center; padding: 20px;">No hay registros para estos filtros.</td></tr>`;
+
+} else {
+
+tableHTML += filt.map(e => {
+
+const pres = parseFloat(e.presupuesto) || 0;
+
+const util = parseFloat(e.total) || 0;
+
+const cost = pres - util;
+
+
+
+return `
+
+<tr>
+
+${colFecha ? `<td>${e.fecha}</td>` : ''}
+
+${colCliente ? `<td><strong>${e.cliente}</strong></td>` : ''}
+
+${colEstado ? `<td><span class="event-chip status-${e.estado}" style="display:inline-block;">${e.estado}</span></td>` : ''}
+
+${colRuta ? `<td>${e.origen || '-'} <i class="fas fa-arrow-right"></i> ${e.destino || '-'}</td>` : ''}
+
+${colVehiculo ? `<td>${e.asignacion}</td>` : ''}
+
+${colIngreso ? `<td>$${pres.toLocaleString('es-AR')}</td>` : ''}
+
+${colCosto ? `<td style="color:#ef4444;">$${cost.toLocaleString('es-AR')}</td>` : ''}
+
+${colUtilidad ? `<td style="color:#10b981; font-weight:bold;">$${util.toLocaleString('es-AR')}</td>` : ''}
+
+</tr>
+
+`;
+
+}).join('');
+
+}
+
+tableHTML += '</tbody>';
+
+
+
+document.getElementById('reportTable').innerHTML = tableHTML;
+
+document.getElementById('reportTableContainer').style.display = 'block';
+
+}
+
+
+
+function imprimirReporte() {
+
+if(document.getElementById('reportTable').innerHTML.trim() === '') {
+
+generarReporteUI();
+
+}
+
+
+const start = document.getElementById('rep-start').value;
+
+const end = document.getElementById('rep-end').value;
+
+const tableContent = document.getElementById('reportTable').outerHTML;
+
+const kpisHtml = document.getElementById('kpiDashboardContainer').outerHTML;
+
+
+const printArea = document.getElementById('printArea');
+
+printArea.innerHTML = `
+
+<div style="font-family:'Outfit', sans-serif; color:#111113; padding:30px; background:white;">
+
+<h1 style="color:#ea580c; border-bottom:4px solid #111113; padding-bottom:10px; margin-bottom: 20px;">NIVEL 9 - INFORME GERENCIAL (KPIs)</h1>
+
+<p style="margin-bottom: 20px; font-size:1.1rem;"><strong>Período Analizado:</strong> ${start || 'Histórico'} a ${end || 'Hoy'}</p>
+
+${kpisHtml}
+
+<hr style="margin: 25px 0; border:1px solid #d4d4d8;">
+
+${tableContent}
+
+</div>
+
+`;
+
+
+window.print();
+
+printArea.innerHTML = '';
+
+}
+
+
+
+function loadContactsLocal() {
+
+try {
+
+const raw = localStorage.getItem(dbContactsKey);
+
+if (raw) contacts = JSON.parse(raw);
+
+} catch(e) {}
+
+}
+
+
+
+function saveContactsLocal() {
+
+try { localStorage.setItem(dbContactsKey, JSON.stringify(contacts)); } catch(e) {}
+
+}
+
+
+
+function showView(viewName) {
+
+document.getElementById('viewPortal').style.display = 'none';
+
+document.getElementById('viewAgenda').style.display = 'none';
+
+document.getElementById('viewCotizador').style.display = 'none';
+
+document.getElementById('viewContactos').style.display = 'none';
+
+document.getElementById('viewInformes').style.display = 'none';
+
+document.getElementById('appHeader').style.display = 'none';
+
+
+
+if (viewName === 'Portal') {
+
+document.getElementById('viewPortal').style.display = 'flex';
+
+} else if (viewName === 'Agenda') {
+
+document.getElementById('appHeader').style.display = 'flex';
+
+document.getElementById('viewAgenda').style.display = 'block';
+
+renderCalendar();
+
+} else if (viewName === 'Cotizador') {
+
+document.getElementById('appHeader').style.display = 'flex';
+
+document.getElementById('viewCotizador').style.display = 'block';
+
+initMap();
+
+} else if (viewName === 'Contactos') {
+
+document.getElementById('appHeader').style.display = 'flex';
+
+document.getElementById('viewContactos').style.display = 'block';
+
+renderContactList();
+
+} else if (viewName === 'Informes') {
+
+document.getElementById('appHeader').style.display = 'flex';
+
+document.getElementById('viewInformes').style.display = 'block';
+
+generarReporteUI();
+
+}
+
+}
+
+
+
+function openContactModal(id = null) {
+
+document.getElementById('contactForm').reset();
+
+document.getElementById('cnt-id').value = '';
+
+if (id) {
+
+const c = contacts.find(x => String(x.id) === String(id));
+
+if (c) {
+
+document.getElementById('cnt-id').value = c.id;
+
+document.getElementById('cnt-categoria').value = c.categoria;
+
+document.getElementById('cnt-nombre').value = c.nombre;
+
+document.getElementById('cnt-tel').value = c.telefono;
+
+document.getElementById('cnt-region').value = c.region || '';
+
+document.getElementById('cnt-localidad').value = c.localidad || '';
+
+document.getElementById('cnt-veh-modelo').value = c.vehModelo || '';
+
+document.getElementById('cnt-veh-m3').value = c.vehM3 || '';
+
+document.getElementById('cnt-veh-dimensiones').value = c.vehDimensiones || '';
+
+document.getElementById('cnt-veh-peso').value = c.vehPeso || '';
+
+document.getElementById('cnt-veh-foto').value = c.vehFoto || '';
+
+}
+
+}
+
+toggleVehicleFields();
+
+document.getElementById('modalContactForm').classList.add('active');
+
+}
+
+
+
+function toggleVehicleFields() {
+
+const cat = document.getElementById('cnt-categoria').value;
+
+document.getElementById('vehicleFields').style.display = (cat.includes('Camioneta') || cat.includes('Camion')) ? 'grid' : 'none';
+
+}
+
+
+
+function saveContact() {
+
+const id = document.getElementById('cnt-id').value || String(Date.now());
+
+const newCnt = {
+
+id: id,
+
+categoria: document.getElementById('cnt-categoria').value,
+
+nombre: document.getElementById('cnt-nombre').value.trim(),
+
+telefono: document.getElementById('cnt-tel').value.trim(),
+
+region: document.getElementById('cnt-region').value.trim(),
+
+localidad: document.getElementById('cnt-localidad').value.trim(),
+
+vehModelo: document.getElementById('cnt-veh-modelo').value,
+
+vehM3: document.getElementById('cnt-veh-m3').value,
+
+vehDimensiones: document.getElementById('cnt-veh-dimensiones').value,
+
+vehPeso: document.getElementById('cnt-veh-peso').value,
+
+vehFoto: document.getElementById('cnt-veh-foto').value
+
+};
+
+
+
+const idx = contacts.findIndex(x => String(x.id) === String(id));
+
+if (idx >= 0) contacts[idx] = newCnt;
+
+else contacts.push(newCnt);
+
+
+
+saveContactsLocal();
+
+closeModals();
+
+renderContactList();
+
+}
+
+
+
+function deleteContact(id) {
+
+if (confirm("¿Eliminar contacto?")) {
+
+contacts = contacts.filter(x => String(x.id) !== String(id));
+
+saveContactsLocal();
+
+renderContactList();
+
+}
+
+}
+
+
+
+function renderContactList() {
+
+const search = document.getElementById('cnt-filter-search').value.toLowerCase();
+
+const catFilter = document.getElementById('cnt-filter-categoria').value;
+
+const regFilter = document.getElementById('cnt-filter-region').value.toLowerCase();
+
+const locFilter = document.getElementById('cnt-filter-localidad').value.toLowerCase();
+
+
+
+let list = contacts.filter(c => {
+
+const mS = !search || c.nombre.toLowerCase().includes(search) || c.telefono.includes(search);
+
+const mC = catFilter === 'Todas' || c.categoria === catFilter;
+
+const mR = !regFilter || ((c.region || '').toLowerCase().includes(regFilter));
+
+const mL = !locFilter || ((c.localidad || '').toLowerCase().includes(locFilter));
+
+return mS && mC && mR && mL;
+
+});
+
+
+
+const container = document.getElementById('contactListContainer');
+
+if (list.length === 0) {
+
+container.innerHTML = `<div class="panel-box" style="text-align:center; color:#71717a;">Sin contactos.</div>`;
+
+return;
+
+}
+
+
+
+container.innerHTML = list.map(c => `
+
+<div class="contact-card">
+
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+
+<div>
+
+<span class="contact-badge">${c.categoria}</span>
+
+<h3 style="margin-top:4px;">${c.nombre}</h3>
+
+<p style="font-size:0.85rem; color:#52525b;"><i class="fas fa-map-marker-alt" style="color:var(--brand);"></i> ${c.localidad || '-'}, ${c.region || '-'}</p>
+
+</div>
+
+<div style="display:flex; gap:6px;">
+
+<a href="https://wa.me/${c.telefono.replace(/\D/g,'')}" target="_blank" class="btn btn-success" style="padding:6px 10px;"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+
+<a href="tel:${c.telefono}" class="btn btn-dark" style="padding:6px 10px;"><i class="fas fa-phone"></i> Llamar</a>
+
+<button class="btn btn-outline" style="padding:6px 10px; color:black;" onclick="openContactModal('${c.id}')"><i class="fas fa-edit"></i></button>
+
+<button class="btn btn-outline" style="padding:6px 10px; color:red;" onclick="deleteContact('${c.id}')"><i class="fas fa-trash"></i></button>
+
+</div>
+
+</div>
+
+</div>
+
+`).join('');
+
+}
+
+
+
+function initMap() {
+
+if (!map) {
+
+map = L.map('map').setView([-31.4135, -64.1810], 11);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
+maxZoom: 19,
+
+attribution: '© OpenStreetMap'
+
+}).addTo(map);
+
+}
+
+setTimeout(() => { map.invalidateSize(); }, 150);
+
+setTimeout(() => { map.invalidateSize(); }, 500);
+
+}
+
+
+
+function agregarDestinoIntermedio() {
+
+const container = document.getElementById('destinosContainer');
+
+const div = document.createElement('div');
+
+div.className = 'dest-item';
+
+div.innerHTML = `
+
+<input type="text" class="cot-destino-input" placeholder="Calle y Número, Localidad" style="margin-top:5px;">
+
+<button class="btn btn-dark" style="padding:6px 10px; color:red; margin-top:5px;" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
+
+`;
+
+container.appendChild(div);
+
+}
+
+
+
+function formatSearchQuery(input) {
+
+let query = input.trim();
+
+if (!query) return '';
+
+if (!query.toLowerCase().includes('argentina')) query += ', Argentina';
+
+return query;
+
+}
+
+
+
+async function calcularRutaOSRM() {
+
+const origRaw = document.getElementById('cot-origen').value;
+
+const destInputs = document.querySelectorAll('.cot-destino-input');
+
+const destArray = Array.from(destInputs).map(i => i.value.trim()).filter(v => v !== '');
+
+
+
+if (!origRaw || destArray.length === 0) { alert("Ingrese Origen y Destino."); return; }
+
+const puntosBusqueda = [origRaw, ...destArray].map(p => formatSearchQuery(p));
+
+
+
+try {
+
+const waypointsList = [];
+
+for (let p of puntosBusqueda) {
+
+const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=ar&q=${encodeURIComponent(p)}`).then(r => r.json());
+
+if (!res || res.length === 0) { alert(`No se encontró la dirección: "${p}". Intenta agregar la provincia.`); return; }
+
+waypointsList.push(L.latLng(res[0].lat, res[0].lon));
+
+}
+
+
+
+if (routingControl) map.removeControl(routingControl);
+
+
+
+routingControl = L.Routing.control({ waypoints: waypointsList, show: false }).addTo(map);
+
+
+
+routingControl.on('routesfound', (e) => {
+
+const kms = Math.round(e.routes[0].summary.totalDistance / 1000);
+
+document.getElementById('cot-kms').value = kms;
+
+map.fitBounds(L.latLngBounds(waypointsList), { padding: [30, 30] });
+
+calcularCotizacion();
+
+});
+
+} catch(e) { alert("Error al calcular la ruta."); }
+
+}
+
+
+
+function calcularCotizacion() {
+
+const kmsSimple = parseFloat(document.getElementById('cot-kms').value) || 0;
+
+const kmsIdaVuelta = kmsSimple * 2;
+
+const unidad = document.getElementById('cot-unidad').value;
+
+
+let consumoLitros100 = config.consFurgon;
+
+if (unidad === 'Sprinter Chasis') consumoLitros100 = config.consChasis;
+
+if (unidad === 'Camión 712 Gustavo') consumoLitros100 = config.consCamion;
+
+
+const combustibleAutoCalculado = Math.round((kmsIdaVuelta / 100) * consumoLitros100 * config.diesel);
+
+document.getElementById('cot-res-combustible').value = combustibleAutoCalculado;
+
+
+
+const tarifaBase = (unidad === 'Camión 712 Gustavo') ? config.tarifaCamion : config.tarifaFurgon;
+
+let tarifa = kmsSimple <= 800 ? kmsSimple * tarifaBase : kmsSimple * (tarifaBase - 200);
+
+document.getElementById('cot-res-tarifa').value = tarifa;
+
+calcularCotizacionManual();
+
+}
+
+
+
+function calcularCotizacionManual() {
+
+const tarifa = parseFloat(document.getElementById('cot-res-tarifa').value) || 0;
+
+const combustibleCosto = parseFloat(document.getElementById('cot-res-combustible').value) || 0;
+
+const peajesCosto = parseFloat(document.getElementById('cot-res-peajes-costo').value) || 0;
+
+const viaticosCosto = parseFloat(document.getElementById('cot-res-viaticos').value) || 0;
+
+const ayudante = parseFloat(document.getElementById('cot-ayudante').value) || 0;
+
+
+
+const costosTotales = combustibleCosto + peajesCosto + viaticosCosto + ayudante;
+
+document.getElementById('cot-res-costostotales').value = costosTotales;
+
+document.getElementById('cot-res-utilidad').value = tarifa - costosTotales;
+
+}
+
+
+
+async function generarPresupuestoCliente() {
+
+const cliente = document.getElementById('cot-cliente').value.trim();
+
+const tarifa = parseFloat(document.getElementById('cot-res-tarifa').value) || 0;
+
+
+
+if (!cliente) { alert("Ingrese Nombre del Cliente."); return; }
+
+
+
+const nuevoMov = {
+
+id: String(Date.now()),
+
+fecha: document.getElementById('cot-fecha-estimativa').value || new Date().toISOString().split('T')[0],
+
+estado: 'Posible',
+
+tipomov: document.getElementById('cot-tipomov').value,
+
+asignacion: document.getElementById('cot-unidad').value,
+
+cliente: cliente,
+
+origen: document.getElementById('cot-origen').value,
+
+destino: document.querySelectorAll('.cot-destino-input')[0].value,
+
+distancia: document.getElementById('cot-kms').value,
+
+detalles: document.getElementById('cot-detalles-recibidos').value,
+
+presupuesto: tarifa,
+
+combustible: parseFloat(document.getElementById('cot-res-combustible').value) || 0,
+
+peajesCosto: parseFloat(document.getElementById('cot-res-peajes-costo').value) || 0,
+
+gastosviaticos: parseFloat(document.getElementById('cot-res-viaticos').value) || 0,
+
+total: tarifa - (parseFloat(document.getElementById('cot-res-combustible').value) || 0)
+
+};
+
+
+
+events.push(nuevoMov);
+
+try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {}
+
+pushCloudData();
+
+renderCalendar();
+
+alert("Movimiento agendado con éxito. Puede verlo en la Agenda o en Informes.");
+
+}
+
+
+
+function fetchCloudData(silent = true) {
+
+if (isSyncing) return;
+
+isSyncing = true;
+
+fetch(webAppUrl, { method: 'GET', mode: 'cors' })
+
+.then(res => res.json())
+
+.then(data => {
+
+if (Array.isArray(data)) {
+
+const newHash = JSON.stringify(data);
+
+if (lastDataHash !== newHash) {
+
+events = data.map(e => ({ ...e, fecha: parseDateStr(e.fecha) }));
+
+try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e){}
+
+renderCalendar();
+
+lastDataHash = newHash;
+
+}
+
+}
+
+})
+
+.catch(err => {})
+
+.finally(() => { isSyncing = false; });
+
+}
+
+
+
+function pushCloudData() {
+
+fetch(webAppUrl, {
+
+method: 'POST',
+
+mode: 'no-cors',
+
+headers: { 'Content-Type': 'application/json' },
+
+body: JSON.stringify(events)
+
+}).catch(err => {});
+
+}
+
+
+
+function parseDateStr(raw) { if (!raw) return ''; return String(raw).trim().substring(0, 10); }
+
+function navigateMonth(direction) { currentDate.setMonth(currentDate.getMonth() + direction); renderCalendar(); }
+
+function goToday() { currentDate = new Date(); renderCalendar(); }
+
+function getFormattedDate(year, month, day) { return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`; }
+
+
+
+function renderCalendar() {
+
+const grid = document.getElementById('calendarGrid');
+
+if (!grid) return;
+
+const year = currentDate.getFullYear();
+
+const month = currentDate.getMonth();
+
+document.getElementById('currentMonthYear').textContent = `${months[month]} ${year}`;
+
+const firstDayIndex = new Date(year, month, 1).getDay();
+
+const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+grid.innerHTML = '';
+
+
+for(let i = 0; i < firstDayIndex; i++) {
+
+grid.innerHTML += `<div class="day-cell" style="background:transparent; border:none; cursor:default;"></div>`;
+
+}
+
+
+
+const todayStr = getFormattedDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+
+
+
+for(let i = 1; i <= daysInMonth; i++) {
+
+const dateStr = getFormattedDate(year, month, i);
+
+const dayEvents = events.filter(e => parseDateStr(e.fecha) === dateStr);
+
+let isToday = (dateStr === todayStr) ? 'today' : '';
+
+
+
+let chipsHTML = dayEvents.map(e => `<div class="event-chip status-${e.estado}">${e.hinicio || '--:--'} | ${e.cliente}</div>`).join('');
+
+grid.innerHTML += `<div class="day-cell ${isToday}" onclick="openDayView('${dateStr}')"><div class="day-number">${i}</div>${chipsHTML}</div>`;
+
+}
+
+}
+
+
+
+function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
+
+
+
+function openDayView(dateStr) {
+
+selectedDate = dateStr;
+
+const dayEvents = events.filter(e => parseDateStr(e.fecha) === dateStr);
+
+const [y, m, d] = dateStr.split('-');
+
+document.getElementById('dayViewTitle').textContent = `Agenda: ${d}/${m}/${y}`;
+
+const body = document.getElementById('dayViewBody');
+
+if (dayEvents.length === 0) {
+
+body.innerHTML = `<p style="color:#71717a; text-align:center; padding:20px;">No hay movimientos agendados para este día.</p>`;
+
+} else {
+
+body.innerHTML = dayEvents.map(e => `
+
+<div class="event-card ${e.estado}">
+
+<div class="event-card-header">
+
+<span class="event-card-title">${e.cliente}</span>
+
+<span class="event-chip status-${e.estado}">${e.estado}</span>
+
+</div>
+
+<div class="event-card-meta">
+
+<div><i class="fas fa-clock"></i> ${e.hinicio || '--:--'} a ${e.hfin || '--:--'}</div>
+
+<div><i class="fas fa-truck"></i> ${e.asignacion} (${e.tipomov})</div>
+
+<div><i class="fas fa-map-marker-alt"></i> Origen: ${e.origen || '-'}</div>
+
+<div><i class="fas fa-flag-checkered"></i> Destino: ${e.destino || '-'}</div>
+
+<div style="grid-column: span 2;"><strong>Detalles Carga:</strong> ${e.detalles || '-'}</div>
+
+</div>
+
+<div style="margin-top: 10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+
+<button class="btn btn-outline" style="padding:4px 8px; color:black;" onclick="editEvent('${e.id}')"><i class="fas fa-edit"></i> Editar</button>
+
+<button class="btn btn-outline" style="padding:4px 8px; color:red;" onclick="deleteEvent('${e.id}')"><i class="fas fa-trash"></i> Eliminar</button>
+
+${e.telefono ? `<a href="https://wa.me/${e.telefono.replace(/\D/g,'')}" target="_blank" class="btn btn-success" style="padding:4px 8px;"><i class="fab fa-whatsapp"></i> Chat Cliente</a>` : ''}
+
+</div>
+
+</div>
+
+`).join('');
+
+}
+
+document.getElementById('modalDayView').classList.add('active');
+
+}
+
+
+
+function editEvent(id) {
+
+const e = events.find(x => String(x.id) === String(id));
+
+if (!e) return;
+
+closeModals();
+
+document.getElementById('ev-id').value = e.id;
+
+document.getElementById('ev-telefono').value = e.telefono || '';
+
+document.getElementById('ev-fecha').value = parseDateStr(e.fecha);
+
+document.getElementById('ev-estado').value = e.estado || 'Posible';
+
+document.getElementById('ev-hinicio').value = e.hinicio || '';
+
+document.getElementById('ev-hfin').value = e.hfin || '';
+
+document.getElementById('ev-tipomov').value = e.tipomov || 'Mudanza Local';
+
+document.getElementById('ev-asignacion').value = e.asignacion || 'Sprinter Furgon';
+
+document.getElementById('ev-jornada').value = e.jornada || 'Completa';
+
+document.getElementById('ev-cliente').value = e.cliente || '';
+
+document.getElementById('ev-origen').value = e.origen || '';
+
+document.getElementById('ev-destino').value = e.destino || '';
+
+document.getElementById('ev-distancia').value = e.distancia || '';
+
+document.getElementById('ev-detalles').value = e.detalles || '';
+
+
+document.getElementById('ev-presupuesto').value = e.presupuesto || 0;
+
+document.getElementById('ev-sena').value = e.sena || 0;
+
+document.getElementById('ev-combustible').value = e.combustible || 0;
+
+document.getElementById('ev-peajes-costo').value = e.peajesCosto || 0;
+
+document.getElementById('ev-gastosviaticos').value = e.gastosviaticos || 0;
+
+document.getElementById('ev-ayudante-monto').value = e.ayudante || 0;
+
+document.getElementById('ev-comision').value = e.comision || 0;
+
+
+calculateTotal();
+
+document.getElementById('modalEventForm').classList.add('active');
+
+}
+
+
+
+function saveEvent() {
+
+const id = document.getElementById('ev-id').value;
+
+const cliente = document.getElementById('ev-cliente').value.trim();
+
+if (!cliente) return;
+
+
+
+const pres = parseFloat(document.getElementById('ev-presupuesto').value) || 0;
+
+const comb = parseFloat(document.getElementById('ev-combustible').value) || 0;
+
+const peaj = parseFloat(document.getElementById('ev-peajes-costo').value) || 0;
+
+const viat = parseFloat(document.getElementById('ev-gastosviaticos').value) || 0;
+
+const ayud = parseFloat(document.getElementById('ev-ayudante-monto').value) || 0;
+
+const comision = parseFloat(document.getElementById('ev-comision').value) || 0;
+
+
+
+const updated = {
+
+id: id || String(Date.now()),
+
+telefono: document.getElementById('ev-telefono').value,
+
+fecha: document.getElementById('ev-fecha').value,
+
+estado: document.getElementById('ev-estado').value,
+
+hinicio: document.getElementById('ev-hinicio').value,
+
+hfin: document.getElementById('ev-hfin').value,
+
+tipomov: document.getElementById('ev-tipomov').value,
+
+asignacion: document.getElementById('ev-asignacion').value,
+
+jornada: document.getElementById('ev-jornada').value,
+
+cliente: cliente,
+
+origen: document.getElementById('ev-origen').value,
+
+destino: document.getElementById('ev-destino').value,
+
+distancia: document.getElementById('ev-distancia').value,
+
+detalles: document.getElementById('ev-detalles').value,
+
+presupuesto: pres,
+
+sena: parseFloat(document.getElementById('ev-sena').value) || 0,
+
+combustible: comb,
+
+peajesCosto: peaj,
+
+gastosviaticos: viat,
+
+ayudante: ayud,
+
+comision: comision,
+
+total: pres - (comb + peaj + viat + ayud + comision)
+
+};
+
+
+
+const idx = events.findIndex(x => String(x.id) === String(id));
+
+if (idx >= 0) events[idx] = updated;
+
+else events.push(updated);
+
+
+
+try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {}
+
+pushCloudData();
+
+renderCalendar();
+
+closeModals();
+
+
+if(document.getElementById('viewInformes').style.display === 'block') {
+
+generarReporteUI();
+
+}
+
+}
+
+
+
+function deleteEvent(id) {
+
+if (confirm("¿Eliminar este movimiento?")) {
+
+events = events.filter(x => String(x.id) !== String(id));
+
+try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {}
+
+pushCloudData();
+
+renderCalendar();
+
+closeModals();
+
+if(document.getElementById('viewInformes').style.display === 'block') {
+
+generarReporteUI();
+
+}
+
+}
+
+}
+
+
+
+function calculateTotal() {
+
+const pres = parseFloat(document.getElementById('ev-presupuesto').value) || 0;
+
+const comb = parseFloat(document.getElementById('ev-combustible').value) || 0;
+
+const peaj = parseFloat(document.getElementById('ev-peajes-costo').value) || 0;
+
+const viat = parseFloat(document.getElementById('ev-gastosviaticos').value) || 0;
+
+const ayud = parseFloat(document.getElementById('ev-ayudante-monto').value) || 0;
+
+const comision = parseFloat(document.getElementById('ev-comision').value) || 0;
+
+document.getElementById('ev-total').value = pres - (comb + peaj + viat + ayud + comision);
+
+}
+
+
+
+function openAddEventModal(dateStr = null) {
+
+closeModals();
+
+document.getElementById('eventForm').reset();
+
+document.getElementById('ev-id').value = '';
+
+document.getElementById('ev-telefono').value = '';
+
+document.getElementById('ev-fecha').value = dateStr || new Date().toISOString().split('T')[0];
+
+calculateTotal();
+
+document.getElementById('modalEventForm').classList.add('active');
+
+}
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+
+initApp();
+
+});
+
+</script>
+
+</body>
+
+</html> 
