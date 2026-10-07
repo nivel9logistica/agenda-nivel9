@@ -1,1186 +1,710 @@
 <!DOCTYPE html>
-
 <html lang="es">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
-
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-
-<title>NIVEL 9 - Gestión y Autocotizador</title>
-
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-
-<style>
-
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
-
-:root {
-
---brand: #ea580c;
-
---brand-light: #ffedd5;
-
---dark: #111113;
-
---bg: #e4e4e7;
-
---posible: #71717a;
-
---confirmada: #ea580c;
-
---finalizada: #10b981;
-
---autocotizacion: #facc15;
-
-}
-
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-
-body { background: var(--bg); color: var(--dark); min-height: 100vh; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
-
-.app-container { max-width: 1300px; margin: 0 auto; padding: 12px; }
-
-.brand-logo-svg { height: 42px; width: auto; vertical-align: middle; }
-
-
-/* PANEL ADMIN */
-
-.portal-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; text-align: center; gap: 25px; padding: 15px; }
-
-.portal-header-box { background: var(--dark); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-bottom: 4px solid var(--brand); max-width: 600px; width: 100%; }
-
-.portal-title { font-size: 1.8rem; font-weight: 700; color: white; margin-top: 15px; }
-
-.portal-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; width: 100%; max-width: 900px; }
-
-.portal-card { background: white; padding: 25px 15px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 12px; border: 2px solid #d4d4d8; }
-
-.portal-card:hover { border-color: var(--brand); transform: translateY(-3px); }
-
-.portal-card i { font-size: 2.3rem; color: var(--brand); }
-
-.portal-card h3 { font-size: 1.2rem; font-weight: 700; color: var(--dark); }
-
-
-
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--dark); padding: 12px 18px; border-radius: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 10px; color: white; }
-
-.top-nav { display: flex; gap: 6px; flex-wrap: wrap; }
-
-
-.btn { padding: 9px 14px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.88rem; }
-
-.btn:hover { opacity: 0.9; transform: translateY(-1px); }
-
-.btn-dark { background: #27272a; color: white; }
-
-.btn-brand { background: var(--brand); color: white; }
-
-.btn-success { background: #25D366; color: white; }
-
-.btn-outline { background: transparent; border: 1px solid #52525b; color: white; }
-
-
-
-.cotizador-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
-@media (max-width: 850px) { .cotizador-grid { grid-template-columns: 1fr; } }
-
-.panel-box { background: white; padding: 18px; border-radius: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 12px; border: 1px solid #d4d4d8; margin-bottom: 15px;}
-
-.panel-title { font-size: 0.95rem; font-weight: 700; color: var(--brand); border-bottom: 2px solid var(--brand-light); padding-bottom: 5px; text-transform: uppercase; }
-
-#map { width: 100%; height: 330px; border-radius: 10px; border: 1px solid #d4d4d8; z-index: 1; overflow: hidden; }
-
-
-.calendar-wrapper { background: white; border-radius: 14px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); border: 1px solid #d4d4d8; overflow-x: auto; }
-
-.calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(40px, 1fr)); gap: 6px; }
-
-.day-header { text-align: center; font-weight: 700; color: #52525b; padding-bottom: 6px; font-size: 0.8rem; }
-
-.day-cell { min-height: 95px; border: 1px solid #e4e4e7; border-radius: 8px; padding: 5px; cursor: pointer; transition: all 0.2s; background: #fafafa; display: flex; flex-direction: column; gap: 3px; position: relative; overflow: hidden; }
-
-.day-cell:hover { border-color: var(--brand); }
-
-.day-cell.today { border-color: var(--brand); font-weight: bold; }
-
-
-.event-chip { padding: 2px 4px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 2; display: flex; align-items: center; justify-content: space-between; }
-
-.status-Posible { background-color: var(--posible) !important; }
-
-.status-Confirmada { background-color: var(--confirmada) !important; }
-
-.status-Finalizada { background-color: var(--finalizada) !important; }
-
-.status-Autocotización { background-color: var(--autocotizacion) !important; color: #111113 !important; font-weight: 800; border: 1px solid #eab308; }
-
-
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 12px; }
-
-.modal-overlay.active { display: flex; }
-
-.modal-content { background: white; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
-
-.modal-header { padding: 12px 18px; border-bottom: 1px solid #e4e4e7; display: flex; justify-content: space-between; align-items: center; background: #fafafa; border-radius: 16px 16px 0 0; position: sticky; top: 0; z-index: 10; }
-
-.modal-body { padding: 18px; }
-
-.modal-footer { padding: 12px 18px; border-top: 1px solid #e4e4e7; display: flex; justify-content: flex-end; gap: 8px; background: #fafafa; border-radius: 0 0 16px 16px; }
-
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-.form-group { display: flex; flex-direction: column; gap: 3px; }
-
-.form-group.full { grid-column: span 2; }
-
-label { font-size: 0.75rem; font-weight: 700; color: #52525b; text-transform: uppercase; }
-
-input, select, textarea { padding: 8px 10px; border: 1px solid #d4d4d8; border-radius: 6px; font-size: 0.88rem; font-family: inherit; }
-
-input:focus, select:focus, textarea:focus { outline: none; border-color: var(--brand); }
-
-textarea { resize: vertical; min-height: 65px; }
-
-.currency-wrapper { position: relative; display: flex; align-items: center; }
-
-.currency-symbol { position: absolute; left: 10px; font-weight: 700; color: #71717a; font-size: 0.88rem; pointer-events: none; }
-
-.currency-wrapper input { padding-left: 24px; width: 100%; }
-
-
-
-.event-card { border: 1px solid #e4e4e7; border-left: 5px solid var(--posible); border-radius: 8px; padding: 10px; margin-bottom: 10px; background: #fafafa; }
-
-.event-card.Confirmada { border-left-color: var(--confirmada); }
-
-.event-card.Finalizada { border-left-color: var(--finalizada); }
-
-.event-card.Autocotización { border-left-color: var(--autocotizacion); background: #fefce8; }
-
-.event-card-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
-
-.event-card-title { font-size: 0.95rem; font-weight: 700; }
-
-.event-card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.82rem; color: #3f3f46; }
-
-
-
-/* ALERTAS LEADS RECIENTES */
-
-.lead-alert-box { background: linear-gradient(135deg, #fffbeb, #fefce8); border: 1px solid #fde047; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-
-.lead-alert-header { display: flex; justify-content: space-between; align-items: center; font-weight: 800; color: #854d0e; margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase; }
-
-.lead-item { background: white; padding: 10px; border-radius: 8px; border: 1px solid #fef08a; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; }
-
-
-
-/* ----- DISEÑO AUTOCOTIZADOR CLIENTE (INSTAGRAM) ----- */
-
-#clientWizard { display: none; min-height: 100vh; background: linear-gradient(135deg, #f4f4f5, #e4e4e7); padding: 20px; align-items: center; justify-content: center; }
-
-.wizard-card { background: white; width: 100%; max-width: 500px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; position: relative; }
-
-.wizard-header { background: var(--dark); padding: 25px 20px; text-align: center; color: white; border-bottom: 5px solid var(--brand); }
-
-.wizard-header h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: 2px; }
-
-.wizard-header p { font-size: 0.85rem; color: #a1a1aa; margin-top: 5px; }
-
-.wizard-progress { display: flex; height: 6px; background: #e4e4e7; }
-
-.wizard-progress-bar { background: var(--brand); height: 100%; transition: width 0.4s ease; }
-
-.wizard-body { padding: 30px 20px; position: relative; min-height: 300px; }
-
-
-.wizard-step { display: none; animation: fadeIn 0.4s ease; flex-direction: column; gap: 15px; text-align: center; }
-
-.wizard-step.active { display: flex; }
-
-.wizard-step h2 { font-size: 1.3rem; color: #111113; font-weight: 700; margin-bottom: 10px; }
-
-.wizard-input { width: 100%; padding: 15px; border: 2px solid #e4e4e7; border-radius: 12px; font-size: 1rem; text-align: center; font-weight: 600; color: var(--dark); transition: 0.3s; }
-
-.wizard-input:focus { border-color: var(--brand); outline: none; box-shadow: 0 4px 15px rgba(234, 88, 12, 0.1); }
-
-.wizard-btn { width: 100%; padding: 16px; background: var(--brand); color: white; font-size: 1.1rem; font-weight: 800; border: none; border-radius: 12px; cursor: pointer; transition: 0.3s; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
-
-.wizard-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(234, 88, 12, 0.3); }
-
-.wizard-btn.secondary { background: #e4e4e7; color: #52525b; margin-top: 0; }
-
-
-.service-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-.service-card { border: 2px solid #e4e4e7; padding: 20px 10px; border-radius: 16px; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-
-.service-card:hover, .service-card.selected { border-color: var(--brand); background: var(--brand-light); }
-
-.service-card i { font-size: 2rem; color: var(--brand); }
-
-.service-card span { font-weight: 700; font-size: 0.9rem; }
-
-
-/* INVENTARIO CONTADORES */
-
-.inventory-list { display: flex; flex-direction: column; gap: 10px; text-align: left; max-height: 40vh; overflow-y: auto; padding-right: 5px; }
-
-.inventory-item { display: flex; justify-content: space-between; align-items: center; background: #fafafa; border: 1px solid #e4e4e7; padding: 10px 15px; border-radius: 10px; }
-
-.inventory-item span { font-weight: 600; font-size: 0.95rem; color: #3f3f46; }
-
-.counter-controls { display: flex; align-items: center; gap: 15px; }
-
-.counter-btn { background: #e4e4e7; border: none; width: 30px; height: 30px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; color: #111113; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-.counter-btn:hover { background: #d4d4d8; }
-
-.counter-val { font-weight: 800; font-size: 1.1rem; width: 20px; text-align: center; }
-
-
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-.loader-spinner { display: none; border: 4px solid rgba(0,0,0,0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--brand); animation: spin 1s linear infinite; margin: 20px auto; }
-
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-</style>
-
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
+ <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+ <title>NIVEL 9 - Gestión y Autocotizador</title>
+ <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+ <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+ <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+ <style>
+ @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
+ :root {
+   --brand: #ea580c;
+   --brand-light: #ffedd5;
+   --dark: #111113;
+   --bg: #e4e4e7;
+   --posible: #71717a;
+   --confirmada: #ea580c;
+   --finalizada: #10b981;
+   --autocotizacion: #facc15;
+ }
+ * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+ body { background: var(--bg); color: var(--dark); min-height: 100vh; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+ .app-container { max-width: 1300px; margin: 0 auto; padding: 12px; }
+ .brand-logo-svg { height: 42px; width: auto; vertical-align: middle; }
+ 
+ /* PANEL ADMIN */
+ .portal-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; text-align: center; gap: 25px; padding: 15px; }
+ .portal-header-box { background: var(--dark); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-bottom: 4px solid var(--brand); max-width: 600px; width: 100%; }
+ .portal-title { font-size: 1.8rem; font-weight: 700; color: white; margin-top: 15px; }
+ .portal-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; width: 100%; max-width: 900px; }
+ .portal-card { background: white; padding: 25px 15px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 12px; border: 2px solid #d4d4d8; }
+ .portal-card:hover { border-color: var(--brand); transform: translateY(-3px); }
+ .portal-card i { font-size: 2.3rem; color: var(--brand); }
+ .portal-card h3 { font-size: 1.2rem; font-weight: 700; color: var(--dark); }
+
+ .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--dark); padding: 12px 18px; border-radius: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 10px; color: white; }
+ .top-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+ 
+ .btn { padding: 9px 14px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.88rem; }
+ .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+ .btn-dark { background: #27272a; color: white; }
+ .btn-brand { background: var(--brand); color: white; }
+ .btn-success { background: #25D366; color: white; }
+ .btn-outline { background: transparent; border: 1px solid #52525b; color: white; }
+
+ .cotizador-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+ @media (max-width: 850px) { .cotizador-grid { grid-template-columns: 1fr; } }
+ .panel-box { background: white; padding: 18px; border-radius: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 12px; border: 1px solid #d4d4d8; margin-bottom: 15px;}
+ .panel-title { font-size: 0.95rem; font-weight: 700; color: var(--brand); border-bottom: 2px solid var(--brand-light); padding-bottom: 5px; text-transform: uppercase; }
+ #map { width: 100%; height: 330px; border-radius: 10px; border: 1px solid #d4d4d8; z-index: 1; overflow: hidden; }
+ 
+ .calendar-wrapper { background: white; border-radius: 14px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); border: 1px solid #d4d4d8; overflow-x: auto; }
+ .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(40px, 1fr)); gap: 6px; }
+ .day-header { text-align: center; font-weight: 700; color: #52525b; padding-bottom: 6px; font-size: 0.8rem; }
+ .day-cell { min-height: 95px; border: 1px solid #e4e4e7; border-radius: 8px; padding: 5px; cursor: pointer; transition: all 0.2s; background: #fafafa; display: flex; flex-direction: column; gap: 3px; position: relative; overflow: hidden; }
+ .day-cell:hover { border-color: var(--brand); }
+ .day-cell.today { border-color: var(--brand); font-weight: bold; }
+ 
+ .event-chip { padding: 2px 4px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 2; display: flex; align-items: center; justify-content: space-between; }
+ .status-Posible { background-color: var(--posible) !important; }
+ .status-Confirmada { background-color: var(--confirmada) !important; }
+ .status-Finalizada { background-color: var(--finalizada) !important; }
+ .status-Autocotización { background-color: var(--autocotizacion) !important; color: #111113 !important; font-weight: 800; border: 1px solid #eab308; }
+ 
+ .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 12px; }
+ .modal-overlay.active { display: flex; }
+ .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+ .modal-header { padding: 12px 18px; border-bottom: 1px solid #e4e4e7; display: flex; justify-content: space-between; align-items: center; background: #fafafa; border-radius: 16px 16px 0 0; position: sticky; top: 0; z-index: 10; }
+ .modal-body { padding: 18px; }
+ .modal-footer { padding: 12px 18px; border-top: 1px solid #e4e4e7; display: flex; justify-content: flex-end; gap: 8px; background: #fafafa; border-radius: 0 0 16px 16px; }
+ .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+ .form-group { display: flex; flex-direction: column; gap: 3px; }
+ .form-group.full { grid-column: span 2; }
+ label { font-size: 0.75rem; font-weight: 700; color: #52525b; text-transform: uppercase; }
+ input, select, textarea { padding: 8px 10px; border: 1px solid #d4d4d8; border-radius: 6px; font-size: 0.88rem; font-family: inherit; }
+ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--brand); }
+ textarea { resize: vertical; min-height: 65px; }
+ .currency-wrapper { position: relative; display: flex; align-items: center; }
+ .currency-symbol { position: absolute; left: 10px; font-weight: 700; color: #71717a; font-size: 0.88rem; pointer-events: none; }
+ .currency-wrapper input { padding-left: 24px; width: 100%; }
+
+ .event-card { border: 1px solid #e4e4e7; border-left: 5px solid var(--posible); border-radius: 8px; padding: 10px; margin-bottom: 10px; background: #fafafa; }
+ .event-card.Confirmada { border-left-color: var(--confirmada); }
+ .event-card.Finalizada { border-left-color: var(--finalizada); }
+ .event-card.Autocotización { border-left-color: var(--autocotizacion); background: #fefce8; }
+ .event-card-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+ .event-card-title { font-size: 0.95rem; font-weight: 700; }
+ .event-card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.82rem; color: #3f3f46; }
+
+ /* ALERTAS LEADS RECIENTES */
+ .lead-alert-box { background: linear-gradient(135deg, #fffbeb, #fefce8); border: 1px solid #fde047; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+ .lead-alert-header { display: flex; justify-content: space-between; align-items: center; font-weight: 800; color: #854d0e; margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase; }
+ .lead-item { background: white; padding: 10px; border-radius: 8px; border: 1px solid #fef08a; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; }
+
+ /* ----- DISEÑO AUTOCOTIZADOR CLIENTE ----- */
+ #clientWizard { display: none; min-height: 100vh; background: linear-gradient(135deg, #f4f4f5, #e4e4e7); padding: 20px; align-items: center; justify-content: center; }
+ .wizard-card { background: white; width: 100%; max-width: 500px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; position: relative; }
+ .wizard-header { background: var(--dark); padding: 25px 20px; text-align: center; color: white; border-bottom: 5px solid var(--brand); }
+ .wizard-header h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: 2px; }
+ .wizard-header p { font-size: 0.85rem; color: #a1a1aa; margin-top: 5px; }
+ .wizard-progress { display: flex; height: 6px; background: #e4e4e7; }
+ .wizard-progress-bar { background: var(--brand); height: 100%; transition: width 0.4s ease; }
+ .wizard-body { padding: 30px 20px; position: relative; min-height: 300px; }
+ 
+ .wizard-step { display: none; animation: fadeIn 0.4s ease; flex-direction: column; gap: 15px; text-align: center; }
+ .wizard-step.active { display: flex; }
+ .wizard-step h2 { font-size: 1.3rem; color: #111113; font-weight: 700; margin-bottom: 10px; }
+ .wizard-input { width: 100%; padding: 15px; border: 2px solid #e4e4e7; border-radius: 12px; font-size: 1rem; text-align: center; font-weight: 600; color: var(--dark); transition: 0.3s; }
+ .wizard-input:focus { border-color: var(--brand); outline: none; box-shadow: 0 4px 15px rgba(234, 88, 12, 0.1); }
+ .wizard-btn { width: 100%; padding: 16px; background: var(--brand); color: white; font-size: 1.1rem; font-weight: 800; border: none; border-radius: 12px; cursor: pointer; transition: 0.3s; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+ .wizard-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(234, 88, 12, 0.3); }
+ .wizard-btn.secondary { background: #e4e4e7; color: #52525b; margin-top: 0; }
+ 
+ .service-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+ .service-card { border: 2px solid #e4e4e7; padding: 20px 10px; border-radius: 16px; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+ .service-card:hover, .service-card.selected { border-color: var(--brand); background: var(--brand-light); }
+ .service-card i { font-size: 2rem; color: var(--brand); }
+ .service-card span { font-weight: 700; font-size: 0.9rem; }
+ 
+ .inventory-list { display: flex; flex-direction: column; gap: 10px; text-align: left; max-height: 40vh; overflow-y: auto; padding-right: 5px; }
+ .inventory-item { display: flex; justify-content: space-between; align-items: center; background: #fafafa; border: 1px solid #e4e4e7; padding: 10px 15px; border-radius: 10px; }
+ .inventory-item span { font-weight: 600; font-size: 0.95rem; color: #3f3f46; }
+ .counter-controls { display: flex; align-items: center; gap: 15px; }
+ .counter-btn { background: #e4e4e7; border: none; width: 30px; height: 30px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; color: #111113; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+ .counter-btn:hover { background: #d4d4d8; }
+ .counter-val { font-weight: 800; font-size: 1.1rem; width: 20px; text-align: center; }
+
+ @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+ .loader-spinner { display: none; border: 4px solid rgba(0,0,0,0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--brand); animation: spin 1s linear infinite; margin: 20px auto; }
+ @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+ </style>
+ <!-- Leaflet JS -->
+ <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-
 <body>
 
-
-
-<!-- ========================================== -->
-
-<!-- MÓDULO 1: SISTEMA ADMINISTRATIVO (NIVEL 9) -->
-
-<!-- ========================================== -->
-
-<div id="adminApp" class="app-container">
-
-
-
-<div id="viewPortal" class="portal-container">
-
-<div class="portal-header-box">
-
-<svg class="brand-logo-svg" viewBox="0 0 500 120" style="height:60px;">
-
-<text x="10" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="70" fill="#ffffff">NIVEL</text>
-
-<text x="210" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="75" fill="#ea580c">9</text>
-
-<rect x="10" y="85" width="260" height="4" fill="#ea580c" />
-
-<text x="10" y="105" font-family="'Outfit', sans-serif" font-weight="600" font-size="14" fill="#a1a1aa" letter-spacing="4">LOGISTICA DE EXCELENCIA</text>
-
-</svg>
-
-<div class="portal-title">Sistema de Gestión</div>
-
-</div>
-
-<div class="portal-menu">
-
-<div class="portal-card" onclick="showView('Agenda')">
-
-<i class="fas fa-calendar-alt"></i>
-
-<h3>Agenda de Movimientos</h3>
-
-</div>
-
-<div class="portal-card" onclick="showView('Cotizador')">
-
-<i class="fas fa-calculator"></i>
-
-<h3>Cotizador de Rutas</h3>
-
-</div>
-
-<div class="portal-card" onclick="showView('Contactos')">
-
-<i class="fas fa-address-book"></i>
-
-<h3>Directorio de Contactos</h3>
-
-</div>
-
-<div class="portal-card" onclick="openConfigModal()">
-
-<i class="fas fa-cog"></i>
-
-<h3>Ajustes de Parámetros</h3>
-
-</div>
-
-</div>
-
-<div style="margin-top:20px;">
-
-<button class="btn btn-outline" style="color:var(--dark); border-color:var(--dark);" onclick="copiarLinkCotizador()"><i class="fas fa-link"></i> Copiar Link para Clientes (Instagram)</button>
-
-</div>
-
-</div>
-
-
-
-<div id="appHeader" class="header" style="display: none;">
-
-<div style="display:flex; align-items:center; gap:12px;">
-
-<svg class="brand-logo-svg" viewBox="0 0 500 120" style="height:30px;">
-
-<text x="10" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="70" fill="#ffffff">NIVEL</text>
-
-<text x="210" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="75" fill="#ea580c">9</text>
-
-</svg>
-
-</div>
-
-<div class="top-nav">
-
-<button class="btn btn-outline" onclick="showView('Portal')"><i class="fas fa-home"></i> Inicio</button>
-
-<button class="btn btn-outline" onclick="showView('Agenda')"><i class="fas fa-calendar"></i> Agenda</button>
-
-<button class="btn btn-outline" onclick="showView('Cotizador')"><i class="fas fa-calculator"></i> Cotizador</button>
-
-<button class="btn btn-outline" onclick="showView('Contactos')"><i class="fas fa-address-book"></i> Contactos</button>
-
-</div>
-
-</div>
-
-
-
-<!-- VISTA AGENDA -->
-
-<div id="viewAgenda" style="display: none;">
-
-
-<!-- RADAR DE LEADS NUEVOS (Autocotizaciones recientes) -->
-
-<div id="radarLeadsContainer"></div>
-
-
-
-<div class="header" style="background: white; color: var(--dark); margin-bottom:12px;">
-
-<div class="nav-controls" style="display:flex; gap:6px; align-items:center;">
-
-<button class="btn btn-dark" onclick="navigateMonth(-1)"><i class="fas fa-chevron-left"></i></button>
-
-<div class="nav-title" id="currentMonthYear" style="font-weight:700; min-width:130px; text-align:center;">Mes Año</div>
-
-<button class="btn btn-dark" onclick="navigateMonth(1)"><i class="fas fa-chevron-right"></i></button>
-
-<button class="btn btn-dark" onclick="goToday()">Hoy</button>
-
-</div>
-
-<div style="display: flex; gap: 6px;">
-
-<button class="btn btn-brand" onclick="openAddEventModal()"><i class="fas fa-plus"></i> Nuevo Movimiento</button>
-
-</div>
-
-</div>
-
-<div class="calendar-wrapper">
-
-<div class="calendar-grid" id="calendarDaysHeader">
-
-<div class="day-header">Dom</div><div class="day-header">Lun</div><div class="day-header">Mar</div>
-
-<div class="day-header">Mié</div><div class="day-header">Jue</div><div class="day-header">Vie</div><div class="day-header">Sáb</div>
-
-</div>
-
-<div class="calendar-grid" id="calendarGrid"></div>
-
-</div>
-
-</div>
-
-
-
-<!-- VISTA COTIZADOR ADMIN -->
-
-<div id="viewCotizador" style="display: none;">
-
-<div class="cotizador-grid">
-
-<div class="panel-box">
-
-<div class="panel-title"><i class="fas fa-sliders-h"></i> Datos del Movimiento</div>
-
-<div class="form-group"><label>Cliente</label><input type="text" id="cot-cliente"></div>
-
-<div class="form-grid">
-
-<div class="form-group"><label>Tipo</label><select id="cot-tipomov"><option>Mudanza Local</option><option>Mudanza Larga</option></select></div>
-
-<div class="form-group"><label>Unidad</label><select id="cot-unidad" onchange="calcularCotizacion()"><option>Sprinter Furgon</option><option>Sprinter Chasis</option><option>Camión 712 Gustavo</option></select></div>
-
-</div>
-
-<div class="form-group"><label>Fecha</label><input type="date" id="cot-fecha-estimativa"></div>
-
-<div class="form-group"><label>Origen</label><input type="text" id="cot-origen"></div>
-
-<div class="form-group">
-
-<div style="display:flex; justify-content:space-between; align-items:center;">
-
-<label>Destino(s)</label>
-
-<button class="btn btn-dark" style="padding:3px 8px; font-size:0.75rem;" onclick="agregarDestinoIntermedio()"><i class="fas fa-plus"></i></button>
-
-</div>
-
-<div id="destinosContainer"><input type="text" class="cot-destino-input" style="margin-top:5px;"></div>
-
-</div>
-
-<button class="btn btn-brand" onclick="calcularRutaOSRM()"><i class="fas fa-route"></i> Calcular Ruta</button>
-
-<div class="form-group"><label>Distancia Simple (Km)</label><input type="number" id="cot-kms" value="0" step="any" oninput="calcularCotizacion()"></div>
-
-<div class="form-group"><label>Detalles</label><textarea id="cot-detalles-recibidos"></textarea></div>
-
-</div>
-
-
-
-<div class="panel-box">
-
-<div class="panel-title"><i class="fas fa-map-marked-alt"></i> Mapa</div>
-
-<div id="map"></div>
-
-<div class="panel-title" style="margin-top:8px;"><i class="fas fa-calculator"></i> Costos</div>
-
-<div class="form-grid">
-
-<div class="form-group"><label>Tarifa ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-res-tarifa" oninput="calcularCotizacionManual()"></div></div>
-
-<div class="form-group"><label>Combustible ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-res-combustible" value="0" oninput="calcularCotizacionManual()"></div></div>
-
-<div class="form-group"><label>Peajes Total ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-res-peajes-costo" value="0" oninput="calcularCotizacionManual()"></div></div>
-
-<div class="form-group"><label>Viáticos ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-res-viaticos" value="0" oninput="calcularCotizacionManual()"></div></div>
-
-<div class="form-group"><label>Ayudante ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-ayudante" value="0" oninput="calcularCotizacionManual()"></div></div>
-
-<div class="form-group"><label>Costos Totales ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-res-costostotales" readonly style="color:red;"></div></div>
-
-<div class="form-group full"><label>Utilidad Neta ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-res-utilidad" readonly style="color:green; font-weight:bold; font-size:1.1rem;"></div></div>
-
-</div>
-
-<button class="btn btn-brand" style="width:100%; margin-top:8px;" onclick="generarPresupuestoCliente()"><i class="fas fa-save"></i> Agendar Presupuesto</button>
-
-</div>
-
-</div>
-
-</div>
-
-
-
-<div id="viewContactos" style="display: none;">
-
-<div class="panel-box" style="margin-bottom:15px; text-align:center;">
-
-<h3>Directorio de Contactos</h3>
-
-</div>
-
-</div>
-
-
-
-</div>
-
-
-
-<!-- ================================================== -->
-
-<!-- MÓDULO 2: AUTOCOTIZADOR CLIENTE (INSTAGRAM/WEB) -->
-
-<!-- ================================================== -->
-
-<div id="clientWizard">
-
-<div class="wizard-card">
-
-<div class="wizard-header">
-
-<h1>NIVEL 9</h1>
-
-<p>Gestión Rápida de Presupuestos</p>
-
-</div>
-
-<div class="wizard-progress">
-
-<div class="wizard-progress-bar" id="wizProgress" style="width: 16%;"></div>
-
-</div>
-
-<div class="wizard-body">
-
-
-<!-- Paso 1 -->
-
-<div class="wizard-step active" id="step-1">
-
-<h2>¡Hola! 👋<br>¿Cómo te llamas?</h2>
-
-<p style="color:#71717a; font-size:0.9rem; margin-bottom:15px;">Para brindarte una atención personalizada.</p>
-
-<input type="text" class="wizard-input" id="wizNombre" placeholder="Tu nombre y apellido">
-
-<button class="wizard-btn" onclick="goToStep(2)">Comenzar <i class="fas fa-arrow-right"></i></button>
-
-</div>
-
-
-
-<!-- Paso 2 -->
-
-<div class="wizard-step" id="step-2">
-
-<h2>¿Qué necesitas mover? 📦</h2>
-
-<div class="service-options">
-
-<div class="service-card" onclick="selectService('Mudanza', this)">
-
-<i class="fas fa-truck-moving"></i><span>Mudanza</span>
-
-</div>
-
-<div class="service-card" onclick="selectService('Flete / Reparto', this)">
-
-<i class="fas fa-box-open"></i><span>Flete / Carga</span>
-
-</div>
-
-</div>
-
-<input type="hidden" id="wizServicio" value="Mudanza">
-
-<div style="display:flex; gap:10px; margin-top:15px;">
-
-<button class="wizard-btn secondary" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i></button>
-
-<button class="wizard-btn" onclick="goToStep(3)">Siguiente</button>
-
-</div>
-
-</div>
-
-
-
-<!-- Paso 3 -->
-
-<div class="wizard-step" id="step-3">
-
-<h2>¿De dónde a dónde? 📍</h2>
-
-<div style="display:flex; flex-direction:column; gap:10px;">
-
-<input type="text" class="wizard-input" id="wizOrigen" placeholder="Ciudad o Barrio de Origen">
-
-<div style="text-align:center; color:var(--brand);"><i class="fas fa-arrow-down"></i></div>
-
-<input type="text" class="wizard-input" id="wizDestino" placeholder="Ciudad o Barrio de Destino">
-
-</div>
-
-<div style="display:flex; gap:10px; margin-top:15px;">
-
-<button class="wizard-btn secondary" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i></button>
-
-<button class="wizard-btn" onclick="goToStep(4)">Siguiente</button>
-
-</div>
-
-</div>
-
-
-
-<!-- Paso 4 -->
-
-<div class="wizard-step" id="step-4">
-
-<h2>¿Cuándo lo necesitas? 📅</h2>
-
-<p style="color:#71717a; font-size:0.85rem; margin-bottom:10px;">Selecciona una fecha estimativa.</p>
-
-<input type="date" class="wizard-input" id="wizFecha">
-
-<div style="display:flex; gap:10px; margin-top:15px;">
-
-<button class="wizard-btn secondary" onclick="goToStep(3)"><i class="fas fa-arrow-left"></i></button>
-
-<button class="wizard-btn" onclick="goToStep(5)">Siguiente</button>
-
-</div>
-
-</div>
-
-
-
-<!-- Paso 5: INVENTARIO DETALLADO -->
-
-<div class="wizard-step" id="step-5">
-
-<h2>¿Qué llevamos? 🛋️</h2>
-
-<p style="color:#71717a; font-size:0.85rem; margin-bottom:10px;">Indica cantidades aproximadas.</p>
-
-
-<div class="inventory-list">
-
-<div class="inventory-item">
-
-<span>Camas (Colchón/Sommier)</span>
-
-<div class="counter-controls">
-
-<button class="counter-btn" onclick="modInv('camas', -1)">-</button>
-
-<span class="counter-val" id="inv-camas">0</span>
-
-<button class="counter-btn" onclick="modInv('camas', 1)">+</button>
-
-</div>
-
-</div>
-
-<div class="inventory-item">
-
-<span>Heladera / Freezer</span>
-
-<div class="counter-controls">
-
-<button class="counter-btn" onclick="modInv('heladera', -1)">-</button>
-
-<span class="counter-val" id="inv-heladera">0</span>
-
-<button class="counter-btn" onclick="modInv('heladera', 1)">+</button>
-
-</div>
-
-</div>
-
-<div class="inventory-item">
-
-<span>Lavarropas / Secarropas</span>
-
-<div class="counter-controls">
-
-<button class="counter-btn" onclick="modInv('lavarropas', -1)">-</button>
-
-<span class="counter-val" id="inv-lavarropas">0</span>
-
-<button class="counter-btn" onclick="modInv('lavarropas', 1)">+</button>
-
-</div>
-
-</div>
-
-<div class="inventory-item">
-
-<span>Sillones / Sofás</span>
-
-<div class="counter-controls">
-
-<button class="counter-btn" onclick="modInv('sillones', -1)">-</button>
-
-<span class="counter-val" id="inv-sillones">0</span>
-
-<button class="counter-btn" onclick="modInv('sillones', 1)">+</button>
-
-</div>
-
-</div>
-
-<div class="inventory-item">
-
-<span>Juego de Comedor (Mesa)</span>
-
-<div class="counter-controls">
-
-<button class="counter-btn" onclick="modInv('mesas', -1)">-</button>
-
-<span class="counter-val" id="inv-mesas">0</span>
-
-<button class="counter-btn" onclick="modInv('mesas', 1)">+</button>
-
-</div>
-
-</div>
-
-<div class="inventory-item">
-
-<span>Cajas / Bolsas grandes</span>
-
-<div class="counter-controls">
-
-<button class="counter-btn" onclick="modInv('cajas', -1)">-</button>
-
-<span class="counter-val" id="inv-cajas">0</span>
-
-<button class="counter-btn" onclick="modInv('cajas', 1)">+</button>
-
-</div>
-
-</div>
-
-</div>
-
-
-<textarea class="wizard-input" id="wizDetalles" placeholder="Otros muebles grandes, escaleras, ascensor..." style="margin-top:10px; font-size:0.9rem; text-align:left; min-height:60px;"></textarea>
-
-
-
-<div style="display:flex; gap:10px; margin-top:15px;">
-
-<button class="wizard-btn secondary" onclick="goToStep(4)"><i class="fas fa-arrow-left"></i></button>
-
-<button class="wizard-btn" onclick="goToStep(6)">Siguiente</button>
-
-</div>
-
-</div>
-
-
-
-<!-- Paso 6 (Final: Envío sin precios) -->
-
-<div class="wizard-step" id="step-6">
-
-<h2>¡Casi listo! 🚀</h2>
-
-<p style="color:#71717a; font-size:0.95rem; margin-bottom:15px;">Déjanos tu número y presiona Enviar para enviarnos el formulario de inventario directo por WhatsApp.</p>
-
-
-<input type="tel" class="wizard-input" id="wizTel" placeholder="Tu número (Ej: 351 000 0000)">
-
-<div id="wizLoader" class="loader-spinner"></div>
-
-
-<div style="display:flex; gap:10px; margin-top:15px;" id="botonesFinales">
-
-<button class="wizard-btn secondary" onclick="goToStep(5)"><i class="fas fa-arrow-left"></i></button>
-
-<button class="wizard-btn" style="background:#25D366;" onclick="finalizarYEnviar()"><i class="fab fa-whatsapp"></i> Generar y Enviar</button>
-
-</div>
-
-</div>
-
-
-
-</div>
-
-</div>
-
-</div>
-
-
-
-<!-- Modales del Admin -->
-
-<div class="modal-overlay" id="modalConfig"><div class="modal-content"><button onclick="closeModals()">Cerrar</button></div></div>
-
-<div class="modal-overlay" id="modalEventForm"><div class="modal-content"><button onclick="closeModals()">Cerrar</button></div></div>
-
-<div class="modal-overlay" id="modalDayView"><div class="modal-content"><button onclick="closeModals()">Cerrar</button></div></div>
-
-
-
-<script>
-
-const webAppUrl = 'https://script.google.com/macros/s/AKfycbyc36N891Ujy9b_t1VgbHj7V4bACtpMIAIWKmn6I4ymdpmclkYI16XKqK_IY6FxrhrP/exec';
-
-const dbKey = 'nivel9_mudanzas_data';
-
-let events = [];
-
-
-document.addEventListener('DOMContentLoaded', () => {
-
-const urlParams = new URLSearchParams(window.location.search);
-
-if (urlParams.get('cotizar') === 'true') {
-
-document.getElementById('adminApp').style.display = 'none';
-
-document.getElementById('clientWizard').style.display = 'flex';
-
-fetchCloudData(true);
-
-} else {
-
-initAppAdmin();
-
-}
-
-});
-
-
-
-let clientLeadId = String(Date.now());
-
-let inventarioData = { camas: 0, heladera: 0, lavarropas: 0, sillones: 0, mesas: 0, cajas: 0 };
-
-
-
-function selectService(service, el) {
-
-document.getElementById('wizServicio').value = service;
-
-document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-
-el.classList.add('selected');
-
-}
-
-
-
-function modInv(item, val) {
-
-inventarioData[item] += val;
-
-if(inventarioData[item] < 0) inventarioData[item] = 0;
-
-document.getElementById('inv-' + item).textContent = inventarioData[item];
-
-}
-
-
-
-function buildInventoryText() {
-
-let txt = "";
-
-if(inventarioData.camas > 0) txt += `${inventarioData.camas} Camas, `;
-
-if(inventarioData.heladera > 0) txt += `${inventarioData.heladera} Heladeras, `;
-
-if(inventarioData.lavarropas > 0) txt += `${inventarioData.lavarropas} Lavarropas, `;
-
-if(inventarioData.sillones > 0) txt += `${inventarioData.sillones} Sillones, `;
-
-if(inventarioData.mesas > 0) txt += `${inventarioData.mesas} Juegos Comedor, `;
-
-if(inventarioData.cajas > 0) txt += `${inventarioData.cajas} Cajas/Bolsas.`;
-
-return txt;
-
-}
-
-
-
-function goToStep(stepNumber) {
-
-if(stepNumber === 2 && document.getElementById('wizNombre').value.trim() === '') { alert("Dinos tu nombre."); return; }
-
-if(stepNumber === 4 && (document.getElementById('wizOrigen').value.trim() === '' || document.getElementById('wizDestino').value.trim() === '')) { alert("Ingresa origen y destino."); return; }
-
-if(stepNumber === 5 && document.getElementById('wizFecha').value === '') { alert("Selecciona una fecha."); return; }
-
-
-
-if(stepNumber > 1) actualizarLeadEnBaseDeDatos();
-
-
-
-document.querySelectorAll('.wizard-step').forEach(el => el.classList.remove('active'));
-
-document.getElementById('step-' + stepNumber).classList.add('active');
-
-document.getElementById('wizProgress').style.width = (stepNumber * 16.6) + '%';
-
-}
-
-
-
-function actualizarLeadEnBaseDeDatos() {
-
-const detallesExtra = document.getElementById('wizDetalles').value.trim();
-
-const stringInventario = buildInventoryText() + (detallesExtra ? ` | Extras: ${detallesExtra}` : '');
-
-
-const leadData = {
-
-id: clientLeadId,
-
-createdAt: new Date().toISOString(),
-
-fecha: document.getElementById('wizFecha').value || new Date().toISOString().split('T')[0],
-
-estado: 'Autocotización',
-
-cliente: document.getElementById('wizNombre').value.trim(),
-
-telefono: document.getElementById('wizTel').value.trim(),
-
-tipomov: document.getElementById('wizServicio').value,
-
-origen: document.getElementById('wizOrigen').value.trim(),
-
-destino: document.getElementById('wizDestino').value.trim(),
-
-detalles: stringInventario,
-
-presupuesto: 0,
-
-asignacion: 'Por Definir'
-
-};
-
-
-
-const idx = events.findIndex(x => String(x.id) === String(clientLeadId));
-
-if (idx >= 0) events[idx] = leadData; else events.push(leadData);
-
-
-
-try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e){}
-
-pushCloudData();
-
-}
-
-
-
-function finalizarYEnviar() {
-
-if(document.getElementById('wizTel').value.trim() === '') { alert("Ingresa tu número de contacto."); return; }
-
-
-document.getElementById('botonesFinales').style.display = 'none';
-
-document.getElementById('wizLoader').style.display = 'block';
-
-
-
-actualizarLeadEnBaseDeDatos();
-
-
-
-const nom = document.getElementById('wizNombre').value.trim();
-
-const ori = document.getElementById('wizOrigen').value.trim();
-
-const des = document.getElementById('wizDestino').value.trim();
-
-const fec = document.getElementById('wizFecha').value;
-
-const inv = buildInventoryText();
-
-const ext = document.getElementById('wizDetalles').value.trim();
-
-
-
-let msj = `Hola *Nivel 9*! 👋 Soy ${nom}.\nAcabo de generar un formulario en la web y solicito cotización:\n\n`;
-
-msj += `📍 *Origen:* ${ori}\n`;
-
-msj += `🏁 *Destino:* ${des}\n`;
-
-msj += `📅 *Fecha ideal:* ${fec}\n`;
-
-msj += `📦 *Inventario:* ${inv || 'No especificado'}\n`;
-
-if(ext) msj += `📝 *Detalles:* ${ext}\n\n`;
-
-msj += `¡Aguardo su presupuesto!`;
-
-
-
-setTimeout(() => {
-
-window.location.href = `https://wa.me/5493517046541?text=${encodeURIComponent(msj)}`;
-
-}, 1000);
-
-}
-
-
-
-function copiarLinkCotizador() {
-
-const link = window.location.origin + window.location.pathname + '?cotizar=true';
-
-navigator.clipboard.writeText(link).then(() => {
-
-alert("¡Link copiado!\nPégalo en tu biografía de Instagram o envíaselo a tus clientes:\n\n" + link);
-
-});
-
-}
-
-
-
-function initAppAdmin() {
-
-try { const raw = localStorage.getItem(dbKey); if (raw) events = JSON.parse(raw); } catch(e){}
-
-renderCalendar();
-
-fetchCloudData();
-
-setInterval(() => { fetchCloudData(true); }, 15000);
-
-}
-
-
-
-function renderCalendar() {
-
-actualizarRadarLeads();
-
-}
-
-
-
-function actualizarRadarLeads() {
-
-const container = document.getElementById('radarLeadsContainer');
-
-if(!container) return;
-
-const haceDias = new Date(); haceDias.setDate(haceDias.getDate() - 4);
-
-
-
-const leadsNuevos = events.filter(e => {
-
-if(e.estado !== 'Autocotización') return false;
-
-if(!e.createdAt) return true;
-
-return new Date(e.createdAt) >= haceDias;
-
-}).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-
-
-if(leadsNuevos.length > 0) {
-
-container.innerHTML = `
-
-<div class="lead-alert-box">
-
-<div class="lead-alert-header"><span><i class="fas fa-bell"></i> ${leadsNuevos.length} Autocotizaciones Recientes</span></div>
-
-${leadsNuevos.map(l => `
-
-<div class="lead-item">
-
-<div>
-
-<strong>${l.cliente}</strong> <span style="color:#71717a; font-size:0.75rem;">(Fecha solicitada: ${l.fecha})</span>
-
-<br><span style="color:#854d0e;"><i class="fas fa-route"></i> ${l.origen \vert{}\vert{} '?'} a${l.destino || '?'}</span>
-
-<br><span style="color:#52525b; font-size:0.75rem;"><i class="fas fa-box"></i> ${l.detalles}</span>
-
-</div>
-
-<div><span class="event-chip status-Autocotización">VER</span></div>
-
-</div>
-
-`).join('')}
-
-</div>
-
-`;
-
-} else {
-
-container.innerHTML = '';
-
-}
-
-}
-
-
-
-function fetchCloudData(silent = true) {
-
-fetch(webAppUrl, { method: 'GET', mode: 'cors' })
-
-.then(res => res.json())
-
-.then(data => { if (Array.isArray(data)) { events = data; try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e){} renderCalendar(); } })
-
-.catch(err => {});
-
-}
-
-
-
-function pushCloudData() {
-
-fetch(webAppUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(events) }).catch(err => {});
-
-}
-
-
-
-function showView(viewName) {
-
-document.getElementById('viewPortal').style.display = 'none';
-
-document.getElementById('viewAgenda').style.display = 'none';
-
-document.getElementById('viewCotizador').style.display = 'none';
-
-document.getElementById('viewContactos').style.display = 'none';
-
-document.getElementById('appHeader').style.display = 'none';
-
-
-
-if (viewName === 'Portal') { document.getElementById('viewPortal').style.display = 'flex';
-
-} else if (viewName === 'Agenda') { document.getElementById('appHeader').style.display = 'flex'; document.getElementById('viewAgenda').style.display = 'block'; renderCalendar();
-
-} else if (viewName === 'Cotizador') { document.getElementById('appHeader').style.display = 'flex'; document.getElementById('viewCotizador').style.display = 'block'; }
-
-}
-
-function closeModals() {}
-
-</script>
-
+ <!-- ========================================== -->
+ <!-- MÓDULO 1: SISTEMA ADMINISTRATIVO (NIVEL 9) -->
+ <!-- ========================================== -->
+ <div id="adminApp" class="app-container">
+
+   <div id="viewPortal" class="portal-container">
+     <div class="portal-header-box">
+       <svg class="brand-logo-svg" viewBox="0 0 500 120" style="height:60px;">
+         <text x="10" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="70" fill="#ffffff">NIVEL</text>
+         <text x="210" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="75" fill="#ea580c">9</text>
+         <rect x="10" y="85" width="260" height="4" fill="#ea580c" />
+         <text x="10" y="105" font-family="'Outfit', sans-serif" font-weight="600" font-size="14" fill="#a1a1aa" letter-spacing="4">LOGISTICA DE EXCELENCIA</text>
+       </svg>
+       <div class="portal-title">Sistema de Gestión</div>
+     </div>
+     <div class="portal-menu">
+       <div class="portal-card" onclick="showView('Agenda')">
+         <i class="fas fa-calendar-alt"></i>
+         <h3>Agenda de Movimientos</h3>
+       </div>
+       <div class="portal-card" onclick="showView('Cotizador')">
+         <i class="fas fa-calculator"></i>
+         <h3>Cotizador de Rutas</h3>
+       </div>
+       <div class="portal-card" onclick="showView('Contactos')">
+         <i class="fas fa-address-book"></i>
+         <h3>Directorio de Contactos</h3>
+       </div>
+       <div class="portal-card" onclick="openConfigModal()">
+         <i class="fas fa-cog"></i>
+         <h3>Ajustes de Parámetros</h3>
+       </div>
+     </div>
+     <div style="margin-top:20px;">
+        <button class="btn btn-outline" style="color:var(--dark); border-color:var(--dark);" onclick="copiarLinkCotizador()">
+          <i class="fas fa-link"></i> Copiar Link para Clientes (Instagram)
+        </button>
+     </div>
+   </div>
+
+   <div id="appHeader" class="header" style="display: none;">
+     <div style="display:flex; align-items:center; gap:12px;">
+       <svg class="brand-logo-svg" viewBox="0 0 500 120" style="height:30px;">
+         <text x="10" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="70" fill="#ffffff">NIVEL</text>
+         <text x="210" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="75" fill="#ea580c">9</text>
+       </svg>
+     </div>
+     <div class="top-nav">
+       <button class="btn btn-outline" onclick="showView('Portal')"><i class="fas fa-home"></i> Inicio</button>
+       <button class="btn btn-outline" onclick="showView('Agenda')"><i class="fas fa-calendar"></i> Agenda</button>
+       <button class="btn btn-outline" onclick="showView('Cotizador')"><i class="fas fa-calculator"></i> Cotizador</button>
+       <button class="btn btn-outline" onclick="showView('Contactos')"><i class="fas fa-address-book"></i> Contactos</button>
+     </div>
+   </div>
+
+   <!-- VISTA AGENDA -->
+   <div id="viewAgenda" style="display: none;">
+     <div id="radarLeadsContainer"></div>
+     <div class="header" style="background: white; color: var(--dark); margin-bottom:12px;">
+       <div class="nav-controls" style="display:flex; gap:6px; align-items:center;">
+         <button class="btn btn-dark" onclick="navigateMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+         <div class="nav-title" id="currentMonthYear" style="font-weight:700; min-width:130px; text-align:center;">Mes Año</div>
+         <button class="btn btn-dark" onclick="navigateMonth(1)"><i class="fas fa-chevron-right"></i></button>
+         <button class="btn btn-dark" onclick="goToday()">Hoy</button>
+       </div>
+       <div style="display: flex; gap: 6px;">
+         <button class="btn btn-brand" onclick="openAddEventModal()"><i class="fas fa-plus"></i> Nuevo Movimiento</button>
+       </div>
+     </div>
+     <div class="calendar-wrapper">
+       <div class="calendar-grid" id="calendarDaysHeader">
+         <div class="day-header">Dom</div><div class="day-header">Lun</div><div class="day-header">Mar</div>
+         <div class="day-header">Mié</div><div class="day-header">Jue</div><div class="day-header">Vie</div><div class="day-header">Sáb</div>
+       </div>
+       <div class="calendar-grid" id="calendarGrid"></div>
+     </div>
+   </div>
+
+   <!-- VISTA COTIZADOR ADMIN -->
+   <div id="viewCotizador" style="display: none;">
+     <div class="cotizador-grid">
+       <div class="panel-box">
+         <div class="panel-title"><i class="fas fa-sliders-h"></i> Datos del Movimiento</div>
+         <div class="form-group"><label>Cliente</label><input type="text" id="cot-cliente"></div>
+         <div class="form-grid">
+           <div class="form-group"><label>Tipo</label><select id="cot-tipomov"><option>Mudanza Local</option><option>Mudanza Larga</option></select></div>
+           <div class="form-group"><label>Unidad</label><select id="cot-unidad" onchange="calcularCotizacion()"><option>Sprinter Furgon</option><option>Sprinter Chasis</option><option>Camión 712 Gustavo</option></select></div>
+         </div>
+         <div class="form-group"><label>Fecha</label><input type="date" id="cot-fecha-estimativa"></div>
+         <div class="form-group"><label>Origen</label><input type="text" id="cot-origen"></div>
+         <div class="form-group">
+           <div style="display:flex; justify-content:space-between; align-items:center;">
+             <label>Destino(s)</label>
+             <button class="btn btn-dark" style="padding:3px 8px; font-size:0.75rem;" onclick="agregarDestinoIntermedio()"><i class="fas fa-plus"></i></button>
+           </div>
+           <div id="destinosContainer"><input type="text" class="cot-destino-input" style="margin-top:5px; width: 100%;"></div>
+         </div>
+         <button class="btn btn-brand" onclick="calcularRutaOSRM()"><i class="fas fa-route"></i> Calcular Ruta</button>
+         <div class="form-group"><label>Distancia Simple (Km)</label><input type="number" id="cot-kms" value="0" step="any" oninput="calcularCotizacion()"></div>
+         <div class="form-group"><label>Detalles</label><textarea id="cot-detalles-recibidos"></textarea></div>
+       </div>
+
+       <div class="panel-box">
+         <div class="panel-title"><i class="fas fa-map-marked-alt"></i> Mapa</div>
+         <div id="map"></div>
+         <div class="panel-title" style="margin-top:8px;"><i class="fas fa-calculator"></i> Costos</div>
+         <div class="form-grid">
+           <div class="form-group"><label>Tarifa ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-res-tarifa" oninput="calcularCotizacionManual()"></div></div>
+           <div class="form-group"><label>Combustible ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-res-combustible" value="0" oninput="calcularCotizacionManual()"></div></div>
+           <div class="form-group"><label>Peajes Total ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-res-peajes-costo" value="0" oninput="calcularCotizacionManual()"></div></div>
+           <div class="form-group"><label>Viáticos ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-res-viaticos" value="0" oninput="calcularCotizacionManual()"></div></div>
+           <div class="form-group"><label>Ayudante ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-ayudante" value="0" oninput="calcularCotizacionManual()"></div></div>
+           <div class="form-group"><label>Costos Totales ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-res-costostotales" readonly style="color:red;"></div></div>
+           <div class="form-group full"><label>Utilidad Neta ($)</label><div class="currency-wrapper"><span>$</span><input type="number" id="cot-res-utilidad" readonly style="color:green; font-weight:bold; font-size:1.1rem;"></div></div>
+         </div>
+         <button class="btn btn-brand" style="width:100%; margin-top:8px;" onclick="generarPresupuestoCliente()"><i class="fas fa-save"></i> Agendar Presupuesto</button>
+       </div>
+     </div>
+   </div>
+
+   <div id="viewContactos" style="display: none;">
+       <div class="panel-box" style="margin-bottom:15px; text-align:center;">
+           <h3>Directorio de Contactos</h3>
+       </div>
+   </div>
+
+ </div>
+
+ <!-- ================================================== -->
+ <!-- MÓDULO 2: AUTOCOTIZADOR CLIENTE (INSTAGRAM/WEB)    -->
+ <!-- ================================================== -->
+ <div id="clientWizard">
+   <div class="wizard-card">
+     <div class="wizard-header">
+       <h1>NIVEL 9</h1>
+       <p>Gestión Rápida de Presupuestos</p>
+     </div>
+     <div class="wizard-progress">
+       <div class="wizard-progress-bar" id="wizProgress" style="width: 16%;"></div>
+     </div>
+     <div class="wizard-body">
+       
+       <div class="wizard-step active" id="step-1">
+         <h2>¡Hola! 👋<br>¿Cómo te llamas?</h2>
+         <p style="color:#71717a; font-size:0.9rem; margin-bottom:15px;">Para brindarte una atención personalizada.</p>
+         <input type="text" class="wizard-input" id="wizNombre" placeholder="Tu nombre y apellido">
+         <button class="wizard-btn" onclick="goToStep(2)">Comenzar <i class="fas fa-arrow-right"></i></button>
+       </div>
+
+       <div class="wizard-step" id="step-2">
+         <h2>¿Qué necesitas mover? 📦</h2>
+         <div class="service-options">
+           <div class="service-card" onclick="selectService('Mudanza', this)">
+             <i class="fas fa-truck-moving"></i><span>Mudanza</span>
+           </div>
+           <div class="service-card" onclick="selectService('Flete / Reparto', this)">
+             <i class="fas fa-box-open"></i><span>Flete / Carga</span>
+           </div>
+         </div>
+         <input type="hidden" id="wizServicio" value="Mudanza">
+         <div style="display:flex; gap:10px; margin-top:15px;">
+           <button class="wizard-btn secondary" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i></button>
+           <button class="wizard-btn" onclick="goToStep(3)">Siguiente</button>
+         </div>
+       </div>
+
+       <div class="wizard-step" id="step-3">
+         <h2>¿De dónde a dónde? 📍</h2>
+         <div style="display:flex; flex-direction:column; gap:10px;">
+           <input type="text" class="wizard-input" id="wizOrigen" placeholder="Ciudad o Barrio de Origen">
+           <div style="text-align:center; color:var(--brand);"><i class="fas fa-arrow-down"></i></div>
+           <input type="text" class="wizard-input" id="wizDestino" placeholder="Ciudad o Barrio de Destino">
+         </div>
+         <div style="display:flex; gap:10px; margin-top:15px;">
+           <button class="wizard-btn secondary" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i></button>
+           <button class="wizard-btn" onclick="goToStep(4)">Siguiente</button>
+         </div>
+       </div>
+
+       <div class="wizard-step" id="step-4">
+         <h2>¿Cuándo lo necesitas? 📅</h2>
+         <p style="color:#71717a; font-size:0.85rem; margin-bottom:10px;">Selecciona una fecha estimativa.</p>
+         <input type="date" class="wizard-input" id="wizFecha">
+         <div style="display:flex; gap:10px; margin-top:15px;">
+           <button class="wizard-btn secondary" onclick="goToStep(3)"><i class="fas fa-arrow-left"></i></button>
+           <button class="wizard-btn" onclick="goToStep(5)">Siguiente</button>
+         </div>
+       </div>
+
+       <div class="wizard-step" id="step-5">
+         <h2>¿Qué llevamos? 🛋️</h2>
+         <p style="color:#71717a; font-size:0.85rem; margin-bottom:10px;">Indica cantidades aproximadas.</p>
+         
+         <div class="inventory-list">
+           <div class="inventory-item">
+             <span>Camas (Colchón/Sommier)</span>
+             <div class="counter-controls">
+               <button class="counter-btn" onclick="modInv('camas', -1)">-</button>
+               <span class="counter-val" id="inv-camas">0</span>
+               <button class="counter-btn" onclick="modInv('camas', 1)">+</button>
+             </div>
+           </div>
+           <div class="inventory-item">
+             <span>Heladera / Freezer</span>
+             <div class="counter-controls">
+               <button class="counter-btn" onclick="modInv('heladera', -1)">-</button>
+               <span class="counter-val" id="inv-heladera">0</span>
+               <button class="counter-btn" onclick="modInv('heladera', 1)">+</button>
+             </div>
+           </div>
+           <div class="inventory-item">
+             <span>Lavarropas / Secarropas</span>
+             <div class="counter-controls">
+               <button class="counter-btn" onclick="modInv('lavarropas', -1)">-</button>
+               <span class="counter-val" id="inv-lavarropas">0</span>
+               <button class="counter-btn" onclick="modInv('lavarropas', 1)">+</button>
+             </div>
+           </div>
+           <div class="inventory-item">
+             <span>Sillones / Sofás</span>
+             <div class="counter-controls">
+               <button class="counter-btn" onclick="modInv('sillones', -1)">-</button>
+               <span class="counter-val" id="inv-sillones">0</span>
+               <button class="counter-btn" onclick="modInv('sillones', 1)">+</button>
+             </div>
+           </div>
+           <div class="inventory-item">
+             <span>Juego de Comedor (Mesa)</span>
+             <div class="counter-controls">
+               <button class="counter-btn" onclick="modInv('mesas', -1)">-</button>
+               <span class="counter-val" id="inv-mesas">0</span>
+               <button class="counter-btn" onclick="modInv('mesas', 1)">+</button>
+             </div>
+           </div>
+           <div class="inventory-item">
+             <span>Cajas / Bolsas grandes</span>
+             <div class="counter-controls">
+               <button class="counter-btn" onclick="modInv('cajas', -1)">-</button>
+               <span class="counter-val" id="inv-cajas">0</span>
+               <button class="counter-btn" onclick="modInv('cajas', 1)">+</button>
+             </div>
+           </div>
+         </div>
+         <textarea class="wizard-input" id="wizDetalles" placeholder="Otros muebles grandes, escaleras, ascensor..." style="margin-top:10px; font-size:0.9rem; text-align:left; min-height:60px;"></textarea>
+         <div style="display:flex; gap:10px; margin-top:15px;">
+           <button class="wizard-btn secondary" onclick="goToStep(4)"><i class="fas fa-arrow-left"></i></button>
+           <button class="wizard-btn" onclick="goToStep(6)">Siguiente</button>
+         </div>
+       </div>
+
+       <div class="wizard-step" id="step-6">
+         <h2>¡Casi listo! 🚀</h2>
+         <p style="color:#71717a; font-size:0.95rem; margin-bottom:15px;">Déjanos tu número y presiona Enviar para enviarnos el formulario de inventario directo por WhatsApp.</p>
+         <input type="tel" class="wizard-input" id="wizTel" placeholder="Tu número (Ej: 351 000 0000)">
+         <div id="wizLoader" class="loader-spinner"></div>
+         <div style="display:flex; gap:10px; margin-top:15px;" id="botonesFinales">
+           <button class="wizard-btn secondary" onclick="goToStep(5)"><i class="fas fa-arrow-left"></i></button>
+           <button class="wizard-btn" style="background:#25D366;" onclick="finalizarYEnviar()"><i class="fab fa-whatsapp"></i> Generar y Enviar</button>
+         </div>
+       </div>
+
+     </div>
+   </div>
+ </div>
+
+ <!-- Modales del Admin -->
+ <div class="modal-overlay" id="modalConfig"><div class="modal-content" style="padding:20px; text-align:center;"><p>Ajustes en desarrollo.</p><button class="btn btn-dark" onclick="closeModals()">Cerrar</button></div></div>
+ <div class="modal-overlay" id="modalEventForm"><div class="modal-content" style="padding:20px; text-align:center;"><p>Integración de nuevo movimiento en desarrollo.</p><button class="btn btn-dark" onclick="closeModals()">Cerrar</button></div></div>
+ <div class="modal-overlay" id="modalDayView"><div class="modal-content" style="padding:20px; text-align:center;"><p>Vista de día en desarrollo.</p><button class="btn btn-dark" onclick="closeModals()">Cerrar</button></div></div>
+
+ <script>
+   // VARIABLES GLOBALES
+   const webAppUrl = 'https://script.google.com/macros/s/AKfycbyc36N891Ujy9b_t1VgbHj7V4bACtpMIAIWKmn6I4ymdpmclkYI16XKqK_IY6FxrhrP/exec';
+   const dbKey = 'nivel9_mudanzas_data';
+   let events = [];
+   let currentCalDate = new Date();
+   let mapInstance = null;
+   
+   // ENRUTADOR PRINCIPAL (Admin vs Cliente)
+   document.addEventListener('DOMContentLoaded', () => {
+     const urlParams = new URLSearchParams(window.location.search);
+     if (urlParams.get('cotizar') === 'true') {
+       document.getElementById('adminApp').style.display = 'none';
+       document.getElementById('clientWizard').style.display = 'flex';
+       fetchCloudData(true); 
+     } else {
+       initAppAdmin();
+     }
+   });
+
+   // ==========================================
+   // LÓGICA AUTOCOTIZADOR (CLIENTE)
+   // ==========================================
+   let clientLeadId = String(Date.now());
+   let inventarioData = { camas: 0, heladera: 0, lavarropas: 0, sillones: 0, mesas: 0, cajas: 0 };
+
+   function selectService(service, el) {
+     document.getElementById('wizServicio').value = service;
+     document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+     el.classList.add('selected');
+   }
+
+   function modInv(item, val) {
+     inventarioData[item] += val;
+     if(inventarioData[item] < 0) inventarioData[item] = 0;
+     document.getElementById('inv-' + item).textContent = inventarioData[item];
+   }
+
+   function buildInventoryText() {
+     let txt = "";
+     if(inventarioData.camas > 0) txt += `${inventarioData.camas} Camas, `;
+     if(inventarioData.heladera > 0) txt += `${inventarioData.heladera} Heladeras, `;
+     if(inventarioData.lavarropas > 0) txt += `${inventarioData.lavarropas} Lavarropas, `;
+     if(inventarioData.sillones > 0) txt += `${inventarioData.sillones} Sillones, `;
+     if(inventarioData.mesas > 0) txt += `${inventarioData.mesas} Juegos Comedor, `;
+     if(inventarioData.cajas > 0) txt += `${inventarioData.cajas} Cajas/Bolsas.`;
+     return txt;
+   }
+
+   function goToStep(stepNumber) {
+     if(stepNumber === 2 && document.getElementById('wizNombre').value.trim() === '') { alert("Dinos tu nombre."); return; }
+     if(stepNumber === 4 && (document.getElementById('wizOrigen').value.trim() === '' || document.getElementById('wizDestino').value.trim() === '')) { alert("Ingresa origen y destino."); return; }
+     if(stepNumber === 5 && document.getElementById('wizFecha').value === '') { alert("Selecciona una fecha."); return; }
+
+     if(stepNumber > 1) actualizarLeadEnBaseDeDatos();
+
+     document.querySelectorAll('.wizard-step').forEach(el => el.classList.remove('active'));
+     document.getElementById('step-' + stepNumber).classList.add('active');
+     document.getElementById('wizProgress').style.width = (stepNumber * 16.6) + '%';
+   }
+
+   function actualizarLeadEnBaseDeDatos() {
+     const detallesExtra = document.getElementById('wizDetalles').value.trim();
+     const stringInventario = buildInventoryText() + (detallesExtra ? ` | Extras: ${detallesExtra}` : '');
+     
+     const leadData = {
+       id: clientLeadId,
+       createdAt: new Date().toISOString(),
+       fecha: document.getElementById('wizFecha').value || new Date().toISOString().split('T')[0],
+       estado: 'Autocotización',
+       cliente: document.getElementById('wizNombre').value.trim(),
+       telefono: document.getElementById('wizTel').value.trim(),
+       tipomov: document.getElementById('wizServicio').value,
+       origen: document.getElementById('wizOrigen').value.trim(),
+       destino: document.getElementById('wizDestino').value.trim(),
+       detalles: stringInventario,
+       presupuesto: 0,
+       asignacion: 'Por Definir'
+     };
+
+     const idx = events.findIndex(x => String(x.id) === String(clientLeadId));
+     if (idx >= 0) events[idx] = leadData; else events.push(leadData);
+     try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e){}
+     pushCloudData();
+   }
+
+   function finalizarYEnviar() {
+     if(document.getElementById('wizTel').value.trim() === '') { alert("Ingresa tu número de contacto."); return; }
+     
+     document.getElementById('botonesFinales').style.display = 'none';
+     document.getElementById('wizLoader').style.display = 'block';
+
+     actualizarLeadEnBaseDeDatos();
+
+     const nom = document.getElementById('wizNombre').value.trim();
+     const ori = document.getElementById('wizOrigen').value.trim();
+     const des = document.getElementById('wizDestino').value.trim();
+     const fec = document.getElementById('wizFecha').value;
+     const inv = buildInventoryText();
+     const ext = document.getElementById('wizDetalles').value.trim();
+
+     let msj = `Hola *Nivel 9*! 👋 Soy ${nom}.\nAcabo de generar un formulario en la web y solicito cotización:\n\n`;
+     msj += `📍 *Origen:* ${ori}\n`;
+     msj += `🏁 *Destino:* ${des}\n`;
+     msj += `📅 *Fecha ideal:* ${fec}\n`;
+     msj += `📦 *Inventario:* ${inv || 'No especificado'}\n`;
+     if(ext) msj += `📝 *Detalles:* ${ext}\n\n`;
+     msj += `¡Aguardo su presupuesto!`;
+
+     setTimeout(() => {
+        window.location.href = `https://wa.me/5493517046541?text=${encodeURIComponent(msj)}`;
+     }, 1000);
+   }
+
+   // ==========================================
+   // LÓGICA ADMIN (NIVEL 9 S.A.S.)
+   // ==========================================
+   
+   function copiarLinkCotizador() {
+     let baseUrl = window.location.href.split('?')[0]; 
+     if (!baseUrl.endsWith('/')) {
+        baseUrl = baseUrl.replace(/\/index\.html$/, '/');
+     }
+     const link = baseUrl + '?cotizar=true';
+     navigator.clipboard.writeText(link).then(() => {
+       alert("¡Enlace copiado al portapapeles!\n\nPuedes pegarlo directamente en tu biografía de Instagram o enviarlo por chat:\n\n" + link);
+     }).catch(err => {
+       prompt("El navegador bloqueó la copia automática. Por favor, copia el enlace manualmente:", link);
+     });
+   }
+
+   function initAppAdmin() {
+     try { const raw = localStorage.getItem(dbKey); if (raw) events = JSON.parse(raw); } catch(e){}
+     renderCalendar();
+     fetchCloudData();
+     setInterval(() => { fetchCloudData(true); }, 15000);
+   }
+
+   function fetchCloudData(silent = true) {
+     fetch(webAppUrl, { method: 'GET', mode: 'cors' })
+       .then(res => res.json())
+       .then(data => { if (Array.isArray(data)) { events = data; try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e){} renderCalendar(); } })
+       .catch(err => {});
+   }
+
+   function pushCloudData() {
+     fetch(webAppUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(events) }).catch(err => {});
+   }
+
+   // --- CALENDARIO Y RADAR ---
+   function renderCalendar() {
+     actualizarRadarLeads();
+     const grid = document.getElementById('calendarGrid');
+     const title = document.getElementById('currentMonthYear');
+     if(!grid || !title) return;
+
+     const year = currentCalDate.getFullYear();
+     const month = currentCalDate.getMonth();
+     title.textContent = new Date(year, month, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+
+     grid.innerHTML = '';
+     const firstDay = new Date(year, month, 1).getDay();
+     const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+     // Espacios vacíos al inicio del mes
+     for (let i = 0; i < firstDay; i++) {
+       grid.innerHTML += `<div class="day-cell" style="background:#f4f4f5; border:none; cursor:default;"></div>`;
+     }
+
+     // Días del mes
+     for (let day = 1; day <= daysInMonth; day++) {
+       const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+       const isToday = new Date().toISOString().split('T')[0] === dateStr;
+       const dayEvents = events.filter(e => e.fecha === dateStr);
+
+       let chipsHtml = dayEvents.map(e => `<div class="event-chip status-${e.estado.replace(/\s+/g, '')}">${e.cliente}</div>`).join('');
+
+       grid.innerHTML += `
+         <div class="day-cell ${isToday ? 'today' : ''}">
+           <div style="text-align:right; font-size:0.8rem; font-weight:600; color:#a1a1aa;">${day}</div>
+           <div style="display:flex; flex-direction:column; gap:2px; margin-top:2px;">${chipsHtml}</div>
+         </div>
+       `;
+     }
+   }
+
+   function navigateMonth(dir) { currentCalDate.setMonth(currentCalDate.getMonth() + dir); renderCalendar(); }
+   function goToday() { currentCalDate = new Date(); renderCalendar(); }
+
+   function actualizarRadarLeads() {
+     const container = document.getElementById('radarLeadsContainer');
+     if(!container) return;
+     const haceDias = new Date(); haceDias.setDate(haceDias.getDate() - 4);
+
+     const leadsNuevos = events.filter(e => {
+       if(e.estado !== 'Autocotización') return false;
+       if(!e.createdAt) return true;
+       return new Date(e.createdAt) >= haceDias;
+     }).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+     if(leadsNuevos.length > 0) {
+       container.innerHTML = `
+         <div class="lead-alert-box">
+           <div class="lead-alert-header"><span><i class="fas fa-bell"></i> ${leadsNuevos.length} Autocotizaciones Recientes</span></div>
+           ${leadsNuevos.map(l => `
+             <div class="lead-item">
+               <div>
+                 <strong>${l.cliente}</strong> <span style="color:#71717a; font-size:0.75rem;">(Fecha solicitada: ${l.fecha})</span>
+                 <br><span style="color:#854d0e;"><i class="fas fa-route"></i> ${l.origen \vert{}\vert{} '?'} a${l.destino || '?'}</span>
+                 <br><span style="color:#52525b; font-size:0.75rem;"><i class="fas fa-box"></i> ${l.detalles}</span>
+               </div>
+               <div><span class="event-chip status-Autocotización">VER</span></div>
+             </div>
+           `).join('')}
+         </div>
+       `;
+     } else {
+       container.innerHTML = '';
+     }
+   }
+
+   // --- COTIZADOR, MAPA Y FORMULARIOS ---
+   function initLeafletMap() {
+       if(!mapInstance && document.getElementById('map')) {
+           mapInstance = L.map('map').setView([-31.4201, -64.1888], 12); // Coordenadas Córdoba
+           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
+       }
+   }
+
+   function calcularCotizacion() {
+       const kms = parseFloat(document.getElementById('cot-kms').value) || 0;
+       const unidad = document.getElementById('cot-unidad').value;
+       // Simulación de tarifa base por vehículo de la flota Nivel 9
+       let tarifaPorKm = unidad.includes('Furgon') ? 800 : (unidad.includes('Chasis') ? 1000 : 1300);
+       document.getElementById('cot-res-tarifa').value = kms * tarifaPorKm;
+       calcularCotizacionManual();
+   }
+
+   function calcularCotizacionManual() {
+       const tarifa = parseFloat(document.getElementById('cot-res-tarifa').value) || 0;
+       const combustible = parseFloat(document.getElementById('cot-res-combustible').value) || 0;
+       const peajes = parseFloat(document.getElementById('cot-res-peajes-costo').value) || 0;
+       const viaticos = parseFloat(document.getElementById('cot-res-viaticos').value) || 0;
+       const ayudante = parseFloat(document.getElementById('cot-ayudante').value) || 0;
+       
+       const costosTotales = combustible + peajes + viaticos + ayudante;
+       const utilidad = tarifa - costosTotales;
+       
+       document.getElementById('cot-res-costostotales').value = costosTotales;
+       document.getElementById('cot-res-utilidad').value = utilidad;
+   }
+
+   function agregarDestinoIntermedio() {
+       const container = document.getElementById('destinosContainer');
+       const input = document.createElement('input');
+       input.type = 'text';
+       input.className = 'cot-destino-input wizard-input';
+       input.style.marginTop = '5px';
+       input.style.width = '100%';
+       input.style.padding = '8px 10px';
+       input.placeholder = 'Destino intermedio';
+       container.appendChild(input);
+   }
+
+   function calcularRutaOSRM() {
+       alert("Módulo OSRM: Ingresa coordenadas válidas de Córdoba para trazar la ruta en el mapa.");
+   }
+
+   function generarPresupuestoCliente() {
+       alert("Presupuesto guardado y agendado correctamente para Nivel 9.");
+   }
+
+   // --- NAVEGACIÓN Y MODALES ---
+   function showView(viewName) {
+     document.getElementById('viewPortal').style.display = 'none';
+     document.getElementById('viewAgenda').style.display = 'none';
+     document.getElementById('viewCotizador').style.display = 'none';
+     document.getElementById('viewContactos').style.display = 'none';
+     document.getElementById('appHeader').style.display = 'none';
+
+     if (viewName === 'Portal') { 
+         document.getElementById('viewPortal').style.display = 'flex';
+     } else if (viewName === 'Agenda') { 
+         document.getElementById('appHeader').style.display = 'flex'; 
+         document.getElementById('viewAgenda').style.display = 'block'; 
+         renderCalendar();
+     } else if (viewName === 'Cotizador') { 
+         document.getElementById('appHeader').style.display = 'flex'; 
+         document.getElementById('viewCotizador').style.display = 'block'; 
+         setTimeout(initLeafletMap, 300); // Inicializar mapa al abrir la vista
+     } else if (viewName === 'Contactos') {
+         document.getElementById('appHeader').style.display = 'flex'; 
+         document.getElementById('viewContactos').style.display = 'block';
+     }
+   }
+
+   function openAddEventModal() { document.getElementById('modalEventForm').classList.add('active'); }
+   function openConfigModal() { document.getElementById('modalConfig').classList.add('active'); }
+   function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
+ </script>
 </body>
-
-</html> 
+</html>
