@@ -204,7 +204,7 @@
        <p style="color:var(--text-muted); font-size:1.05rem; margin: 15px 0 30px;">Los detalles de tu mudanza están estructurados y listos para presupuestar.</p>
        
        <div class="controls-row" style="flex-direction:column; gap:15px;">
-         <button type="button" class="btn btn-whatsapp" onclick="finalizarYEnviar()" style="padding: 20px;">
+         <button type="button" class="btn btn-whatsapp" id="btnEnviarFinal" onclick="finalizarYEnviar()" style="padding: 20px;">
            <i class="fab fa-whatsapp" style="font-size:1.5rem;"></i> Estamos listos, solicita tu presupuesto
          </button>
          <button type="button" class="btn btn-secondary" onclick="prevStep(6, 5)" style="width:100%; border:none;">Volver a revisar</button>
@@ -216,7 +216,7 @@
 
  <script>
    const oficialWhatsApp = "5493517046541";
-   const leadId = 'WEB-' + Date.now();
+   const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxuDYL34epNjEf5_SEAsOrhgB3seoXW5L6vs7CcbXjLuSkUcxZ6H7gfq-KDKc88j5AK/exec'; // <--- REEMPLAZAR AQUÍ TAMBIÉN
    let map = null;
    let routeLayer = null;
 
@@ -256,7 +256,6 @@
 
    let userInventory = {};
 
-   // RENDERIZAR INVENTARIO
    window.onload = () => {
      const container = document.getElementById('inventoryContainer');
      invDB.forEach((g, idx) => {
@@ -280,10 +279,7 @@
      });
    };
 
-   function toggleInvGroup(id) {
-     const el = document.getElementById(id);
-     el.classList.toggle('open');
-   }
+   function toggleInvGroup(id) { document.getElementById(id).classList.toggle('open'); }
 
    function modItem(id, val) {
      userInventory[id].count += val;
@@ -291,13 +287,11 @@
      document.getElementById(`val-${id}`).textContent = userInventory[id].count;
    }
 
-   // LÓGICA DE SERVICIO Y MAPA
    function selectService(service, element) {
      document.getElementById('wizServicio').value = service;
      document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
      element.classList.add('selected');
      
-     // Adaptar Paso 3 según servicio
      if(service === 'Mudanza Larga') {
        document.getElementById('inst-locales').style.display = 'none';
        document.getElementById('inst-larga').style.display = 'block';
@@ -314,9 +308,8 @@
      }
    }
 
-   // MAPA Y GEOLOCALIZACIÓN
    function initMap() {
-     map = L.map('clientMap').setView([-31.4201, -64.1888], 5); // Centro Arg
+     map = L.map('clientMap').setView([-31.4201, -64.1888], 5);
      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
    }
 
@@ -332,7 +325,6 @@
      status.textContent = "Buscando coordenadas y trazando ruta...";
      
      try {
-       // Geocoding Nominatim
        const resOri = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(ori)}`);
        const dataOri = await resOri.json();
        const resDes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(des)}`);
@@ -347,7 +339,6 @@
        const cOri = [dataOri[0].lat, dataOri[0].lon];
        const cDes = [dataDes[0].lat, dataDes[0].lon];
        
-       // Routing OSRM
        const resRuta = await fetch(`https://router.project-osrm.org/route/v1/driving/${cOri[1]},${cOri[0]};${cDes[1]},${cDes[0]}?overview=full&geometries=geojson`);
        const dataRuta = await resRuta.json();
        
@@ -359,7 +350,6 @@
        status.style.color = 'var(--brand)';
        status.textContent = `¡Ruta trazada! Distancia: ${kms} km`;
        
-       // Dibujar en mapa
        if(routeLayer) map.removeLayer(routeLayer);
        const coords = dataRuta.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
        routeLayer = L.polyline(coords, {color: '#ea580c', weight: 4}).addTo(map);
@@ -371,7 +361,6 @@
      }
    }
 
-   // UX: Accesos
    function togglePiso(modo) {
      const tipo = document.getElementById(`acc-${modo}-tipo`).value;
      document.getElementById(`acc-${modo}-piso`).style.display = (tipo === 'Piso') ? 'block' : 'none';
@@ -391,7 +380,6 @@
      return str;
    }
 
-   // FLUJO WIZARD
    function nextStep(current, next) {
      const nombre = document.getElementById('wizNombre').value.trim();
      if(current === 1 && nombre === '') { alert("Indícanos tu nombre."); return; }
@@ -403,7 +391,7 @@
      document.getElementById('wizProgress').style.width = (next * 16.6) + '%';
      
      if(next === 3 && document.getElementById('wizServicio').value === 'Mudanza Larga' && map) {
-         setTimeout(() => map.invalidateSize(), 300); // Refresca mapa si estaba oculto
+         setTimeout(() => map.invalidateSize(), 300);
      }
    }
 
@@ -413,9 +401,11 @@
      document.getElementById('wizProgress').style.width = (prev * 16.6) + '%';
    }
 
-   // FORMATEO Y ENVÍO WSP
-   function finalizarYEnviar() {
-     // Recopilar Inventario y Volumen
+   async function finalizarYEnviar() {
+     const btn = document.getElementById('btnEnviarFinal');
+     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+     btn.disabled = true;
+
      let invTextLines = [];
      let totalM3 = 0;
      for (let key in userInventory) {
@@ -425,7 +415,6 @@
        }
      }
      
-     // Lógica de Vehículo Inteligente
      let vehiculoSugerido = "Por definir";
      if(totalM3 > 0) {
          if(totalM3 <= 10) vehiculoSugerido = "Sprinter Furgón";
@@ -443,6 +432,50 @@
      const kms = document.getElementById('wizKms').value;
      const ext = document.getElementById('wizDetalles').value.trim();
 
+     // Enviar a la Base de Datos como Autocotización
+     try {
+       // Primero intentamos recuperar la base actual
+       let response = await fetch(WEB_APP_URL);
+       let existingData = await response.json();
+       
+       if(!Array.isArray(existingData)) existingData = [];
+
+       const autoLead = {
+         id: 'WEB-' + Date.now(),
+         fecha: fec,
+         estado: 'Autocotización',
+         tipomov: srv,
+         asignacion: vehiculoSugerido,
+         tipocliente: 'Web',
+         cliente: nom,
+         origen: ori + ' (' + accOri + ')',
+         destino: des + ' (' + accDes + ')',
+         distancia: kms,
+         detalles: 'Volumen: ' + totalM3.toFixed(1) + ' m3. | ' + ext,
+         presupuesto: 0,
+         sena: 0,
+         tarifafinal: 0,
+         comision: 0,
+         combustible: 0,
+         gastosviaticos: 0,
+         ayudante: 0,
+         peajescosto: 0,
+         total: 0
+       };
+
+       existingData.push(autoLead);
+
+       await fetch(WEB_APP_URL, {
+         method: 'POST',
+         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+         body: JSON.stringify(existingData)
+       });
+     } catch (e) {
+       console.error("No se pudo registrar la autocotización en la base de datos.", e);
+       // Ignoramos el error para no trabar al cliente, igual se manda a WhatsApp.
+     }
+
+     // Redirigir a WhatsApp
      let msj = `Hola *NIVEL 9*! 👋 Soy ${nom}.\nSolicito presupuesto generado desde la web:\n\n`;
      msj += `🚚 *Servicio:* ${srv}\n`;
      if(srv === 'Mudanza Larga' && kms > 0) msj += `🛣️ *Distancia:* ~${kms} km\n`;
@@ -463,6 +496,7 @@
      if(ext) msj += `📝 *Detalles Adicionales:*\n"${ext}"\n\n`;
      msj += `¡Quedo a la espera de la cotización!`;
 
+     btn.innerHTML = '<i class="fab fa-whatsapp"></i> Redirigiendo...';
      const finalUrl = `https://wa.me/${oficialWhatsApp}?text=${encodeURIComponent(msj)}`;
      window.location.href = finalUrl;
    }
