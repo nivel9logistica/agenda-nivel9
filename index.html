@@ -11,14 +11,8 @@
  <style>
  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
  :root {
-   --brand: #ea580c;
-   --brand-light: #ffedd5;
-   --dark: #111113;
-   --bg: #e4e4e7;
-   --posible: #71717a;
-   --confirmada: #ea580c;
-   --finalizada: #10b981;
-   --autocotizacion: #facc15;
+   --brand: #ea580c; --brand-light: #ffedd5; --dark: #111113; --bg: #e4e4e7;
+   --posible: #71717a; --confirmada: #ea580c; --finalizada: #10b981; --autocotizacion: #facc15; --presupuesto: #8b5cf6;
  }
  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
  body { background: var(--bg); color: var(--dark); min-height: 100vh; -webkit-text-size-adjust: 100%; }
@@ -41,6 +35,7 @@
  .btn:hover { opacity: 0.9; transform: translateY(-1px); }
  .btn-dark { background: #27272a; color: white; }
  .btn-brand { background: var(--brand); color: white; }
+ .btn-purple { background: var(--presupuesto); color: white; }
  .btn-success { background: #25D366; color: white; }
  .btn-outline { background: transparent; border: 1px solid #52525b; color: white; }
 
@@ -62,13 +57,14 @@
  .status-Confirmada { background-color: var(--confirmada) !important; }
  .status-Finalizada { background-color: var(--finalizada) !important; }
  .status-Autocotización { background-color: var(--autocotizacion) !important; color: #111113 !important; font-weight: 800; }
+ .status-Presupuesto { background-color: var(--presupuesto) !important; color: white !important; }
  
  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 12px; }
  .modal-overlay.active { display: flex; }
  .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
  .modal-header { padding: 12px 18px; border-bottom: 1px solid #e4e4e7; display: flex; justify-content: space-between; align-items: center; background: #fafafa; border-radius: 16px 16px 0 0; position: sticky; top: 0; z-index: 10; }
  .modal-body { padding: 18px; }
- .modal-footer { padding: 12px 18px; border-top: 1px solid #e4e4e7; display: flex; justify-content: flex-end; gap: 8px; background: #fafafa; border-radius: 0 0 16px 16px; }
+ .modal-footer { padding: 12px 18px; border-top: 1px solid #e4e4e7; display: flex; justify-content: flex-end; gap: 8px; background: #fafafa; border-radius: 0 0 16px 16px; position: sticky; bottom: 0; z-index: 10;}
  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
  .form-group { display: flex; flex-direction: column; gap: 3px; }
  .form-group.full { grid-column: span 2; }
@@ -89,22 +85,35 @@
  .event-card.Confirmada { border-left-color: var(--confirmada); }
  .event-card.Finalizada { border-left-color: var(--finalizada); }
  .event-card.Autocotización { border-left-color: var(--autocotizacion); }
+ .event-card.Presupuesto { border-left-color: var(--presupuesto); }
  .event-card-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
  .event-card-title { font-size: 0.95rem; font-weight: 700; }
  .event-card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.82rem; color: #3f3f46; }
 
- /* Estilos para Informes KPI */
+ /* KPIs */
  .kpi-cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px; }
  .kpi-card-box { background: white; padding: 18px; border-radius: 12px; border: 1px solid #d4d4d8; box-shadow: 0 4px 6px rgba(0,0,0,0.04); text-align: center; }
  .kpi-card-box h4 { color: #52525b; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 8px; font-weight: 700;}
  .kpi-card-box .kpi-value { font-size: 1.8rem; font-weight: 800; color: var(--brand); }
  .checkbox-group { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #3f3f46; cursor: pointer; }
  .table-responsive { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid #d4d4d8; }
- .report-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+ .report-table { width: 100%; border-collapse: collapse; min-width: 900px; }
  .report-table th, .report-table td { padding: 12px 15px; border-bottom: 1px solid #e4e4e7; text-align: left; font-size: 0.85rem; }
  .report-table th { background: #f4f4f5; color: #111113; font-weight: 700; text-transform: uppercase; }
  .report-table tr:hover { background: #fafafa; }
  
+ /* PDF HIDDEN TEMPLATE */
+ #pdf-render-container { display: none; }
+ .pdf-page { width: 793px; min-height: 1122px; padding: 40px; background: white; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #111; box-sizing: border-box; }
+ .pdf-header { text-align: center; margin-bottom: 20px; }
+ .pdf-logo { width: 140px; height: 140px; background: #000; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 10px; color: white; }
+ .pdf-title { font-size: 14px; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
+ .pdf-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+ .pdf-section-title { font-size: 12px; font-weight: bold; margin: 15px 0 5px; }
+ .pdf-text { font-size: 11px; line-height: 1.4; margin-bottom: 5px; }
+ .pdf-terms { font-size: 9px; line-height: 1.3; margin-top: 15px; text-align: justify; }
+ .pdf-signature { margin-top: 40px; text-align: center; font-size: 11px; }
+
  @media print {
    body * { visibility: hidden; }
    #printArea, #printArea * { visibility: visible; }
@@ -128,28 +137,12 @@
        <div class="portal-title">Sistema de Gestión</div>
      </div>
      <div class="portal-menu">
-       <div class="portal-card" onclick="showView('Agenda')">
-         <i class="fas fa-calendar-alt"></i>
-         <h3>Agenda de Movimientos</h3>
-       </div>
-       <div class="portal-card" onclick="showView('Cotizador')">
-         <i class="fas fa-calculator"></i>
-         <h3>Cotizador de Rutas</h3>
-       </div>
-       <div class="portal-card" onclick="showView('Contactos')">
-         <i class="fas fa-address-book"></i>
-         <h3>Directorio de Contactos</h3>
-       </div>
-       <div class="portal-card" onclick="showView('Informes')">
-         <i class="fas fa-chart-pie"></i>
-         <h3>Informes y KPIs</h3>
-       </div>
-       <div class="portal-card" onclick="openConfigModal()">
-         <i class="fas fa-cog"></i>
-         <h3>Ajustes de Parámetros</h3>
-       </div>
+       <div class="portal-card" onclick="showView('Agenda')"><i class="fas fa-calendar-alt"></i><h3>Agenda de Movimientos</h3></div>
+       <div class="portal-card" onclick="showView('Cotizador')"><i class="fas fa-calculator"></i><h3>Cotizador de Rutas</h3></div>
+       <div class="portal-card" onclick="showView('Contactos')"><i class="fas fa-address-book"></i><h3>Directorio de Contactos</h3></div>
+       <div class="portal-card" onclick="showView('Informes')"><i class="fas fa-chart-pie"></i><h3>Informes y KPIs</h3></div>
+       <div class="portal-card" onclick="openConfigModal()"><i class="fas fa-cog"></i><h3>Ajustes de Parámetros</h3></div>
      </div>
-     <div id="status-indicator" style="margin-top:20px; font-size:0.8rem; color:#10b981;"><i class="fas fa-check-circle"></i> Interfaz Operativa Global</div>
    </div>
 
    <div id="appHeader" class="header" style="display: none;">
@@ -180,8 +173,9 @@
          <button class="btn btn-dark" onclick="navigateMonth(1)"><i class="fas fa-chevron-right"></i></button>
          <button class="btn btn-dark" onclick="goToday()">Hoy</button>
        </div>
-       <div style="display: flex; gap: 6px;">
+       <div style="display: flex; gap: 6px; flex-wrap:wrap;">
          <button class="btn btn-brand" onclick="openAddEventModal()"><i class="fas fa-plus"></i> Nuevo Movimiento</button>
+         <button class="btn btn-purple" onclick="openPresupuestoModal()"><i class="fas fa-file-pdf"></i> Generar Presupuesto</button>
        </div>
      </div>
      <div class="calendar-wrapper">
@@ -193,58 +187,26 @@
      </div>
    </div>
 
-   <!-- VISTA COTIZADOR -->
+   <!-- VISTA COTIZADOR INTERNO -->
    <div id="viewCotizador" style="display: none;">
      <div class="cotizador-grid">
        <div class="panel-box">
          <div class="panel-title"><i class="fas fa-sliders-h"></i> Datos del Movimiento</div>
-         
-         <div class="form-group">
-           <label>Cliente / Nombre</label>
-           <input type="text" id="cot-cliente" placeholder="Ej: Juan Pérez">
-         </div>
-
+         <div class="form-group"><label>Cliente / Nombre</label><input type="text" id="cot-cliente" placeholder="Ej: Juan Pérez"></div>
          <div class="form-grid">
-           <div class="form-group">
-             <label>Tipo de Movimiento</label>
-             <select id="cot-tipomov">
-               <option value="Mudanza Local">Mudanza Local</option>
-               <option value="Mudanza Larga">Mudanza Larga</option>
-             </select>
-           </div>
-           
-           <div class="form-group">
-             <label>Unidad</label>
-             <select id="cot-unidad" onchange="calcularCotizacion()">
-               <option value="Sprinter Furgon">Sprinter Furgon</option>
-               <option value="Sprinter Chasis">Sprinter Chasis</option>
-               <option value="Camión 712 Gustavo">Camión 712 Gustavo</option>
-             </select>
-           </div>
+           <div class="form-group"><label>Tipo de Movimiento</label><select id="cot-tipomov"><option value="Mudanza Local">Mudanza Local</option><option value="Mudanza Larga">Mudanza Larga</option></select></div>
+           <div class="form-group"><label>Unidad</label><select id="cot-unidad" onchange="calcularCotizacion()"><option value="Sprinter Furgon">Sprinter Furgon</option><option value="Sprinter Chasis">Sprinter Chasis</option><option value="Camión 712 Gustavo">Camión 712 Gustavo</option></select></div>
          </div>
-
-         <div class="form-group">
-           <label>Fecha Estimativa</label>
-           <input type="date" id="cot-fecha-estimativa">
-         </div>
-
-         <div class="form-group">
-           <label>Origen (Ej: Rómula Carbia 3381, Córdoba)</label>
-           <input type="text" id="cot-origen" placeholder="Calle y Número, Localidad">
-         </div>
-
+         <div class="form-group"><label>Fecha Estimativa</label><input type="date" id="cot-fecha-estimativa"></div>
+         <div class="form-group"><label>Origen (Ej: Rómula Carbia 3381, Córdoba)</label><input type="text" id="cot-origen" placeholder="Calle y Número, Localidad"></div>
          <div class="form-group">
            <div style="display:flex; justify-content:space-between; align-items:center;">
              <label>Destino(s) (Ej: San Martin 150, Mendoza)</label>
              <button class="btn btn-dark" style="padding:3px 8px; font-size:0.75rem;" onclick="agregarDestinoIntermedio()"><i class="fas fa-plus"></i> Añadir Parada</button>
            </div>
-           <div id="destinosContainer">
-             <input type="text" class="cot-destino-input" placeholder="Calle y Número, Localidad">
-           </div>
+           <div id="destinosContainer"><input type="text" class="cot-destino-input" placeholder="Calle y Número, Localidad"></div>
          </div>
-
          <button class="btn btn-brand" onclick="calcularRutaOSRM()"><i class="fas fa-route"></i> Calcular Ruta y Distancia</button>
-         
          <div class="form-group">
            <label>Distancia Simple Ida (Km)</label>
            <div style="display:flex; gap:8px; align-items:center;">
@@ -252,62 +214,25 @@
              <span style="font-weight:bold;">Km</span>
            </div>
          </div>
-
-         <div class="form-group">
-           <label>Detalles / Inventario Recibido</label>
-           <textarea id="cot-detalles-recibidos" placeholder="Pegar información recibida..."></textarea>
-         </div>
+         <div class="form-group"><label>Detalles / Inventario Recibido</label><textarea id="cot-detalles-recibidos" placeholder="Pegar información recibida..."></textarea></div>
        </div>
 
        <div class="panel-box">
          <div class="panel-title"><i class="fas fa-map-marked-alt"></i> Mapa de Ruta Completa</div>
          <div id="map"></div>
-
          <div class="panel-title" style="margin-top:8px;"><i class="fas fa-calculator"></i> Desglose y Costos Manuales</div>
-         
          <div class="form-grid">
-           <div class="form-group">
-             <label>Tarifa Presupuestada ($)</label>
-             <div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-tarifa" placeholder="0" style="font-weight:bold; color:var(--brand);" oninput="calcularCotizacionManual()"></div>
-           </div>
-
-           <div class="form-group">
-             <label>Combustible ($ Ida/Vuelta)</label>
-             <div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-combustible" value="0" step="any" oninput="calcularCotizacionManual()"></div>
-           </div>
-
+           <div class="form-group"><label>Tarifa Presupuestada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-tarifa" placeholder="0" style="font-weight:bold; color:var(--brand);" oninput="calcularCotizacionManual()"></div></div>
+           <div class="form-group"><label>Combustible ($ Ida/Vuelta)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-combustible" value="0" step="any" oninput="calcularCotizacionManual()"></div></div>
            <div class="form-grid" style="grid-column: span 2;">
-             <div class="form-group">
-               <label>Cant. Peajes</label>
-               <input type="number" id="cot-res-peajes-cant" value="0" min="0" oninput="calcularCotizacionManual()">
-             </div>
-             <div class="form-group">
-               <label>Peajes Total ($)</label>
-               <div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-peajes-costo" value="0" step="any" oninput="calcularCotizacionManual()"></div>
-             </div>
+             <div class="form-group"><label>Cant. Peajes</label><input type="number" id="cot-res-peajes-cant" value="0" min="0" oninput="calcularCotizacionManual()"></div>
+             <div class="form-group"><label>Peajes Total ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-peajes-costo" value="0" step="any" oninput="calcularCotizacionManual()"></div></div>
            </div>
-
-           <div class="form-group">
-             <label>Gastos / Viáticos ($)</label>
-             <div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-viaticos" value="0" step="any" oninput="calcularCotizacionManual()"></div>
-           </div>
-
-           <div class="form-group">
-             <label>Ayudante ($ Extra)</label>
-             <div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-ayudante" value="0" step="any" oninput="calcularCotizacionManual()"></div>
-           </div>
-
-           <div class="form-group">
-             <label>Costos Totales ($)</label>
-             <div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-costostotales" readonly style="color:red;"></div>
-           </div>
-
-           <div class="form-group full">
-             <label>Utilidad Neta ($)</label>
-             <div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-utilidad" readonly style="color:green; font-weight:bold; font-size:1.1rem;"></div>
-           </div>
+           <div class="form-group"><label>Gastos / Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-viaticos" value="0" step="any" oninput="calcularCotizacionManual()"></div></div>
+           <div class="form-group"><label>Ayudante ($ Extra)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-ayudante" value="0" step="any" oninput="calcularCotizacionManual()"></div></div>
+           <div class="form-group"><label>Costos Totales ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-costostotales" readonly style="color:red;"></div></div>
+           <div class="form-group full"><label>Utilidad Neta ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-utilidad" readonly style="color:green; font-weight:bold; font-size:1.1rem;"></div></div>
          </div>
-
          <div style="display:flex; gap:8px; margin-top:8px;">
            <button class="btn btn-brand" style="flex:1;" onclick="generarPresupuestoCliente()"><i class="fas fa-file-invoice"></i> Agendar y Guardar</button>
          </div>
@@ -317,45 +242,33 @@
 
    <!-- VISTA CONTACTOS -->
    <div id="viewContactos" style="display: none;">
-     <div class="panel-box" style="margin-bottom:15px;">
-       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-         <div class="panel-title" style="border:none; margin:0;"><i class="fas fa-address-book"></i> Directorio de Contactos</div>
-         <button class="btn btn-brand" onclick="openContactModal()"><i class="fas fa-user-plus"></i> Nuevo Contacto</button>
+       <div class="panel-box" style="margin-bottom:15px;">
+           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+             <div class="panel-title" style="border:none; margin:0;"><i class="fas fa-address-book"></i> Directorio de Contactos</div>
+             <button class="btn btn-brand" onclick="openContactModal()"><i class="fas fa-user-plus"></i> Nuevo Contacto</button>
+           </div>
+           <div class="form-grid" style="margin-top:10px;">
+             <div class="form-group"><label>Buscar por Texto</label><input type="text" id="cnt-filter-search" placeholder="Nombre, teléfono..." oninput="renderContactList()"></div>
+             <div class="form-group">
+               <label>Categoría</label>
+               <select id="cnt-filter-categoria" onchange="renderContactList()">
+                 <option value="Todas">Todas las Categorías</option>
+                 <option value="Clientes - Empresa">Clientes - Empresa</option>
+                 <option value="Clientes - Particular">Clientes - Particular</option>
+                 <option value="Terceros - Ayudante">Terceros - Ayudante</option>
+                 <option value="Terceros - Camioneta/Furgon">Terceros - Camioneta/Furgón</option>
+                 <option value="Terceros - Camion">Terceros - Camión</option>
+               </select>
+             </div>
+             <div class="form-group"><label>Provincia / Región</label><input type="text" id="cnt-filter-region" placeholder="Ej: Córdoba" oninput="renderContactList()"></div>
+             <div class="form-group"><label>Localidad</label><input type="text" id="cnt-filter-localidad" placeholder="Ej: Villa Allende" oninput="renderContactList()"></div>
+           </div>
        </div>
-
-       <div class="form-grid" style="margin-top:10px;">
-         <div class="form-group">
-           <label>Buscar por Texto</label>
-           <input type="text" id="cnt-filter-search" placeholder="Nombre, teléfono..." oninput="renderContactList()">
-         </div>
-         <div class="form-group">
-           <label>Categoría</label>
-           <select id="cnt-filter-categoria" onchange="renderContactList()">
-             <option value="Todas">Todas las Categorías</option>
-             <option value="Clientes - Empresa">Clientes - Empresa</option>
-             <option value="Clientes - Particular">Clientes - Particular</option>
-             <option value="Terceros - Ayudante">Terceros - Ayudante</option>
-             <option value="Terceros - Camioneta/Furgon">Terceros - Camioneta/Furgón</option>
-             <option value="Terceros - Camion">Terceros - Camión</option>
-           </select>
-         </div>
-         <div class="form-group">
-           <label>Provincia / Región</label>
-           <input type="text" id="cnt-filter-region" placeholder="Ej: Córdoba" oninput="renderContactList()">
-         </div>
-         <div class="form-group">
-           <label>Localidad</label>
-           <input type="text" id="cnt-filter-localidad" placeholder="Ej: Villa Allende" oninput="renderContactList()">
-         </div>
-       </div>
-     </div>
-
-     <div id="contactListContainer"></div>
+       <div id="contactListContainer"></div>
    </div>
    
    <!-- VISTA: INFORMES Y KPIS -->
    <div id="viewInformes" style="display: none;">
-     
      <div class="panel-box">
        <div class="panel-title"><i class="fas fa-filter"></i> 1. Filtros del Informe</div>
        <div class="form-grid">
@@ -364,10 +277,21 @@
          <div class="form-group"><label>Filtrar por Estado</label>
            <select id="rep-estado">
              <option value="Todos">Todos los Estados</option>
-             <option value="Finalizada">Solo Finalizadas (Cierres)</option>
+             <option value="Finalizada">Finalizadas</option>
              <option value="Confirmada">Confirmadas</option>
              <option value="Posible">Posibles</option>
              <option value="Autocotización">Autocotizaciones</option>
+             <option value="Presupuesto">Presupuestos Emitidos</option>
+           </select>
+         </div>
+         <div class="form-group"><label>Tipo de Movimiento</label>
+           <select id="rep-tipomov">
+             <option value="Todos">Todos los Tipos</option>
+             <option value="Mudanza Local">Mudanza Local</option>
+             <option value="Mudanza Larga">Mudanza Larga</option>
+             <option value="Flete">Flete</option>
+             <option value="Trabajos Especiales">Trabajos Especiales</option>
+             <option value="Cotización PDF">Cotización PDF</option>
            </select>
          </div>
          <div class="form-group"><label>Unidad / Vehículo</label>
@@ -389,196 +313,70 @@
          <label class="checkbox-group"><input type="checkbox" id="col-estado" checked> Estado</label>
          <label class="checkbox-group"><input type="checkbox" id="col-ruta"> Origen / Destino</label>
          <label class="checkbox-group"><input type="checkbox" id="col-vehiculo"> Vehículo</label>
-         <label class="checkbox-group"><input type="checkbox" id="col-ingreso" checked> Tarifa (Ingreso)</label>
+         <label class="checkbox-group"><input type="checkbox" id="col-ingreso" checked> Tarifa</label>
          <label class="checkbox-group"><input type="checkbox" id="col-costo" checked> Costos Operativos</label>
          <label class="checkbox-group"><input type="checkbox" id="col-utilidad" checked> Utilidad Neta</label>
+         <label class="checkbox-group"><input type="checkbox" id="col-acciones" checked> Acciones</label>
        </div>
-       
        <div style="display:flex; gap:10px;">
          <button class="btn btn-brand" onclick="generarReporteUI()"><i class="fas fa-sync"></i> Generar / Actualizar Pantalla</button>
          <button class="btn btn-dark" onclick="imprimirReporte()"><i class="fas fa-print"></i> Imprimir Informe PDF</button>
        </div>
      </div>
 
-     <!-- Tarjetas KPI -->
      <div class="kpi-cards-grid" id="kpiDashboardContainer" style="display: none;">
-       <div class="kpi-card-box">
-         <h4>Total de Viajes</h4>
-         <div class="kpi-value" id="kpi-tot-viajes">0</div>
-       </div>
-       <div class="kpi-card-box">
-         <h4>Facturación Bruta</h4>
-         <div class="kpi-value" id="kpi-tot-ingresos" style="color: #3b82f6;">$0</div>
-       </div>
-       <div class="kpi-card-box">
-         <h4>Costos Operativos</h4>
-         <div class="kpi-value" id="kpi-tot-costos" style="color: #ef4444;">$0</div>
-       </div>
-       <div class="kpi-card-box">
-         <h4>Utilidad Neta Real</h4>
-         <div class="kpi-value" id="kpi-tot-utilidad" style="color: #10b981;">$0</div>
-       </div>
+       <div class="kpi-card-box"><h4>Total de Registros</h4><div class="kpi-value" id="kpi-tot-viajes">0</div></div>
+       <div class="kpi-card-box"><h4>Facturación Bruta</h4><div class="kpi-value" id="kpi-tot-ingresos" style="color:#3b82f6;">$0</div></div>
+       <div class="kpi-card-box"><h4>Costos Operativos</h4><div class="kpi-value" id="kpi-tot-costos" style="color:#ef4444;">$0</div></div>
+       <div class="kpi-card-box"><h4>Utilidad Neta Real</h4><div class="kpi-value" id="kpi-tot-utilidad" style="color:#10b981;">$0</div></div>
      </div>
 
-     <!-- Tabla de Resultados -->
      <div class="table-responsive" id="reportTableContainer" style="display: none;">
        <table class="report-table" id="reportTable"></table>
      </div>
-
    </div>
 
  </div>
 
- <!-- MODALES -->
+ <!-- MODALES: AJUSTES, DÍA, EVENTOS, CONTACTOS Y PRESUPUESTOS -->
  <div class="modal-overlay" id="modalConfig">
    <div class="modal-content" style="max-width:500px;">
-     <div class="modal-header">
-       <h2>Ajustes de Fórmulas y Costos</h2>
-       <button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button>
-     </div>
+     <div class="modal-header"><h2>Ajustes de Fórmulas y Costos</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
      <div class="modal-body form-grid">
-       <div class="form-group full">
-         <label>Precio Litro Diésel ($)</label>
-         <input type="number" id="cfg-diesel" value="2450">
-       </div>
-       <div class="form-group">
-         <label>Consumo Sprinter Furgón (L/100km)</label>
-         <input type="number" id="cfg-cons-furgon" value="14">
-       </div>
-       <div class="form-group">
-         <label>Consumo Sprinter Chasis (L/100km)</label>
-         <input type="number" id="cfg-cons-chasis" value="16">
-       </div>
-       <div class="form-group full">
-         <label>Consumo Camión 712 (L/100km)</label>
-         <input type="number" id="cfg-cons-camion" value="22">
-       </div>
-       <div class="form-group">
-         <label>Tarifa Base Furgón/Chasis ($/Km)</label>
-         <input type="number" id="cfg-tarifa-furgon" value="2200">
-       </div>
-       <div class="form-group">
-         <label>Tarifa Base Camión 712 ($/Km)</label>
-         <input type="number" id="cfg-tarifa-camion" value="2400">
-       </div>
+       <div class="form-group full"><label>Precio Litro Diésel ($)</label><input type="number" id="cfg-diesel" value="2450"></div>
+       <div class="form-group"><label>Consumo Sprinter Furgón (L/100km)</label><input type="number" id="cfg-cons-furgon" value="14"></div>
+       <div class="form-group"><label>Consumo Sprinter Chasis (L/100km)</label><input type="number" id="cfg-cons-chasis" value="16"></div>
+       <div class="form-group full"><label>Consumo Camión 712 (L/100km)</label><input type="number" id="cfg-cons-camion" value="22"></div>
+       <div class="form-group"><label>Tarifa Base Furgón/Chasis ($/Km)</label><input type="number" id="cfg-tarifa-furgon" value="2200"></div>
+       <div class="form-group"><label>Tarifa Base Camión 712 ($/Km)</label><input type="number" id="cfg-tarifa-camion" value="2400"></div>
      </div>
-     <div class="modal-footer">
-       <button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button>
-       <button class="btn btn-brand" onclick="saveConfig()"><i class="fas fa-save"></i> Guardar Ajustes</button>
-     </div>
+     <div class="modal-footer"><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button><button class="btn btn-brand" onclick="saveConfig()"><i class="fas fa-save"></i> Guardar</button></div>
    </div>
  </div>
 
  <div class="modal-overlay" id="modalDayView">
    <div class="modal-content">
-     <div class="modal-header">
-       <h2 id="dayViewTitle">Movimientos del Día</h2>
-       <button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button>
-     </div>
+     <div class="modal-header"><h2 id="dayViewTitle">Movimientos del Día</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
      <div class="modal-body" id="dayViewBody"></div>
-     <div class="modal-footer">
-       <button class="btn btn-brand" onclick="openAddEventModal(selectedDate)"><i class="fas fa-plus"></i> Agregar Nuevo</button>
-       <button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cerrar</button>
-     </div>
-   </div>
- </div>
-
- <div class="modal-overlay" id="modalEventForm">
-   <div class="modal-content">
-     <div class="modal-header">
-       <h2 id="formModalTitle">Cargar / Editar Movimiento</h2>
-       <button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button>
-     </div>
-     <div class="modal-body">
-       <form id="eventForm" class="form-grid" onsubmit="return false;">
-         <input type="hidden" id="ev-id">
-         <input type="hidden" id="ev-telefono">
-         <div class="form-group"><label>Fecha</label><input type="date" id="ev-fecha" required></div>
-         <div class="form-group"><label>Estado</label>
-           <select id="ev-estado" required>
-             <option value="Posible">Posible</option>
-             <option value="Confirmada">Confirmada</option>
-             <option value="Finalizada">Finalizada</option>
-             <option value="Autocotización">Autocotización</option>
-           </select>
-         </div>
-         <div class="form-group"><label>Hora Inicio</label><input type="time" id="ev-hinicio"></div>
-         <div class="form-group"><label>Hora Fin</label><input type="time" id="ev-hfin"></div>
-
-         <div class="form-group"><label>Tipo de Movimiento</label>
-           <select id="ev-tipomov">
-             <option value="Mudanza Local">Mudanza Local</option>
-             <option value="Mudanza Larga">Mudanza Larga</option>
-             <option value="Flete">Flete</option>
-             <option value="Trabajos Especiales">Trabajos Especiales</option>
-           </select>
-         </div>
-
-         <div class="form-group"><label>Unidad Asignada</label>
-           <select id="ev-asignacion">
-             <option value="Sprinter Furgon">Sprinter Furgon</option>
-             <option value="Sprinter Chasis">Sprinter Chasis</option>
-             <option value="Camión 712 Gustavo">Camión 712 Gustavo</option>
-           </select>
-         </div>
-
-         <div class="form-group"><label>Tipo de Jornada</label>
-           <select id="ev-jornada">
-             <option value="Completa">Jornada Completa</option>
-             <option value="Media Jornada">Media Jornada</option>
-           </select>
-         </div>
-         <div class="form-group"><label>Nombre del Cliente</label><input type="text" id="ev-cliente" required></div>
-
-         <div class="form-group"><label>Origen</label><input type="text" id="ev-origen"></div>
-         <div class="form-group"><label>Destino</label><input type="text" id="ev-destino"></div>
-         <div class="form-group full"><label>Distancia (Km Simple)</label><input type="number" id="ev-distancia" step="any"></div>
-         <div class="form-group full"><label>Detalles Carga</label><textarea id="ev-detalles"></textarea></div>
-         
-         <div class="form-group"><label>Presupuesto / Tarifa ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-presupuesto" value="0" oninput="calculateTotal()" required></div></div>
-         <div class="form-group"><label>Seña Abonada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-sena" value="0" oninput="calculateTotal()"></div></div>
-         
-         <div class="form-group"><label>Combustible ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-combustible" value="0" oninput="calculateTotal()"></div></div>
-         <div class="form-group"><label>Peajes ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-peajes-costo" value="0" oninput="calculateTotal()"></div></div>
-         
-         <div class="form-group"><label>Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-gastosviaticos" value="0" oninput="calculateTotal()"></div></div>
-         <div class="form-group"><label>Costo Ayudante ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-ayudante-monto" value="0" oninput="calculateTotal()"></div></div>
-         <div class="form-group"><label>Comisión ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-comision" value="0" oninput="calculateTotal()"></div></div>
-         
-         <div class="form-group"><label>Utilidad Neta Real ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-total" readonly style="font-weight:bold; color:var(--brand);"></div></div>
-       </form>
-     </div>
-     <div class="modal-footer">
-       <button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button>
-       <button class="btn btn-brand" onclick="saveEvent()"><i class="fas fa-save"></i> Guardar Movimiento</button>
-     </div>
+     <div class="modal-footer"><button class="btn btn-brand" onclick="openAddEventModal(selectedDate)"><i class="fas fa-plus"></i> Agregar Nuevo</button><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cerrar</button></div>
    </div>
  </div>
 
  <div class="modal-overlay" id="modalContactForm">
    <div class="modal-content">
-     <div class="modal-header">
-       <h2>Contacto</h2>
-       <button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button>
-     </div>
+     <div class="modal-header"><h2>Contacto</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
      <div class="modal-body">
        <form id="contactForm" class="form-grid" onsubmit="return false;">
          <input type="hidden" id="cnt-id">
-         <div class="form-group full">
-           <label>Categoría</label>
+         <div class="form-group full"><label>Categoría</label>
            <select id="cnt-categoria" required onchange="toggleVehicleFields()">
-             <option value="Clientes - Particular">Clientes - Particular</option>
-             <option value="Clientes - Empresa">Clientes - Empresa</option>
-             <option value="Terceros - Ayudante">Terceros - Ayudante</option>
-             <option value="Terceros - Camioneta/Furgon">Terceros - Camioneta/Furgón</option>
-             <option value="Terceros - Camion">Terceros - Camión</option>
+             <option value="Clientes - Particular">Clientes - Particular</option><option value="Clientes - Empresa">Clientes - Empresa</option><option value="Terceros - Ayudante">Terceros - Ayudante</option><option value="Terceros - Camioneta/Furgon">Terceros - Camioneta/Furgón</option><option value="Terceros - Camion">Terceros - Camión</option>
            </select>
          </div>
          <div class="form-group"><label>Nombre</label><input type="text" id="cnt-nombre" required></div>
          <div class="form-group"><label>Teléfono</label><input type="text" id="cnt-tel" required></div>
          <div class="form-group"><label>Provincia / Región</label><input type="text" id="cnt-region"></div>
          <div class="form-group"><label>Localidad</label><input type="text" id="cnt-localidad"></div>
-
          <div id="vehicleFields" class="form-grid full" style="display:none; border-top:1px solid #e4e4e7; padding-top:10px;">
            <div class="form-group"><label>Modelo Vehículo</label><input type="text" id="cnt-veh-modelo"></div>
            <div class="form-group"><label>Capacidad m³</label><input type="number" id="cnt-veh-m3"></div>
@@ -588,32 +386,184 @@
          </div>
        </form>
      </div>
-     <div class="modal-footer">
-       <button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button>
-       <button class="btn btn-brand" onclick="saveContact()"><i class="fas fa-save"></i> Guardar Contacto</button>
+     <div class="modal-footer"><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button><button class="btn btn-brand" onclick="saveContact()"><i class="fas fa-save"></i> Guardar</button></div>
+   </div>
+ </div>
+
+ <div class="modal-overlay" id="modalEventForm">
+   <div class="modal-content">
+     <div class="modal-header"><h2 id="formModalTitle">Cargar / Editar Movimiento</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
+     <div class="modal-body">
+       <form id="eventForm" class="form-grid" onsubmit="return false;">
+         <input type="hidden" id="ev-id">
+         <input type="hidden" id="ev-telefono">
+         <div class="form-group"><label>Fecha</label><input type="date" id="ev-fecha" required></div>
+         <div class="form-group"><label>Estado</label>
+           <select id="ev-estado" required><option value="Posible">Posible</option><option value="Confirmada">Confirmada</option><option value="Finalizada">Finalizada</option><option value="Autocotización">Autocotización</option></select>
+         </div>
+         <div class="form-group"><label>Hora Inicio</label><input type="time" id="ev-hinicio"></div>
+         <div class="form-group"><label>Hora Fin</label><input type="time" id="ev-hfin"></div>
+         <div class="form-group"><label>Tipo de Movimiento</label>
+           <select id="ev-tipomov"><option value="Mudanza Local">Mudanza Local</option><option value="Mudanza Larga">Mudanza Larga</option><option value="Flete">Flete</option><option value="Trabajos Especiales">Trabajos Especiales</option></select>
+         </div>
+         <div class="form-group"><label>Unidad Asignada</label>
+           <select id="ev-asignacion"><option value="Sprinter Furgon">Sprinter Furgon</option><option value="Sprinter Chasis">Sprinter Chasis</option><option value="Camión 712 Gustavo">Camión 712 Gustavo</option></select>
+         </div>
+         <div class="form-group"><label>Tipo de Jornada</label>
+           <select id="ev-jornada"><option value="Completa">Jornada Completa</option><option value="Media Jornada">Media Jornada</option></select>
+         </div>
+         <div class="form-group"><label>Nombre del Cliente</label><input type="text" id="ev-cliente" required></div>
+         <div class="form-group"><label>Origen</label><input type="text" id="ev-origen"></div>
+         <div class="form-group"><label>Destino</label><input type="text" id="ev-destino"></div>
+         <div class="form-group full"><label>Distancia (Km Simple)</label><input type="number" id="ev-distancia" step="any"></div>
+         <div class="form-group full"><label>Detalles Carga</label><textarea id="ev-detalles"></textarea></div>
+         <div class="form-group"><label>Presupuesto / Tarifa ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-presupuesto" value="0" oninput="calculateTotal()" required></div></div>
+         <div class="form-group"><label>Seña Abonada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-sena" value="0" oninput="calculateTotal()"></div></div>
+         <div class="form-group"><label>Combustible ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-combustible" value="0" oninput="calculateTotal()"></div></div>
+         <div class="form-group"><label>Peajes ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-peajes-costo" value="0" oninput="calculateTotal()"></div></div>
+         <div class="form-group"><label>Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-gastosviaticos" value="0" oninput="calculateTotal()"></div></div>
+         <div class="form-group"><label>Costo Ayudante ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-ayudante-monto" value="0" oninput="calculateTotal()"></div></div>
+         <div class="form-group"><label>Comisión ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-comision" value="0" oninput="calculateTotal()"></div></div>
+         <div class="form-group"><label>Utilidad Neta Real ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-total" readonly style="font-weight:bold; color:var(--brand);"></div></div>
+       </form>
+     </div>
+     <div class="modal-footer"><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button><button class="btn btn-brand" onclick="saveEvent()"><i class="fas fa-save"></i> Guardar Movimiento</button></div>
+   </div>
+ </div>
+
+ <div class="modal-overlay" id="modalPresupuesto">
+  <div class="modal-content" style="max-width: 850px;">
+    <div class="modal-header"><h2><i class="fas fa-file-pdf" style="color:var(--presupuesto);"></i> Generador de Presupuestos PDF</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
+    <div class="modal-body">
+      <div class="panel-box" style="margin-bottom: 15px; background: var(--brand-light); border: 1px solid var(--brand);">
+        <label>Importar datos desde un movimiento en Agenda (Opcional)</label>
+        <select id="pres-import-select" onchange="importDataToPresupuesto()" style="width: 100%; padding: 10px; margin-top: 5px;"><option value="">-- Seleccionar Evento --</option></select>
+      </div>
+      <form id="presupuestoForm" class="form-grid" onsubmit="return false;">
+        <input type="hidden" id="pres-id">
+        <div class="form-group"><label>N° Presupuesto (Automático)</label><input type="text" id="pres-nro" readonly style="background: #e4e4e7; font-weight: bold;"></div>
+        <div class="form-group"><label>Lugar y Fecha Emisión</label><div style="display:flex; gap:5px;"><input type="text" id="pres-lugar" value="Córdoba" style="width: 40%;"><input type="date" id="pres-fecha" style="width: 60%;" required></div></div>
+        <div class="form-group"><label>Validez del Presupuesto (Días)</label><input type="number" id="pres-validez" value="15"></div>
+        <div class="form-group"><label>Fecha Estimada del Servicio</label><input type="text" id="pres-fecha-servicio" placeholder="Ej: confirmación 48hs antes"></div>
+        <div class="form-group full" style="border-top:1px solid #d4d4d8; padding-top:10px; margin-top:5px;"><label style="color:var(--brand);">1. Datos del Cliente</label></div>
+        <div class="form-group"><label>Nombre / Razón Social</label><input type="text" id="pres-cliente" required></div>
+        <div class="form-group"><label>DNI / CUIT</label><input type="text" id="pres-cuit"></div>
+        <div class="form-group"><label>Teléfono de Contacto</label><input type="text" id="pres-tel"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="pres-email"></div>
+        <div class="form-group full" style="border-top:1px solid #d4d4d8; padding-top:10px; margin-top:5px;"><label style="color:var(--brand);">2. Detalle del Servicio</label></div>
+        <div class="form-group"><label>Domicilio de Origen</label><input type="text" id="pres-origen"></div>
+        <div class="form-group"><label>Domicilio de Destino</label><input type="text" id="pres-destino"></div>
+        <div class="form-group"><label>Distancia Aprox. (Km)</label><input type="text" id="pres-km"></div>
+        <div class="form-group full"><label>3. Descripción del Servicio (Trabajos, requisitos, etc)</label><textarea id="pres-desc" style="min-height: 80px;"></textarea></div>
+        <div class="form-group full" style="border-top:1px solid #d4d4d8; padding-top:10px; margin-top:5px;"><label style="color:var(--brand);">4. Presupuesto y Condiciones</label></div>
+        <div class="form-group"><label>Valor Total del Servicio ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="pres-total" value="0" oninput="convertirMontoLetras()" required></div></div>
+        <div class="form-group"><label>Son pesos (Automático)</label><input type="text" id="pres-letras" readonly style="background: #fafafa;"></div>
+        <div class="form-group"><label>Condiciones de Pago</label><input type="text" id="pres-condpago" value="Contado"></div>
+        <div class="form-group"><label>Seña solicitada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="pres-sena" value="0"></div></div>
+        <div class="form-group"><label>Saldo restante ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="pres-saldo" value="0"></div></div>
+        <div class="form-group full"><label>Métodos Aceptados</label><input type="text" id="pres-metodos" value="E-Cheq / Efectivo / Transferencia Bancaria / MercadoPago / Tarjetas de Crédito"></div>
+      </form>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button><button class="btn btn-purple" onclick="generarPdfYGuardar()"><i class="fas fa-file-pdf"></i> Generar PDF y Guardar en Agenda</button></div>
+  </div>
+ </div>
+
+ <!-- CONTENEDOR OCULTO PARA IMPRESIÓN REPORTES -->
+ <div id="printArea"></div>
+
+ <!-- CONTENEDOR OCULTO PARA EXPORTAR PDF CON HTML2PDF -->
+ <div id="pdf-render-container">
+   <div class="pdf-page" id="pdf-template-content">
+     <div class="pdf-header">
+        <div class="pdf-logo">
+           <div style="font-size:26px; font-weight:800; letter-spacing:1px; line-height:1;">NIVEL<span style="color:#ea580c;">9</span></div>
+           <div style="width:80%; height:2px; background:#ea580c; margin:2px 0;"></div>
+           <div style="font-size:5px; letter-spacing:2px; color:#ccc;">LOGISTICA DE EXCELENCIA</div>
+        </div>
+        <div style="font-size:12px; font-weight:bold; margin-bottom:15px;">NIVEL 9 Logística de Excelencia - Rodrigo J. Castro CUIT: 20-24691221-2</div>
+        <div class="pdf-title">PRESUPUESTO DE SERVICIOS LOGÍSTICOS EMPRESARIALES</div>
+     </div>
+     <div class="pdf-row"><strong>N° de Presupuesto:</strong> <span id="pdf-nro"></span></div>
+     <div class="pdf-row"><strong>Lugar y Fecha:</strong> <span id="pdf-lugar-fecha"></span></div>
+     <div class="pdf-row"><strong>Validez del Presupuesto:</strong> <span id="pdf-validez"></span> días desde su emisión.</div>
+     <div class="pdf-section-title">1. DATOS DEL CLIENTE</div>
+     <div class="pdf-text"><strong>Nombre / Razón Social:</strong> <span id="pdf-cliente"></span></div>
+     <div class="pdf-text"><strong>DNI / CUIT:</strong> <span id="pdf-cuit"></span></div>
+     <div class="pdf-text"><strong>Teléfono de contacto:</strong> <span id="pdf-tel"></span></div>
+     <div class="pdf-text"><strong>Email:</strong> <span id="pdf-email"></span></div>
+     <div class="pdf-section-title">2. DETALLE DE SERVICIO</div>
+     <div class="pdf-text"><strong>Fecha estimada del servicio:</strong> <span id="pdf-fservicio"></span></div>
+     <div class="pdf-text"><strong>Domicilio de Origen:</strong> <span id="pdf-origen"></span></div>
+     <div class="pdf-text"><strong>Domicilio de Destino:</strong> <span id="pdf-destino"></span></div>
+     <div class="pdf-text"><strong>Distancia aprox. (Km):</strong> <span id="pdf-km"></span></div>
+     <div class="pdf-section-title">3. DESCRIPCIÓN DEL SERVICIO</div>
+     <div class="pdf-text" id="pdf-desc" style="white-space: pre-wrap; min-height: 40px;"></div>
+     <div class="pdf-section-title">4. PRESUPUESTO Y CONDICIONES</div>
+     <div class="pdf-text" style="font-size: 13px; margin: 10px 0;"><strong>VALOR TOTAL DEL SERVICIO: $<span id="pdf-total"></span></strong></div>
+     <div class="pdf-text"><strong>Son pesos:</strong> <span id="pdf-letras"></span>.-</div>
+     <div class="pdf-text"><strong>Condiciones de Pago:</strong> <span id="pdf-condpago"></span></div>
+     <div class="pdf-text"><strong>Seña para reserva de fecha:</strong> $<span id="pdf-sena"></span></div>
+     <div class="pdf-text"><strong>Saldo restante:</strong> $<span id="pdf-saldo"></span></div>
+     <div class="pdf-text"><strong>Métodos aceptados:</strong> <span id="pdf-metodos"></span></div>
+     <div class="pdf-text" style="margin-top: 10px; font-style: italic;">La aceptación de este presupuesto implica la conformidad con el servicio detallado. Los valores pueden estar sujetos a modificaciones si las condiciones o el volumen de la carga varían respecto a lo declarado inicialmente.</div>
+     <div class="pdf-signature">
+       <svg viewBox="0 0 200 60" style="height: 50px;">
+         <path d="M 20 40 Q 40 10 60 30 T 100 20 Q 130 50 160 10" fill="transparent" stroke="#000080" stroke-width="2"/>
+         <path d="M 30 50 L 180 30" fill="transparent" stroke="#000080" stroke-width="1"/>
+       </svg><br>
+       <strong>Firma y Aclaración: Rodrigo Javier Castro | DNI: 24.691.221</strong><br>CEO / Administrador<br>Nivel 9 Logística de Excelencia
+     </div>
+     <div style="page-break-before: always;"></div>
+     <div class="pdf-header">
+        <div class="pdf-logo" style="width:100px; height:100px;">
+           <div style="font-size:20px; font-weight:800; line-height:1;">NIVEL<span style="color:#ea580c;">9</span></div>
+           <div style="width:80%; height:2px; background:#ea580c; margin:2px 0;"></div>
+        </div>
+        <div class="pdf-title" style="font-size:12px;">TÉRMINOS Y CONDICIONES GENERALES DEL SERVICIO<br>NIVEL 9 S.A.S. - Logística de Excelencia</div>
+     </div>
+     <div class="pdf-terms">
+       <strong>1. Aceptación del Servicio y Reserva</strong> La confirmación del servicio y la fijación de la fecha y horario estipulados en el presupuesto se harán efectivas únicamente mediante el abono de la seña acordada. El pago de dicha seña implica la lectura, comprensión y aceptación total de los presentes términos y condiciones.<br><br>
+       <strong>2. Declaración de Carga y Modificaciones</strong> El presupuesto emitido se basa exclusivamente en la información (volumen, cantidad de muebles, accesos) proporcionada por el cliente. Si el día de la mudanza el volumen de los bienes o la complejidad del trabajo excede lo declarado inicialmente (por ejemplo, muebles que no pasan por aberturas y requieren desarme no previsto, o necesidad de izajes), Nivel 9 S.A.S. se reserva el derecho de ajustar el valor final del servicio o de negarse a trasladar el excedente.<br><br>
+       <strong>3. Accesos, Permisos y Consorcios</strong> Es responsabilidad exclusiva del cliente gestionar y garantizar los permisos necesarios para el estacionamiento del camión de mudanzas en los domicilios de origen y destino. Asimismo, el cliente debe coordinar con las administraciones de los edificios (consorcios) los horarios permitidos para mudanzas, el uso de ascensores (colocación de cobertores) y la reserva de espacios. Cualquier demora u obstáculo operativo derivado de la falta de estos permisos será facturado como tiempo de espera adicional.<br><br>
+       <strong>4. Embalaje y Responsabilidad por Daños</strong><br>
+       - Cajas embaladas por el cliente: Nivel 9 S.A.S. no se hace responsable por roturas o daños de los objetos contenidos en cajas, bolsas o contenedores que hayan sido embalados previamente por el cliente, a menos que el daño sea consecuencia de un accidente evidente del vehículo de transporte.<br>
+       - Servicio de embalaje Nivel 9: La empresa solo responderá por la integridad de aquellos bienes que hayan sido acondicionados y embalados por nuestro propio personal.<br>
+       Es obligación del cliente revisar el estado de los muebles y electrodomésticos al finalizar la descarga. Todo reclamo por daños deberá realizarse en el momento de la entrega, antes de que el personal se retire del domicilio.<br><br>
+       <strong>5. Exclusión de Objetos de Valor</strong> El cliente asume la total responsabilidad por el traslado de objetos de alto valor, tales como: dinero en efectivo, joyas, relojes, títulos, acciones, escrituras, documentos personales importantes, obras de arte de alto valor, dispositivos electrónicos pequeños (notebooks, tablets, celulares) y cualquier otro artículo de características similares. Nivel 9 S.A.S. queda exenta de toda responsabilidad ante la pérdida o sustracción de estos bienes durante el servicio.<br><br>
+       <strong>6. Suspensión, Cancelación y Fuerza Mayor</strong><br>
+       - Cancelaciones: En caso de que el cliente decida cancelar o reprogramar el servicio, deberá notificarlo con un mínimo de 48 horas de anticipación. Las cancelaciones fuera de este plazo implicarán la pérdida total de la seña abonada en concepto de gastos administrativos y lucro cesante.<br>
+       - Fuerza Mayor: Nivel 9 S.A.S. se reserva el derecho de reprogramar el servicio sin incurrir en penalidad alguna frente a situaciones de fuerza mayor que pongan en riesgo al personal, los bienes o los vehículos, tales como: condiciones climáticas severas (tormentas fuertes, inundaciones), cortes de ruta, piquetes, o desperfectos mecánicos imprevistos de fuerza mayor en tránsito.<br><br>
+       <strong>7. Jurisdicción</strong> Para cualquier controversia que pudiera derivarse de la prestación del servicio, las partes se someten a la jurisdicción de los Tribunales Ordinarios de la Ciudad de Córdoba, renunciando a cualquier otro fuero o jurisdicción que pudiera corresponder.
+     </div>
+     <div class="pdf-signature">
+       <svg viewBox="0 0 200 60" style="height: 50px;">
+         <path d="M 20 40 Q 40 10 60 30 T 100 20 Q 130 50 160 10" fill="transparent" stroke="#000080" stroke-width="2"/>
+         <path d="M 30 50 L 180 30" fill="transparent" stroke="#000080" stroke-width="1"/>
+       </svg><br>
+       <strong>Firma y Aclaración: Rodrigo Javier Castro | DNI: 24.691.221</strong><br>CEO / Administrador<br>Nivel 9 S.A.S.
      </div>
    </div>
  </div>
 
- <!-- CONTENEDOR OCULTO PARA IMPRESIÓN PDF -->
- <div id="printArea"></div>
-
  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+ 
  <script>
-   const webAppUrl = 'https://script.google.com/macros/s/AKfycbxuDYL34epNjEf5_SEAsOrhgB3seoXW5L6vs7CcbXjLuSkUcxZ6H7gfq-KDKc88j5AK/exec'; // <--- REEMPLAZAR
+   const webAppUrl = 'https://script.google.com/macros/s/AKfycbw9mtXm7NhkqJZbGIUp3F-6EbVcQckgU1YVcsAFAzYq-a0O7U1tEcjrCc7T9OhblsU/exec';
    const dbKey = 'nivel9_mudanzas_data';
    const dbContactsKey = 'nivel9_contactos_data';
    const dbConfigKey = 'nivel9_config_data';
    
    let events = [];
    let contacts = [];
-   let lastDataHash = '';
    let config = { diesel: 2450, consFurgon: 14, consChasis: 16, consCamion: 22, tarifaFurgon: 2200, tarifaCamion: 2400 };
+   let lastDataHash = '';
    let currentDate = new Date();
    let selectedDate = null;
    const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-   let map = null, routingControl = null, isSyncing = false;
+   let isSyncing = false;
+   let map = null, routingControl = null;
 
    function initApp() {
      try {
@@ -626,21 +576,10 @@
      } catch(e) {}
    }
 
-   function loadConfig() {
-     try {
-       const raw = localStorage.getItem(dbConfigKey);
-       if (raw) config = JSON.parse(raw);
-     } catch(e) {}
-   }
-
-   function loadLocalEvents() {
-     try {
-       const raw = localStorage.getItem(dbKey);
-       if (raw) {
-         events = JSON.parse(raw).map(e => ({ ...e, fecha: parseDateStr(e.fecha) }));
-       }
-     } catch(e) {}
-   }
+   function loadConfig() { try { const raw = localStorage.getItem(dbConfigKey); if (raw) config = JSON.parse(raw); } catch(e) {} }
+   function loadContactsLocal() { try { const raw = localStorage.getItem(dbContactsKey); if (raw) contacts = JSON.parse(raw); } catch(e) {} }
+   function saveContactsLocal() { try { localStorage.setItem(dbContactsKey, JSON.stringify(contacts)); } catch(e) {} }
+   function loadLocalEvents() { try { const raw = localStorage.getItem(dbKey); if (raw) events = JSON.parse(raw).map(e => ({ ...e, fecha: parseDateStr(e.fecha) })); } catch(e) {} }
 
    function saveConfig() {
      config = {
@@ -666,127 +605,6 @@
      document.getElementById('modalConfig').classList.add('active');
    }
 
-   function generarReporteUI() {
-     const start = document.getElementById('rep-start').value;
-     const end = document.getElementById('rep-end').value;
-     const estado = document.getElementById('rep-estado').value;
-     const unidad = document.getElementById('rep-unidad').value;
-     
-     let filt = events;
-     if (start) filt = filt.filter(e => e.fecha >= start);
-     if (end) filt = filt.filter(e => e.fecha <= end);
-     if (estado !== 'Todos') filt = filt.filter(e => e.estado === estado);
-     if (unidad !== 'Todas') filt = filt.filter(e => e.asignacion === unidad);
-
-     let sumUtilidad = 0;
-     let sumIngresos = 0;
-     let sumCostos = 0;
-     
-     filt.forEach(e => {
-       const pres = parseFloat(e.presupuesto) || 0;
-       const util = parseFloat(e.total) || 0;
-       const cost = pres - util;
-       
-       sumIngresos += pres;
-       sumUtilidad += util;
-       sumCostos += cost;
-     });
-
-     document.getElementById('kpiDashboardContainer').style.display = 'grid';
-     document.getElementById('kpi-tot-viajes').textContent = filt.length;
-     document.getElementById('kpi-tot-ingresos').textContent = '$' + sumIngresos.toLocaleString('es-AR');
-     document.getElementById('kpi-tot-costos').textContent = '$' + sumCostos.toLocaleString('es-AR');
-     document.getElementById('kpi-tot-utilidad').textContent = '$' + sumUtilidad.toLocaleString('es-AR');
-
-     const colFecha = document.getElementById('col-fecha').checked;
-     const colCliente = document.getElementById('col-cliente').checked;
-     const colEstado = document.getElementById('col-estado').checked;
-     const colRuta = document.getElementById('col-ruta').checked;
-     const colVehiculo = document.getElementById('col-vehiculo').checked;
-     const colIngreso = document.getElementById('col-ingreso').checked;
-     const colCosto = document.getElementById('col-costo').checked;
-     const colUtilidad = document.getElementById('col-utilidad').checked;
-
-     let tableHTML = `
-       <thead>
-         <tr>
-           ${colFecha ? '<th>Fecha</th>' : ''}
-           ${colCliente ? '<th>Cliente</th>' : ''}
-           ${colEstado ? '<th>Estado</th>' : ''}
-           ${colRuta ? '<th>Origen / Destino</th>' : ''}
-           ${colVehiculo ? '<th>Unidad</th>' : ''}
-           ${colIngreso ? '<th>Tarifa</th>' : ''}
-           ${colCosto ? '<th>Costos Op.</th>' : ''}
-           ${colUtilidad ? '<th>Utilidad</th>' : ''}
-         </tr>
-       </thead>
-       <tbody>
-     `;
-
-     if (filt.length === 0) {
-       tableHTML += `<tr><td colspan="8" style="text-align:center; padding: 20px;">No hay registros para estos filtros.</td></tr>`;
-     } else {
-       tableHTML += filt.map(e => {
-         const pres = parseFloat(e.presupuesto) || 0;
-         const util = parseFloat(e.total) || 0;
-         const cost = pres - util;
-
-         return `
-           <tr>
-             ${colFecha ? `<td>${e.fecha}</td>` : ''}
-             ${colCliente ? `<td><strong>${e.cliente}</strong></td>` : ''}
-             ${colEstado ? `<td><span class="event-chip status-${e.estado}" style="display:inline-block;">${e.estado}</span></td>` : ''}
-             ${colRuta ? `<td>${e.origen || '-'} <i class="fas fa-arrow-right"></i> ${e.destino || '-'}</td>` : ''}
-             ${colVehiculo ? `<td>${e.asignacion}</td>` : ''}
-             ${colIngreso ? `<td>$${pres.toLocaleString('es-AR')}</td>` : ''}
-             ${colCosto ? `<td style="color:#ef4444;">$${cost.toLocaleString('es-AR')}</td>` : ''}
-             ${colUtilidad ? `<td style="color:#10b981; font-weight:bold;">$${util.toLocaleString('es-AR')}</td>` : ''}
-           </tr>
-         `;
-       }).join('');
-     }
-     tableHTML += '</tbody>';
-
-     document.getElementById('reportTable').innerHTML = tableHTML;
-     document.getElementById('reportTableContainer').style.display = 'block';
-   }
-
-   function imprimirReporte() {
-     if(document.getElementById('reportTable').innerHTML.trim() === '') {
-       generarReporteUI();
-     }
-     
-     const start = document.getElementById('rep-start').value;
-     const end = document.getElementById('rep-end').value;
-     const tableContent = document.getElementById('reportTable').outerHTML;
-     const kpisHtml = document.getElementById('kpiDashboardContainer').outerHTML;
-     
-     const printArea = document.getElementById('printArea');
-     printArea.innerHTML = `
-       <div style="font-family:'Outfit', sans-serif; color:#111113; padding:30px; background:white;">
-         <h1 style="color:#ea580c; border-bottom:4px solid #111113; padding-bottom:10px; margin-bottom: 20px;">NIVEL 9 - INFORME GERENCIAL (KPIs)</h1>
-         <p style="margin-bottom: 20px; font-size:1.1rem;"><strong>Período Analizado:</strong> ${start || 'Histórico'} a ${end || 'Hoy'}</p>
-         ${kpisHtml}
-         <hr style="margin: 25px 0; border:1px solid #d4d4d8;">
-         ${tableContent}
-       </div>
-     `;
-     
-     window.print();
-     printArea.innerHTML = '';
-   }
-
-   function loadContactsLocal() {
-     try {
-       const raw = localStorage.getItem(dbContactsKey);
-       if (raw) contacts = JSON.parse(raw);
-     } catch(e) {}
-   }
-
-   function saveContactsLocal() {
-     try { localStorage.setItem(dbContactsKey, JSON.stringify(contacts)); } catch(e) {}
-   }
-
    function showView(viewName) {
      document.getElementById('viewPortal').style.display = 'none';
      document.getElementById('viewAgenda').style.display = 'none';
@@ -794,117 +612,43 @@
      document.getElementById('viewContactos').style.display = 'none';
      document.getElementById('viewInformes').style.display = 'none';
      document.getElementById('appHeader').style.display = 'none';
-
-     if (viewName === 'Portal') {
-       document.getElementById('viewPortal').style.display = 'flex';
-     } else if (viewName === 'Agenda') {
-       document.getElementById('appHeader').style.display = 'flex';
-       document.getElementById('viewAgenda').style.display = 'block';
-       renderCalendar();
-     } else if (viewName === 'Cotizador') {
-       document.getElementById('appHeader').style.display = 'flex';
-       document.getElementById('viewCotizador').style.display = 'block';
-       initMap();
-     } else if (viewName === 'Contactos') {
-       document.getElementById('appHeader').style.display = 'flex';
-       document.getElementById('viewContactos').style.display = 'block';
-       renderContactList();
-     } else if (viewName === 'Informes') {
-       document.getElementById('appHeader').style.display = 'flex';
-       document.getElementById('viewInformes').style.display = 'block';
-       generarReporteUI();
-     }
+     if (viewName === 'Portal') { document.getElementById('viewPortal').style.display = 'flex'; }
+     else if (viewName === 'Agenda') { document.getElementById('appHeader').style.display = 'flex'; document.getElementById('viewAgenda').style.display = 'block'; renderCalendar(); }
+     else if (viewName === 'Cotizador') { document.getElementById('appHeader').style.display = 'flex'; document.getElementById('viewCotizador').style.display = 'block'; initMap(); }
+     else if (viewName === 'Contactos') { document.getElementById('appHeader').style.display = 'flex'; document.getElementById('viewContactos').style.display = 'block'; renderContactList(); }
+     else if (viewName === 'Informes') { document.getElementById('appHeader').style.display = 'flex'; document.getElementById('viewInformes').style.display = 'block'; generarReporteUI(); }
    }
 
+   // --- LOGICA DE CONTACTOS ---
    function openContactModal(id = null) {
      document.getElementById('contactForm').reset();
      document.getElementById('cnt-id').value = '';
      if (id) {
        const c = contacts.find(x => String(x.id) === String(id));
        if (c) {
-         document.getElementById('cnt-id').value = c.id;
-         document.getElementById('cnt-categoria').value = c.categoria;
-         document.getElementById('cnt-nombre').value = c.nombre;
-         document.getElementById('cnt-tel').value = c.telefono;
-         document.getElementById('cnt-region').value = c.region || '';
-         document.getElementById('cnt-localidad').value = c.localidad || '';
-         document.getElementById('cnt-veh-modelo').value = c.vehModelo || '';
-         document.getElementById('cnt-veh-m3').value = c.vehM3 || '';
-         document.getElementById('cnt-veh-dimensiones').value = c.vehDimensiones || '';
-         document.getElementById('cnt-veh-peso').value = c.vehPeso || '';
-         document.getElementById('cnt-veh-foto').value = c.vehFoto || '';
+         document.getElementById('cnt-id').value = c.id; document.getElementById('cnt-categoria').value = c.categoria; document.getElementById('cnt-nombre').value = c.nombre; document.getElementById('cnt-tel').value = c.telefono; document.getElementById('cnt-region').value = c.region || ''; document.getElementById('cnt-localidad').value = c.localidad || ''; document.getElementById('cnt-veh-modelo').value = c.vehModelo || ''; document.getElementById('cnt-veh-m3').value = c.vehM3 || ''; document.getElementById('cnt-veh-dimensiones').value = c.vehDimensiones || ''; document.getElementById('cnt-veh-peso').value = c.vehPeso || ''; document.getElementById('cnt-veh-foto').value = c.vehFoto || '';
        }
      }
-     toggleVehicleFields();
-     document.getElementById('modalContactForm').classList.add('active');
+     toggleVehicleFields(); document.getElementById('modalContactForm').classList.add('active');
    }
-
-   function toggleVehicleFields() {
-     const cat = document.getElementById('cnt-categoria').value;
-     document.getElementById('vehicleFields').style.display = (cat.includes('Camioneta') || cat.includes('Camion')) ? 'grid' : 'none';
-   }
-
+   function toggleVehicleFields() { const cat = document.getElementById('cnt-categoria').value; document.getElementById('vehicleFields').style.display = (cat.includes('Camioneta') || cat.includes('Camion')) ? 'grid' : 'none'; }
    function saveContact() {
      const id = document.getElementById('cnt-id').value || String(Date.now());
-     const newCnt = {
-       id: id,
-       categoria: document.getElementById('cnt-categoria').value,
-       nombre: document.getElementById('cnt-nombre').value.trim(),
-       telefono: document.getElementById('cnt-tel').value.trim(),
-       region: document.getElementById('cnt-region').value.trim(),
-       localidad: document.getElementById('cnt-localidad').value.trim(),
-       vehModelo: document.getElementById('cnt-veh-modelo').value,
-       vehM3: document.getElementById('cnt-veh-m3').value,
-       vehDimensiones: document.getElementById('cnt-veh-dimensiones').value,
-       vehPeso: document.getElementById('cnt-veh-peso').value,
-       vehFoto: document.getElementById('cnt-veh-foto').value
-     };
-
+     const newCnt = { id: id, categoria: document.getElementById('cnt-categoria').value, nombre: document.getElementById('cnt-nombre').value.trim(), telefono: document.getElementById('cnt-tel').value.trim(), region: document.getElementById('cnt-region').value.trim(), localidad: document.getElementById('cnt-localidad').value.trim(), vehModelo: document.getElementById('cnt-veh-modelo').value, vehM3: document.getElementById('cnt-veh-m3').value, vehDimensiones: document.getElementById('cnt-veh-dimensiones').value, vehPeso: document.getElementById('cnt-veh-peso').value, vehFoto: document.getElementById('cnt-veh-foto').value };
      const idx = contacts.findIndex(x => String(x.id) === String(id));
-     if (idx >= 0) contacts[idx] = newCnt;
-     else contacts.push(newCnt);
-
-     saveContactsLocal();
-     closeModals();
-     renderContactList();
+     if (idx >= 0) contacts[idx] = newCnt; else contacts.push(newCnt);
+     saveContactsLocal(); closeModals(); renderContactList();
    }
-
-   function deleteContact(id) {
-     if (confirm("¿Eliminar contacto?")) {
-       contacts = contacts.filter(x => String(x.id) !== String(id));
-       saveContactsLocal();
-       renderContactList();
-     }
-   }
-
+   function deleteContact(id) { if (confirm("¿Eliminar contacto?")) { contacts = contacts.filter(x => String(x.id) !== String(id)); saveContactsLocal(); renderContactList(); } }
    function renderContactList() {
-     const search = document.getElementById('cnt-filter-search').value.toLowerCase();
-     const catFilter = document.getElementById('cnt-filter-categoria').value;
-     const regFilter = document.getElementById('cnt-filter-region').value.toLowerCase();
-     const locFilter = document.getElementById('cnt-filter-localidad').value.toLowerCase();
-
-     let list = contacts.filter(c => {
-       const mS = !search || c.nombre.toLowerCase().includes(search) || c.telefono.includes(search);
-       const mC = catFilter === 'Todas' || c.categoria === catFilter;
-       const mR = !regFilter || ((c.region || '').toLowerCase().includes(regFilter));
-       const mL = !locFilter || ((c.localidad || '').toLowerCase().includes(locFilter));
-       return mS && mC && mR && mL;
-     });
-
+     const search = document.getElementById('cnt-filter-search').value.toLowerCase(), catFilter = document.getElementById('cnt-filter-categoria').value, regFilter = document.getElementById('cnt-filter-region').value.toLowerCase(), locFilter = document.getElementById('cnt-filter-localidad').value.toLowerCase();
+     let list = contacts.filter(c => { const mS = !search || c.nombre.toLowerCase().includes(search) || c.telefono.includes(search); const mC = catFilter === 'Todas' || c.categoria === catFilter; const mR = !regFilter || ((c.region || '').toLowerCase().includes(regFilter)); const mL = !locFilter || ((c.localidad || '').toLowerCase().includes(locFilter)); return mS && mC && mR && mL; });
      const container = document.getElementById('contactListContainer');
-     if (list.length === 0) {
-       container.innerHTML = `<div class="panel-box" style="text-align:center; color:#71717a;">Sin contactos.</div>`;
-       return;
-     }
-
+     if (list.length === 0) { container.innerHTML = `<div class="panel-box" style="text-align:center; color:#71717a;">Sin contactos.</div>`; return; }
      container.innerHTML = list.map(c => `
        <div class="contact-card">
          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-           <div>
-             <span class="contact-badge">${c.categoria}</span>
-             <h3 style="margin-top:4px;">${c.nombre}</h3>
-             <p style="font-size:0.85rem; color:#52525b;"><i class="fas fa-map-marker-alt" style="color:var(--brand);"></i> ${c.localidad || '-'}, ${c.region || '-'}</p>
-           </div>
+           <div><span class="contact-badge">${c.categoria}</span><h3 style="margin-top:4px;">${c.nombre}</h3><p style="font-size:0.85rem; color:#52525b;"><i class="fas fa-map-marker-alt" style="color:var(--brand);"></i> ${c.localidad || '-'}, ${c.region || '-'}</p></div>
            <div style="display:flex; gap:6px;">
              <a href="https://wa.me/${c.telefono.replace(/\D/g,'')}" target="_blank" class="btn btn-success" style="padding:6px 10px;"><i class="fab fa-whatsapp"></i> WhatsApp</a>
              <a href="tel:${c.telefono}" class="btn btn-dark" style="padding:6px 10px;"><i class="fas fa-phone"></i> Llamar</a>
@@ -916,227 +660,188 @@
      `).join('');
    }
 
-   function initMap() {
-     if (!map) {
-       map = L.map('map').setView([-31.4135, -64.1810], 11);
-       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-           maxZoom: 19,
-           attribution: '© OpenStreetMap'
-       }).addTo(map);
-     }
-     setTimeout(() => { map.invalidateSize(); }, 150);
-     setTimeout(() => { map.invalidateSize(); }, 500);
-   }
-
-   function agregarDestinoIntermedio() {
-     const container = document.getElementById('destinosContainer');
-     const div = document.createElement('div');
-     div.className = 'dest-item';
-     div.innerHTML = `
-       <input type="text" class="cot-destino-input" placeholder="Calle y Número, Localidad" style="margin-top:5px;">
-       <button class="btn btn-dark" style="padding:6px 10px; color:red; margin-top:5px;" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
-     `;
-     container.appendChild(div);
-   }
-
-   function formatSearchQuery(input) {
-     let query = input.trim();
-     if (!query) return '';
-     if (!query.toLowerCase().includes('argentina')) query += ', Argentina';
-     return query;
-   }
-
+   // --- LOGICA DE COTIZADOR INTERNO ---
+   function initMap() { if (!map) { map = L.map('map').setView([-31.4135, -64.1810], 11); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); } setTimeout(() => { map.invalidateSize(); }, 150); }
+   function agregarDestinoIntermedio() { const container = document.getElementById('destinosContainer'); const div = document.createElement('div'); div.className = 'dest-item'; div.innerHTML = `<input type="text" class="cot-destino-input" placeholder="Calle y Número, Localidad" style="margin-top:5px;"><button class="btn btn-dark" style="padding:6px 10px; color:red; margin-top:5px;" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>`; container.appendChild(div); }
+   function formatSearchQuery(input) { let query = input.trim(); if (!query) return ''; if (!query.toLowerCase().includes('argentina')) query += ', Argentina'; return query; }
    async function calcularRutaOSRM() {
-     const origRaw = document.getElementById('cot-origen').value;
-     const destInputs = document.querySelectorAll('.cot-destino-input');
-     const destArray = Array.from(destInputs).map(i => i.value.trim()).filter(v => v !== '');
-
+     const origRaw = document.getElementById('cot-origen').value; const destInputs = document.querySelectorAll('.cot-destino-input'); const destArray = Array.from(destInputs).map(i => i.value.trim()).filter(v => v !== '');
      if (!origRaw || destArray.length === 0) { alert("Ingrese Origen y Destino."); return; }
      const puntosBusqueda = [origRaw, ...destArray].map(p => formatSearchQuery(p));
-
      try {
        const waypointsList = [];
        for (let p of puntosBusqueda) {
          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=ar&q=${encodeURIComponent(p)}`).then(r => r.json());
-         if (!res || res.length === 0) { alert(`No se encontró la dirección: "${p}". Intenta agregar la provincia.`); return; }
+         if (!res || res.length === 0) { alert(`No se encontró la dirección: "${p}".`); return; }
          waypointsList.push(L.latLng(res[0].lat, res[0].lon));
        }
-
        if (routingControl) map.removeControl(routingControl);
-
        routingControl = L.Routing.control({ waypoints: waypointsList, show: false }).addTo(map);
-
-       routingControl.on('routesfound', (e) => {
-         const kms = Math.round(e.routes[0].summary.totalDistance / 1000);
-         document.getElementById('cot-kms').value = kms;
-         map.fitBounds(L.latLngBounds(waypointsList), { padding: [30, 30] });
-         calcularCotizacion();
-       });
+       routingControl.on('routesfound', (e) => { const kms = Math.round(e.routes[0].summary.totalDistance / 1000); document.getElementById('cot-kms').value = kms; map.fitBounds(L.latLngBounds(waypointsList), { padding: [30, 30] }); calcularCotizacion(); });
      } catch(e) { alert("Error al calcular la ruta."); }
    }
-
    function calcularCotizacion() {
-     const kmsSimple = parseFloat(document.getElementById('cot-kms').value) || 0;
-     const kmsIdaVuelta = kmsSimple * 2;
-     const unidad = document.getElementById('cot-unidad').value;
-     
-     let consumoLitros100 = config.consFurgon;
-     if (unidad === 'Sprinter Chasis') consumoLitros100 = config.consChasis;
-     if (unidad === 'Camión 712 Gustavo') consumoLitros100 = config.consCamion;
-     
-     const combustibleAutoCalculado = Math.round((kmsIdaVuelta / 100) * consumoLitros100 * config.diesel);
-     document.getElementById('cot-res-combustible').value = combustibleAutoCalculado;
-
+     const kmsSimple = parseFloat(document.getElementById('cot-kms').value) || 0; const kmsIdaVuelta = kmsSimple * 2; const unidad = document.getElementById('cot-unidad').value;
+     let consumoLitros100 = config.consFurgon; if (unidad === 'Sprinter Chasis') consumoLitros100 = config.consChasis; if (unidad === 'Camión 712 Gustavo') consumoLitros100 = config.consCamion;
+     document.getElementById('cot-res-combustible').value = Math.round((kmsIdaVuelta / 100) * consumoLitros100 * config.diesel);
      const tarifaBase = (unidad === 'Camión 712 Gustavo') ? config.tarifaCamion : config.tarifaFurgon;
-     let tarifa = kmsSimple <= 800 ? kmsSimple * tarifaBase : kmsSimple * (tarifaBase - 200);
-     document.getElementById('cot-res-tarifa').value = tarifa;
+     document.getElementById('cot-res-tarifa').value = kmsSimple <= 800 ? kmsSimple * tarifaBase : kmsSimple * (tarifaBase - 200);
      calcularCotizacionManual();
    }
-
    function calcularCotizacionManual() {
-     const tarifa = parseFloat(document.getElementById('cot-res-tarifa').value) || 0;
-     const combustibleCosto = parseFloat(document.getElementById('cot-res-combustible').value) || 0;
-     const peajesCosto = parseFloat(document.getElementById('cot-res-peajes-costo').value) || 0;
-     const viaticosCosto = parseFloat(document.getElementById('cot-res-viaticos').value) || 0;
-     const ayudante = parseFloat(document.getElementById('cot-ayudante').value) || 0;
-
-     const costosTotales = combustibleCosto + peajesCosto + viaticosCosto + ayudante;
-     document.getElementById('cot-res-costostotales').value = costosTotales;
-     document.getElementById('cot-res-utilidad').value = tarifa - costosTotales;
+     const tarifa = parseFloat(document.getElementById('cot-res-tarifa').value) || 0; const combustible = parseFloat(document.getElementById('cot-res-combustible').value) || 0; const peajes = parseFloat(document.getElementById('cot-res-peajes-costo').value) || 0; const viaticos = parseFloat(document.getElementById('cot-res-viaticos').value) || 0; const ayudante = parseFloat(document.getElementById('cot-ayudante').value) || 0;
+     const costos = combustible + peajes + viaticos + ayudante;
+     document.getElementById('cot-res-costostotales').value = costos; document.getElementById('cot-res-utilidad').value = tarifa - costos;
    }
-
    async function generarPresupuestoCliente() {
-     const cliente = document.getElementById('cot-cliente').value.trim();
-     const tarifa = parseFloat(document.getElementById('cot-res-tarifa').value) || 0;
-
+     const cliente = document.getElementById('cot-cliente').value.trim(); const tarifa = parseFloat(document.getElementById('cot-res-tarifa').value) || 0;
      if (!cliente) { alert("Ingrese Nombre del Cliente."); return; }
-
-     const nuevoMov = {
-       id: String(Date.now()),
-       fecha: document.getElementById('cot-fecha-estimativa').value || new Date().toISOString().split('T')[0],
-       estado: 'Posible',
-       tipomov: document.getElementById('cot-tipomov').value,
-       asignacion: document.getElementById('cot-unidad').value,
-       cliente: cliente,
-       origen: document.getElementById('cot-origen').value,
-       destino: document.querySelectorAll('.cot-destino-input')[0].value,
-       distancia: document.getElementById('cot-kms').value,
-       detalles: document.getElementById('cot-detalles-recibidos').value,
-       presupuesto: tarifa,
-       combustible: parseFloat(document.getElementById('cot-res-combustible').value) || 0,
-       peajesCosto: parseFloat(document.getElementById('cot-res-peajes-costo').value) || 0,
-       gastosviaticos: parseFloat(document.getElementById('cot-res-viaticos').value) || 0,
-       total: tarifa - (parseFloat(document.getElementById('cot-res-combustible').value) || 0)
-     };
-
-     events.push(nuevoMov);
-     try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {}
-     pushCloudData();
-     renderCalendar();
-     alert("Movimiento agendado con éxito. Puede verlo en la Agenda o en Informes.");
+     const nuevoMov = { id: String(Date.now()), fecha: document.getElementById('cot-fecha-estimativa').value || new Date().toISOString().split('T')[0], estado: 'Posible', tipomov: document.getElementById('cot-tipomov').value, asignacion: document.getElementById('cot-unidad').value, cliente: cliente, origen: document.getElementById('cot-origen').value, destino: document.querySelectorAll('.cot-destino-input')[0].value, distancia: document.getElementById('cot-kms').value, detalles: document.getElementById('cot-detalles-recibidos').value, presupuesto: tarifa, combustible: parseFloat(document.getElementById('cot-res-combustible').value) || 0, peajesCosto: parseFloat(document.getElementById('cot-res-peajes-costo').value) || 0, gastosviaticos: parseFloat(document.getElementById('cot-res-viaticos').value) || 0, total: tarifa - (parseFloat(document.getElementById('cot-res-costostotales').value) || 0) };
+     events.push(nuevoMov); try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {} pushCloudData(); renderCalendar(); alert("Movimiento agendado con éxito."); document.getElementById('viewCotizador').style.display = 'none'; document.getElementById('viewAgenda').style.display = 'block';
    }
 
-   function fetchCloudData(silent = true) {
-     if (isSyncing) return;
-     isSyncing = true;
-     // Usamos fetch normal, sin forzar no-cors aquí, ya que doGet de Google lo permite por defecto.
-     fetch(webAppUrl)
-       .then(res => res.json())
-       .then(data => {
-         if (Array.isArray(data)) {
-           const newHash = JSON.stringify(data);
-           if (lastDataHash !== newHash) {
-             events = data.map(e => ({ ...e, fecha: parseDateStr(e.fecha) }));
-             try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e){}
-             renderCalendar();
-             lastDataHash = newHash;
+   // --- LÓGICA DE PRESUPUESTOS Y PDF ---
+   function getNextPresupuestoID() {
+       let maxId = 1009; // Base
+       events.forEach(e => {
+           if (e.nro_presupuesto && String(e.nro_presupuesto).includes('-')) {
+               let numPart = parseInt(String(e.nro_presupuesto).split('-')[1], 10);
+               if (!isNaN(numPart) && numPart > maxId) maxId = numPart;
            }
-         }
-       })
-       .catch(err => {
-         if(!silent) console.error("Error al traer datos: ", err);
-       })
-       .finally(() => { isSyncing = false; });
+       });
+       let year = new Date().getFullYear().toString().slice(-2);
+       return `00${year}-${String(maxId + 1).padStart(7, '0')}`;
+   }
+   function numeroALetras(num) {
+        if (!num || num === 0) return 'Cero';
+        function Unidades(n) { switch(n) { case 1: return 'Un'; case 2: return 'Dos'; case 3: return 'Tres'; case 4: return 'Cuatro'; case 5: return 'Cinco'; case 6: return 'Seis'; case 7: return 'Siete'; case 8: return 'Ocho'; case 9: return 'Nueve'; default: return ''; } }
+        function Decenas(n) { let d = Math.floor(n/10); let u = n - (d * 10); switch(d) { case 1: switch(u) { case 0: return 'Diez'; case 1: return 'Once'; case 2: return 'Doce'; case 3: return 'Trece'; case 4: return 'Catorce'; case 5: return 'Quince'; default: return 'Dieci' + Unidades(u).toLowerCase(); } case 2: switch(u) { case 0: return 'Veinte'; default: return 'Veinti' + Unidades(u).toLowerCase(); } case 3: return DecenasY('Treinta', u); case 4: return DecenasY('Cuarenta', u); case 5: return DecenasY('Cincuenta', u); case 6: return DecenasY('Sesenta', u); case 7: return DecenasY('Setenta', u); case 8: return DecenasY('Ochenta', u); case 9: return DecenasY('Noventa', u); case 0: return Unidades(u); } }
+        function DecenasY(s, u) { if (u > 0) return s + ' y ' + Unidades(u); return s; }
+        function Centenas(n) { let c = Math.floor(n / 100); let d = n - (c * 100); switch(c) { case 1: if (d > 0) return 'Ciento ' + Decenas(d); return 'Cien'; case 2: return 'Doscientos ' + Decenas(d); case 3: return 'Trescientos ' + Decenas(d); case 4: return 'Cuatrocientos ' + Decenas(d); case 5: return 'Quinientos ' + Decenas(d); case 6: return 'Seiscientos ' + Decenas(d); case 7: return 'Setecientos ' + Decenas(d); case 8: return 'Ochocientos ' + Decenas(d); case 9: return 'Novecientos ' + Decenas(d); default: return Decenas(d); } }
+        function Seccion(n, div, sing, plur) { let c = Math.floor(n / div); let r = n - (c * div); let l = ''; if (c > 0) if (c > 1) l = Centenas(c) + ' ' + plur; else l = sing; if (r > 0) l += ''; return l; }
+        function Miles(n) { let div = 1000; let c = Math.floor(n / div); let r = n - (c * div); let sM = Seccion(n, div, 'Un Mil', 'Mil'); let sC = Centenas(r); if(sM === '') return sC; return sM + (sC ? ' ' + sC : ''); }
+        function Millones(n) { let div = 1000000; let c = Math.floor(n / div); let r = n - (c * div); let sMill = Seccion(n, div, 'Un Millón', 'Millones'); let sM = Miles(r); if(sMill === '') return sM; return sMill + (sM ? ' ' + sM : ''); }
+        return Millones(num);
+   }
+   function convertirMontoLetras() { let total = parseInt(document.getElementById('pres-total').value) || 0; document.getElementById('pres-letras').value = numeroALetras(total); }
+   function openPresupuestoModal(idEdit = null) {
+     closeModals(); document.getElementById('presupuestoForm').reset();
+     let select = document.getElementById('pres-import-select'); select.innerHTML = '<option value="">-- Autocompletar desde evento existente --</option>';
+     events.filter(e => e.estado !== 'Presupuesto').forEach(e => { select.innerHTML += `<option value="${e.id}">${e.fecha} - ${e.cliente} (${e.origen} a ${e.destino})</option>`; });
+     if (idEdit) {
+         let e = events.find(x => String(x.id) === String(idEdit));
+         if(e) { document.getElementById('pres-id').value = e.id; document.getElementById('pres-nro').value = e.nro_presupuesto || getNextPresupuestoID(); document.getElementById('pres-fecha').value = e.fecha; document.getElementById('pres-cliente').value = e.cliente.replace("PRESUP. ", ""); document.getElementById('pres-cuit').value = e.dni_cuit || ''; document.getElementById('pres-email').value = e.email || ''; document.getElementById('pres-tel').value = e.telefono || ''; document.getElementById('pres-origen').value = e.origen || ''; document.getElementById('pres-destino').value = e.destino || ''; document.getElementById('pres-km').value = e.distancia || ''; document.getElementById('pres-total').value = e.presupuesto || 0; document.getElementById('pres-sena').value = e.sena || 0; document.getElementById('pres-desc').value = (e.detalles || '').split(' | ')[1] || e.detalles || ''; }
+     } else { document.getElementById('pres-id').value = ''; document.getElementById('pres-nro').value = getNextPresupuestoID(); document.getElementById('pres-fecha').value = new Date().toISOString().split('T')[0]; }
+     convertirMontoLetras(); document.getElementById('modalPresupuesto').classList.add('active');
+   }
+   function importDataToPresupuesto() {
+       let id = document.getElementById('pres-import-select').value; if(!id) return; let e = events.find(x => String(x.id) === String(id)); if(!e) return;
+       document.getElementById('pres-cliente').value = e.cliente; document.getElementById('pres-tel').value = e.telefono || ''; document.getElementById('pres-origen').value = e.origen || ''; document.getElementById('pres-destino').value = e.destino || ''; document.getElementById('pres-km').value = e.distancia || ''; document.getElementById('pres-desc').value = e.detalles || ''; document.getElementById('pres-total').value = e.presupuesto || 0; document.getElementById('pres-sena').value = e.sena || 0; convertirMontoLetras();
+   }
+   async function generarPdfYGuardar() {
+       let btn = document.querySelector('#modalPresupuesto .btn-purple'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
+       let nro = document.getElementById('pres-nro').value; let cliente = document.getElementById('pres-cliente').value;
+       if(!cliente) { alert("Nombre del cliente es obligatorio"); btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generar PDF y Guardar en Agenda'; return; }
+       document.getElementById('pdf-nro').textContent = nro; let fObj = document.getElementById('pres-fecha').value.split('-'); let meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']; document.getElementById('pdf-lugar-fecha').textContent = `${document.getElementById('pres-lugar').value}, ${fObj[2]} de ${meses[parseInt(fObj[1])-1]} de ${fObj[0]}`; document.getElementById('pdf-validez').textContent = document.getElementById('pres-validez').value; document.getElementById('pdf-cliente').textContent = cliente; document.getElementById('pdf-cuit').textContent = document.getElementById('pres-cuit').value; document.getElementById('pdf-tel').textContent = document.getElementById('pres-tel').value; document.getElementById('pdf-email').textContent = document.getElementById('pres-email').value; document.getElementById('pdf-fservicio').textContent = document.getElementById('pres-fecha-servicio').value; document.getElementById('pdf-origen').textContent = document.getElementById('pres-origen').value; document.getElementById('pdf-destino').textContent = document.getElementById('pres-destino').value; document.getElementById('pdf-km').textContent = document.getElementById('pres-km').value; document.getElementById('pdf-desc').textContent = document.getElementById('pres-desc').value; document.getElementById('pdf-total').textContent = Number(document.getElementById('pres-total').value).toLocaleString('es-AR'); document.getElementById('pdf-letras').textContent = document.getElementById('pres-letras').value; document.getElementById('pdf-condpago').textContent = document.getElementById('pres-condpago').value; document.getElementById('pdf-sena').textContent = Number(document.getElementById('pres-sena').value).toLocaleString('es-AR'); document.getElementById('pdf-saldo').textContent = Number(document.getElementById('pres-saldo').value).toLocaleString('es-AR'); document.getElementById('pdf-metodos').textContent = document.getElementById('pres-metodos').value;
+       let element = document.getElementById('pdf-template-content'); let opt = { margin: 0, filename: `Presupuesto_${nro}_${cliente.replace(/[^a-z0-9]/gi, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+       await html2pdf().set(opt).from(element).save();
+       let id = document.getElementById('pres-id').value || 'PRE-' + Date.now();
+       let nuevoPresupuesto = { id: id, fecha: document.getElementById('pres-fecha').value, estado: 'Presupuesto', cliente: "PRESUP. " + cliente, origen: document.getElementById('pres-origen').value, destino: document.getElementById('pres-destino').value, distancia: document.getElementById('pres-km').value, presupuesto: document.getElementById('pres-total').value, sena: document.getElementById('pres-sena').value, nro_presupuesto: nro, dni_cuit: document.getElementById('pres-cuit').value, email: document.getElementById('pres-email').value, telefono: document.getElementById('pres-tel').value, detalles: "Fecha estim. serv: " + document.getElementById('pres-fecha-servicio').value + " | " + document.getElementById('pres-desc').value, tipomov: 'Cotización PDF', asignacion: '-', total: document.getElementById('pres-total').value };
+       const idx = events.findIndex(x => String(x.id) === String(id)); if (idx >= 0) events[idx] = nuevoPresupuesto; else events.push(nuevoPresupuesto);
+       try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {} pushCloudData(); renderCalendar(); if(document.getElementById('viewInformes').style.display === 'block') generarReporteUI();
+       closeModals(); btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generar PDF y Guardar en Agenda';
    }
 
-   function pushCloudData() {
-     // CAMBIO CRUCIAL PARA EVITAR ERROR CORS AL ENVIAR DATOS A APPS SCRIPT
-     fetch(webAppUrl, {
-       method: 'POST',
-       // Enviamos como texto plano para evitar el bloqueo OPTIONS preflight de Google
-       headers: {
-           'Content-Type': 'text/plain;charset=utf-8',
-       },
-       body: JSON.stringify(events)
-     })
-     .then(response => response.json())
-     .then(result => {
-        console.log("Guardado en Sheets exitoso:", result);
-     })
-     .catch(err => {
-        console.error("Fallo al guardar en Sheets:", err);
-     });
+   // --- LÓGICA DE INFORMES EDITADA ---
+   function generarReporteUI() {
+     const start = document.getElementById('rep-start').value, end = document.getElementById('rep-end').value, estado = document.getElementById('rep-estado').value, tipo = document.getElementById('rep-tipomov').value;
+     let filt = events;
+     if (start) filt = filt.filter(e => e.fecha >= start); if (end) filt = filt.filter(e => e.fecha <= end); if (estado !== 'Todos') filt = filt.filter(e => e.estado === estado); if (tipo !== 'Todos') filt = filt.filter(e => e.tipomov === tipo);
+     let sumUtilidad = 0; let sumIngresos = 0; let sumCostos = 0;
+     filt.forEach(e => { const pres = parseFloat(e.presupuesto) || 0; const util = parseFloat(e.total) || 0; const cost = pres - util; sumIngresos += pres; sumUtilidad += util; sumCostos += cost; });
+     document.getElementById('kpiDashboardContainer').style.display = 'grid'; document.getElementById('kpi-tot-viajes').textContent = filt.length; document.getElementById('kpi-tot-ingresos').textContent = '$' + sumIngresos.toLocaleString('es-AR'); document.getElementById('kpi-tot-costos').textContent = '$' + sumCostos.toLocaleString('es-AR'); document.getElementById('kpi-tot-utilidad').textContent = '$' + sumUtilidad.toLocaleString('es-AR');
+     const colFecha = document.getElementById('col-fecha').checked, colCliente = document.getElementById('col-cliente').checked, colEstado = document.getElementById('col-estado').checked, colRuta = document.getElementById('col-ruta').checked, colVehiculo = document.getElementById('col-vehiculo').checked, colIngreso = document.getElementById('col-ingreso').checked, colCosto = document.getElementById('col-costo').checked, colUtilidad = document.getElementById('col-utilidad').checked, colAcciones = document.getElementById('col-acciones').checked;
+     let tableHTML = `<thead><tr>${colFecha ? '<th>Fecha</th>' : ''}${colCliente ? '<th>Cliente</th>' : ''}${colEstado ? '<th>Estado</th>' : ''}${colRuta ? '<th>Origen / Destino</th>' : ''}${colVehiculo ? '<th>Unidad</th>' : ''}${colIngreso ? '<th>Tarifa</th>' : ''}${colCosto ? '<th>Costos Op.</th>' : ''}${colUtilidad ? '<th>Utilidad</th>' : ''}${colAcciones ? '<th>Acciones</th>' : ''}</tr></thead><tbody>`;
+     if (filt.length === 0) { tableHTML += `<tr><td colspan="9" style="text-align:center;">No hay registros.</td></tr>`; } 
+     else {
+       tableHTML += filt.map(e => `
+         <tr>
+           ${colFecha ? `<td>${e.fecha}</td>` : ''}
+           ${colCliente ? `<td><strong>${e.cliente}</strong><br><small style="color:#71717a">${e.nro_presupuesto || ''}</small></td>` : ''}
+           ${colEstado ? `<td><span class="event-chip status-${e.estado}" style="display:inline-block;">${e.estado}</span></td>` : ''}
+           ${colRuta ? `<td>${e.origen || '-'} <i class="fas fa-arrow-right"></i> ${e.destino || '-'}</td>` : ''}
+           ${colVehiculo ? `<td>${e.asignacion}</td>` : ''}
+           ${colIngreso ? `<td>$${(parseFloat(e.presupuesto)||0).toLocaleString('es-AR')}</td>` : ''}
+           ${colCosto ? `<td style="color:#ef4444;">$${((parseFloat(e.presupuesto)||0) - (parseFloat(e.total)||0)).toLocaleString('es-AR')}</td>` : ''}
+           ${colUtilidad ? `<td style="color:#10b981; font-weight:bold;">$${(parseFloat(e.total)||0).toLocaleString('es-AR')}</td>` : ''}
+           ${colAcciones ? `<td><button class="btn btn-outline" style="padding:4px 8px; color:black; font-size:0.75rem;" onclick="smartEditEvent('${e.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-outline" style="padding:4px 8px; color:red; font-size:0.75rem;" onclick="deleteEvent('${e.id}')"><i class="fas fa-trash"></i></button></td>` : ''}
+         </tr>
+       `).join('');
+     }
+     tableHTML += '</tbody>'; document.getElementById('reportTable').innerHTML = tableHTML; document.getElementById('reportTableContainer').style.display = 'block';
+   }
+   function imprimirReporte() {
+     if(document.getElementById('reportTable').innerHTML.trim() === '') generarReporteUI();
+     const start = document.getElementById('rep-start').value, end = document.getElementById('rep-end').value, tableContent = document.getElementById('reportTable').outerHTML, kpisHtml = document.getElementById('kpiDashboardContainer').outerHTML;
+     const printArea = document.getElementById('printArea');
+     printArea.innerHTML = `<div style="font-family:'Outfit', sans-serif; color:#111113; padding:30px; background:white;"><h1 style="color:#ea580c; border-bottom:4px solid #111113; padding-bottom:10px; margin-bottom: 20px;">NIVEL 9 - INFORME GERENCIAL (KPIs)</h1><p style="margin-bottom: 20px; font-size:1.1rem;"><strong>Período Analizado:</strong> ${start || 'Histórico'} a ${end || 'Hoy'}</p>${kpisHtml}<hr style="margin: 25px 0; border:1px solid #d4d4d8;">${tableContent}</div>`;
+     window.print(); printArea.innerHTML = '';
    }
 
+   // --- EVENTOS ESTANDAR Y NUBE ---
+   function smartEditEvent(id) { let e = events.find(x => String(x.id) === String(id)); if(!e) return; if(e.estado === 'Presupuesto') openPresupuestoModal(id); else editEvent(id); }
+   function calculateTotal() { const pres = parseFloat(document.getElementById('ev-presupuesto').value) || 0, comb = parseFloat(document.getElementById('ev-combustible').value) || 0, peaj = parseFloat(document.getElementById('ev-peajes-costo').value) || 0, viat = parseFloat(document.getElementById('ev-gastosviaticos').value) || 0, ayud = parseFloat(document.getElementById('ev-ayudante-monto').value) || 0, comision = parseFloat(document.getElementById('ev-comision').value) || 0; document.getElementById('ev-total').value = pres - (comb + peaj + viat + ayud + comision); }
+   
+   function editEvent(id) {
+     const e = events.find(x => String(x.id) === String(id)); if (!e) return; closeModals();
+     document.getElementById('ev-id').value = e.id; document.getElementById('ev-telefono').value = e.telefono || ''; document.getElementById('ev-fecha').value = parseDateStr(e.fecha); document.getElementById('ev-estado').value = e.estado || 'Posible'; document.getElementById('ev-hinicio').value = e.hinicio || ''; document.getElementById('ev-hfin').value = e.hfin || ''; document.getElementById('ev-tipomov').value = e.tipomov || 'Mudanza Local'; document.getElementById('ev-asignacion').value = e.asignacion || 'Sprinter Furgon'; document.getElementById('ev-jornada').value = e.jornada || 'Completa'; document.getElementById('ev-cliente').value = e.cliente || ''; document.getElementById('ev-origen').value = e.origen || ''; document.getElementById('ev-destino').value = e.destino || ''; document.getElementById('ev-distancia').value = e.distancia || ''; document.getElementById('ev-detalles').value = e.detalles || ''; document.getElementById('ev-presupuesto').value = e.presupuesto || 0; document.getElementById('ev-sena').value = e.sena || 0; document.getElementById('ev-combustible').value = e.combustible || 0; document.getElementById('ev-peajes-costo').value = e.peajesCosto || 0; document.getElementById('ev-gastosviaticos').value = e.gastosviaticos || 0; document.getElementById('ev-ayudante-monto').value = e.ayudante || 0; document.getElementById('ev-comision').value = e.comision || 0;
+     calculateTotal(); document.getElementById('modalEventForm').classList.add('active');
+   }
+
+   function saveEvent() {
+     const id = document.getElementById('ev-id').value; const cliente = document.getElementById('ev-cliente').value.trim(); if (!cliente) return;
+     const pres = parseFloat(document.getElementById('ev-presupuesto').value) || 0, comb = parseFloat(document.getElementById('ev-combustible').value) || 0, peaj = parseFloat(document.getElementById('ev-peajes-costo').value) || 0, viat = parseFloat(document.getElementById('ev-gastosviaticos').value) || 0, ayud = parseFloat(document.getElementById('ev-ayudante-monto').value) || 0, comision = parseFloat(document.getElementById('ev-comision').value) || 0;
+     const updated = { id: id || String(Date.now()), telefono: document.getElementById('ev-telefono').value, fecha: document.getElementById('ev-fecha').value, estado: document.getElementById('ev-estado').value, hinicio: document.getElementById('ev-hinicio').value, hfin: document.getElementById('ev-hfin').value, tipomov: document.getElementById('ev-tipomov').value, asignacion: document.getElementById('ev-asignacion').value, jornada: document.getElementById('ev-jornada').value, cliente: cliente, origen: document.getElementById('ev-origen').value, destino: document.getElementById('ev-destino').value, distancia: document.getElementById('ev-distancia').value, detalles: document.getElementById('ev-detalles').value, presupuesto: pres, sena: parseFloat(document.getElementById('ev-sena').value) || 0, combustible: comb, peajesCosto: peaj, gastosviaticos: viat, ayudante: ayud, comision: comision, total: pres - (comb + peaj + viat + ayud + comision) };
+     const idx = events.findIndex(x => String(x.id) === String(id)); if (idx >= 0) events[idx] = updated; else events.push(updated);
+     try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {} pushCloudData(); renderCalendar(); closeModals(); if(document.getElementById('viewInformes').style.display === 'block') generarReporteUI();
+   }
+
+   function deleteEvent(id) { if (confirm("¿Eliminar de forma definitiva?")) { events = events.filter(x => String(x.id) !== String(id)); try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {} pushCloudData(); renderCalendar(); closeModals(); if(document.getElementById('viewInformes').style.display === 'block') generarReporteUI(); } }
+   function fetchCloudData(silent = true) { if (isSyncing) return; isSyncing = true; fetch(webAppUrl).then(res => res.json()).then(data => { if (Array.isArray(data)) { const newHash = JSON.stringify(data); if (lastDataHash !== newHash) { events = data.map(e => ({ ...e, fecha: parseDateStr(e.fecha) })); try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e){} renderCalendar(); lastDataHash = newHash; if(document.getElementById('viewInformes').style.display === 'block') generarReporteUI(); } } }).finally(() => { isSyncing = false; }); }
+   function pushCloudData() { fetch(webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(events) }); }
    function parseDateStr(raw) { if (!raw) return ''; return String(raw).trim().substring(0, 10); }
    function navigateMonth(direction) { currentDate.setMonth(currentDate.getMonth() + direction); renderCalendar(); }
    function goToday() { currentDate = new Date(); renderCalendar(); }
-   function getFormattedDate(year, month, day) { return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`; }
+   function getFormattedDate(y, m, d) { return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`; }
 
    function renderCalendar() {
-     const grid = document.getElementById('calendarGrid');
-     if (!grid) return;
-     const year = currentDate.getFullYear();
-     const month = currentDate.getMonth();
-     document.getElementById('currentMonthYear').textContent = `${months[month]} ${year}`;
-     const firstDayIndex = new Date(year, month, 1).getDay();
-     const daysInMonth = new Date(year, month + 1, 0).getDate();
-     grid.innerHTML = '';
-     
-     for(let i = 0; i < firstDayIndex; i++) {
-       grid.innerHTML += `<div class="day-cell" style="background:transparent; border:none; cursor:default;"></div>`;
-     }
-
+     const grid = document.getElementById('calendarGrid'); if (!grid) return;
+     const year = currentDate.getFullYear(); const month = currentDate.getMonth(); document.getElementById('currentMonthYear').textContent = `${months[month]} ${year}`;
+     const firstDayIndex = new Date(year, month, 1).getDay(); const daysInMonth = new Date(year, month + 1, 0).getDate();
+     grid.innerHTML = ''; for(let i = 0; i < firstDayIndex; i++) grid.innerHTML += `<div class="day-cell" style="background:transparent; border:none;"></div>`;
      const todayStr = getFormattedDate(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
-
      for(let i = 1; i <= daysInMonth; i++) {
-       const dateStr = getFormattedDate(year, month, i);
-       const dayEvents = events.filter(e => parseDateStr(e.fecha) === dateStr);
-       let isToday = (dateStr === todayStr) ? 'today' : '';
-
-       let chipsHTML = dayEvents.map(e => `<div class="event-chip status-${e.estado}">${e.hinicio || '--:--'} | ${e.cliente}</div>`).join('');
+       const dateStr = getFormattedDate(year, month, i); const dayEvents = events.filter(e => parseDateStr(e.fecha) === dateStr); let isToday = (dateStr === todayStr) ? 'today' : '';
+       let chipsHTML = dayEvents.map(e => { let icon = e.estado === 'Presupuesto' ? '<i class="fas fa-file-pdf"></i>' : (e.hinicio || '--:--'); return `<div class="event-chip status-${e.estado}">${icon} | ${e.cliente}</div>`; }).join('');
        grid.innerHTML += `<div class="day-cell ${isToday}" onclick="openDayView('${dateStr}')"><div class="day-number">${i}</div>${chipsHTML}</div>`;
      }
    }
 
-   function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
-
    function openDayView(dateStr) {
-     selectedDate = dateStr;
-     const dayEvents = events.filter(e => parseDateStr(e.fecha) === dateStr);
-     const [y, m, d] = dateStr.split('-');
-     document.getElementById('dayViewTitle').textContent = `Agenda: ${d}/${m}/${y}`;
-     const body = document.getElementById('dayViewBody');
-     if (dayEvents.length === 0) {
-       body.innerHTML = `<p style="color:#71717a; text-align:center; padding:20px;">No hay movimientos agendados para este día.</p>`;
-     } else {
+     selectedDate = dateStr; const dayEvents = events.filter(e => parseDateStr(e.fecha) === dateStr); const [y, m, d] = dateStr.split('-'); document.getElementById('dayViewTitle').textContent = `Agenda: ${d}/${m}/${y}`; const body = document.getElementById('dayViewBody');
+     if (dayEvents.length === 0) body.innerHTML = `<p style="color:#71717a; text-align:center; padding:20px;">No hay movimientos para este día.</p>`;
+     else {
        body.innerHTML = dayEvents.map(e => `
          <div class="event-card ${e.estado}">
-           <div class="event-card-header">
-             <span class="event-card-title">${e.cliente}</span>
-             <span class="event-chip status-${e.estado}">${e.estado}</span>
-           </div>
+           <div class="event-card-header"><span class="event-card-title">${e.cliente}</span><span class="event-chip status-${e.estado}">${e.estado}</span></div>
            <div class="event-card-meta">
-             <div><i class="fas fa-clock"></i> ${e.hinicio || '--:--'} a ${e.hfin || '--:--'}</div>
-             <div><i class="fas fa-truck"></i> ${e.asignacion} (${e.tipomov})</div>
-             <div><i class="fas fa-map-marker-alt"></i> Origen: ${e.origen || '-'}</div>
-             <div><i class="fas fa-flag-checkered"></i> Destino: ${e.destino || '-'}</div>
-             <div style="grid-column: span 2;"><strong>Detalles Carga:</strong> ${e.detalles || '-'}</div>
+             <div><i class="fas fa-truck"></i> ${e.tipomov || '-'}</div>
+             <div><i class="fas fa-dollar-sign"></i> ${e.presupuesto || 0}</div>
+             <div style="grid-column: span 2;"><strong>Detalles:</strong> ${e.detalles || '-'}</div>
            </div>
-           <div style="margin-top: 10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-             <button class="btn btn-outline" style="padding:4px 8px; color:black;" onclick="editEvent('${e.id}')"><i class="fas fa-edit"></i> Editar</button>
+           <div style="margin-top: 10px; display:flex; gap:8px;">
+             <button class="btn btn-outline" style="padding:4px 8px; color:black;" onclick="smartEditEvent('${e.id}')"><i class="fas fa-edit"></i> Editar</button>
              <button class="btn btn-outline" style="padding:4px 8px; color:red;" onclick="deleteEvent('${e.id}')"><i class="fas fa-trash"></i> Eliminar</button>
-             ${e.telefono ? `<a href="https://wa.me/${e.telefono.replace(/\D/g,'')}" target="_blank" class="btn btn-success" style="padding:4px 8px;"><i class="fab fa-whatsapp"></i> Chat Cliente</a>` : ''}
            </div>
          </div>
        `).join('');
@@ -1144,124 +849,10 @@
      document.getElementById('modalDayView').classList.add('active');
    }
 
-   function editEvent(id) {
-     const e = events.find(x => String(x.id) === String(id));
-     if (!e) return;
-     closeModals();
-     document.getElementById('ev-id').value = e.id;
-     document.getElementById('ev-telefono').value = e.telefono || '';
-     document.getElementById('ev-fecha').value = parseDateStr(e.fecha);
-     document.getElementById('ev-estado').value = e.estado || 'Posible';
-     document.getElementById('ev-hinicio').value = e.hinicio || '';
-     document.getElementById('ev-hfin').value = e.hfin || '';
-     document.getElementById('ev-tipomov').value = e.tipomov || 'Mudanza Local';
-     document.getElementById('ev-asignacion').value = e.asignacion || 'Sprinter Furgon';
-     document.getElementById('ev-jornada').value = e.jornada || 'Completa';
-     document.getElementById('ev-cliente').value = e.cliente || '';
-     document.getElementById('ev-origen').value = e.origen || '';
-     document.getElementById('ev-destino').value = e.destino || '';
-     document.getElementById('ev-distancia').value = e.distancia || '';
-     document.getElementById('ev-detalles').value = e.detalles || '';
-     
-     document.getElementById('ev-presupuesto').value = e.presupuesto || 0;
-     document.getElementById('ev-sena').value = e.sena || 0;
-     document.getElementById('ev-combustible').value = e.combustible || 0;
-     document.getElementById('ev-peajes-costo').value = e.peajesCosto || 0;
-     document.getElementById('ev-gastosviaticos').value = e.gastosviaticos || 0;
-     document.getElementById('ev-ayudante-monto').value = e.ayudante || 0;
-     document.getElementById('ev-comision').value = e.comision || 0;
-     
-     calculateTotal();
-     document.getElementById('modalEventForm').classList.add('active');
-   }
+   function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
+   function openAddEventModal(dateStr = null) { closeModals(); document.getElementById('eventForm').reset(); document.getElementById('ev-id').value = ''; document.getElementById('ev-fecha').value = dateStr || new Date().toISOString().split('T')[0]; calculateTotal(); document.getElementById('modalEventForm').classList.add('active'); }
 
-   function saveEvent() {
-     const id = document.getElementById('ev-id').value;
-     const cliente = document.getElementById('ev-cliente').value.trim();
-     if (!cliente) return;
-
-     const pres = parseFloat(document.getElementById('ev-presupuesto').value) || 0;
-     const comb = parseFloat(document.getElementById('ev-combustible').value) || 0;
-     const peaj = parseFloat(document.getElementById('ev-peajes-costo').value) || 0;
-     const viat = parseFloat(document.getElementById('ev-gastosviaticos').value) || 0;
-     const ayud = parseFloat(document.getElementById('ev-ayudante-monto').value) || 0;
-     const comision = parseFloat(document.getElementById('ev-comision').value) || 0;
-
-     const updated = {
-       id: id || String(Date.now()),
-       telefono: document.getElementById('ev-telefono').value,
-       fecha: document.getElementById('ev-fecha').value,
-       estado: document.getElementById('ev-estado').value,
-       hinicio: document.getElementById('ev-hinicio').value,
-       hfin: document.getElementById('ev-hfin').value,
-       tipomov: document.getElementById('ev-tipomov').value,
-       asignacion: document.getElementById('ev-asignacion').value,
-       jornada: document.getElementById('ev-jornada').value,
-       cliente: cliente,
-       origen: document.getElementById('ev-origen').value,
-       destino: document.getElementById('ev-destino').value,
-       distancia: document.getElementById('ev-distancia').value,
-       detalles: document.getElementById('ev-detalles').value,
-       presupuesto: pres,
-       sena: parseFloat(document.getElementById('ev-sena').value) || 0,
-       combustible: comb,
-       peajesCosto: peaj,
-       gastosviaticos: viat,
-       ayudante: ayud,
-       comision: comision,
-       total: pres - (comb + peaj + viat + ayud + comision)
-     };
-
-     const idx = events.findIndex(x => String(x.id) === String(id));
-     if (idx >= 0) events[idx] = updated;
-     else events.push(updated);
-
-     try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {}
-     pushCloudData();
-     renderCalendar();
-     closeModals();
-     
-     if(document.getElementById('viewInformes').style.display === 'block') {
-         generarReporteUI();
-     }
-   }
-
-   function deleteEvent(id) {
-     if (confirm("¿Eliminar este movimiento?")) {
-       events = events.filter(x => String(x.id) !== String(id));
-       try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {}
-       pushCloudData(); // Esto enviará el array filtrado a la nube
-       renderCalendar();
-       closeModals();
-       if(document.getElementById('viewInformes').style.display === 'block') {
-           generarReporteUI();
-       }
-     }
-   }
-
-   function calculateTotal() {
-     const pres = parseFloat(document.getElementById('ev-presupuesto').value) || 0;
-     const comb = parseFloat(document.getElementById('ev-combustible').value) || 0;
-     const peaj = parseFloat(document.getElementById('ev-peajes-costo').value) || 0;
-     const viat = parseFloat(document.getElementById('ev-gastosviaticos').value) || 0;
-     const ayud = parseFloat(document.getElementById('ev-ayudante-monto').value) || 0;
-     const comision = parseFloat(document.getElementById('ev-comision').value) || 0;
-     document.getElementById('ev-total').value = pres - (comb + peaj + viat + ayud + comision);
-   }
-
-   function openAddEventModal(dateStr = null) {
-     closeModals();
-     document.getElementById('eventForm').reset();
-     document.getElementById('ev-id').value = '';
-     document.getElementById('ev-telefono').value = '';
-     document.getElementById('ev-fecha').value = dateStr || new Date().toISOString().split('T')[0];
-     calculateTotal();
-     document.getElementById('modalEventForm').classList.add('active');
-   }
-
-   document.addEventListener('DOMContentLoaded', () => {
-     initApp();
-   });
+   document.addEventListener('DOMContentLoaded', () => { initApp(); });
  </script>
 </body>
 </html>
