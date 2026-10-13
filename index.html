@@ -601,7 +601,7 @@
  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
  <script>
-   const webAppUrl = 'https://script.google.com/macros/s/AKfycbyT8UrsxutVfGhnVR2UZYBfQ5ZjNPAgXdPYQRfuQ0pRHVLEECqqzBCspJeUHMZPFmWa/exec';
+   const webAppUrl = 'https://script.google.com/macros/s/AKfycbxuDYL34epNjEf5_SEAsOrhgB3seoXW5L6vs7CcbXjLuSkUcxZ6H7gfq-KDKc88j5AK/exec'; // <--- REEMPLAZAR
    const dbKey = 'nivel9_mudanzas_data';
    const dbContactsKey = 'nivel9_contactos_data';
    const dbConfigKey = 'nivel9_config_data';
@@ -1039,7 +1039,8 @@
    function fetchCloudData(silent = true) {
      if (isSyncing) return;
      isSyncing = true;
-     fetch(webAppUrl, { method: 'GET', mode: 'cors' })
+     // Usamos fetch normal, sin forzar no-cors aquí, ya que doGet de Google lo permite por defecto.
+     fetch(webAppUrl)
        .then(res => res.json())
        .then(data => {
          if (Array.isArray(data)) {
@@ -1052,17 +1053,29 @@
            }
          }
        })
-       .catch(err => {})
+       .catch(err => {
+         if(!silent) console.error("Error al traer datos: ", err);
+       })
        .finally(() => { isSyncing = false; });
    }
 
    function pushCloudData() {
+     // CAMBIO CRUCIAL PARA EVITAR ERROR CORS AL ENVIAR DATOS A APPS SCRIPT
      fetch(webAppUrl, {
        method: 'POST',
-       mode: 'no-cors',
-       headers: { 'Content-Type': 'application/json' },
+       // Enviamos como texto plano para evitar el bloqueo OPTIONS preflight de Google
+       headers: {
+           'Content-Type': 'text/plain;charset=utf-8',
+       },
        body: JSON.stringify(events)
-     }).catch(err => {});
+     })
+     .then(response => response.json())
+     .then(result => {
+        console.log("Guardado en Sheets exitoso:", result);
+     })
+     .catch(err => {
+        console.error("Fallo al guardar en Sheets:", err);
+     });
    }
 
    function parseDateStr(raw) { if (!raw) return ''; return String(raw).trim().substring(0, 10); }
@@ -1217,7 +1230,7 @@
      if (confirm("¿Eliminar este movimiento?")) {
        events = events.filter(x => String(x.id) !== String(id));
        try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {}
-       pushCloudData();
+       pushCloudData(); // Esto enviará el array filtrado a la nube
        renderCalendar();
        closeModals();
        if(document.getElementById('viewInformes').style.display === 'block') {
