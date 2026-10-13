@@ -10,68 +10,382 @@
  <style>
  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
  :root {
-   --brand: #ea580c; --brand-hover: #c2410c; --brand-light: #ffedd5;
-   --dark: #111113; --bg: #f4f4f5; --text-muted: #71717a; --border: #e4e4e7;
+   --brand: #ea580c; 
+   --brand-hover: #c2410c; 
+   --brand-light: #ffedd5;
+   --dark: #111113; 
+   --bg: #f4f4f5; 
+   --text-muted: #71717a; 
+   --border: #e4e4e7;
  }
- * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
- body { background: var(--bg); color: var(--dark); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 10px; -webkit-tap-highlight-color: transparent; }
  
- .wizard-container { background: white; width: 100%; max-width: 550px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; max-height: 95vh; }
- .wizard-header { background: var(--dark); padding: 25px 20px 20px; text-align: center; color: white; border-bottom: 5px solid var(--brand); flex-shrink: 0; }
- .brand-title { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; line-height: 1; margin-bottom: 5px; }
- .brand-subtitle { font-size: 0.9rem; color: #a1a1aa; font-weight: 400; }
- .progress-container { width: 100%; height: 6px; background: var(--border); flex-shrink: 0; }
- .progress-bar { height: 100%; background: var(--brand); width: 16%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
- .wizard-body { padding: 25px 20px; position: relative; overflow-y: auto; flex-grow: 1; }
-
- .wizard-step { display: none; animation: slideUp 0.4s ease forwards; flex-direction: column; gap: 18px; opacity: 0; }
- .wizard-step.active { display: flex; opacity: 1; }
+ * { 
+   margin: 0; 
+   padding: 0; 
+   box-sizing: border-box; 
+   font-family: 'Outfit', sans-serif; 
+ }
  
- h2 { font-size: 1.35rem; color: var(--dark); font-weight: 800; line-height: 1.3; text-align: center; }
- p.instruction { color: var(--text-muted); font-size: 0.9rem; margin-top: -10px; margin-bottom: 5px; text-align: center; }
-
- .input-field { width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 12px; font-size: 1rem; font-weight: 600; color: var(--dark); transition: all 0.3s; background: #fafafa; }
- .input-field:focus { border-color: var(--brand); outline: none; background: white; box-shadow: 0 4px 15px rgba(234, 88, 12, 0.1); }
- select.input-field { appearance: none; cursor: pointer; }
+ body { 
+   background: var(--bg); 
+   color: var(--dark); 
+   min-height: 100vh; 
+   display: flex; 
+   align-items: center; 
+   justify-content: center; 
+   padding: 10px; 
+   -webkit-tap-highlight-color: transparent; 
+ }
  
- .btn { width: 100%; padding: 16px; background: var(--brand); color: white; font-size: 1.1rem; font-weight: 800; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: center; align-items: center; gap: 10px; }
- .btn:hover { background: var(--brand-hover); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(234, 88, 12, 0.25); }
- .btn-secondary { background: var(--bg); color: var(--text-muted); width: auto; padding: 16px 22px; }
- .btn-secondary:hover { background: #e4e4e7; box-shadow: none; color: var(--dark); }
- .btn-whatsapp { background: #25D366; font-size: 1rem; }
- .btn-whatsapp:hover { background: #1ebc5a; box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3); }
+ .wizard-container { 
+   background: white; 
+   width: 100%; 
+   max-width: 550px; 
+   border-radius: 24px; 
+   box-shadow: 0 20px 40px rgba(0,0,0,0.08); 
+   overflow: hidden; 
+   display: flex; 
+   flex-direction: column; 
+   max-height: 95vh; 
+ }
+ 
+ .wizard-header { 
+   background: var(--dark); 
+   padding: 25px 20px 20px; 
+   text-align: center; 
+   color: white; 
+   border-bottom: 5px solid var(--brand); 
+   flex-shrink: 0; 
+ }
+ 
+ .brand-title { 
+   font-size: 1.8rem; 
+   font-weight: 800; 
+   letter-spacing: 2px; 
+   line-height: 1; 
+   margin-bottom: 5px; 
+ }
+ 
+ .brand-subtitle { 
+   font-size: 0.9rem; 
+   color: #a1a1aa; 
+   font-weight: 400; 
+ }
+ 
+ .progress-container { 
+   width: 100%; 
+   height: 6px; 
+   background: var(--border); 
+   flex-shrink: 0; 
+ }
+ 
+ .progress-bar { 
+   height: 100%; 
+   background: var(--brand); 
+   width: 16%; 
+   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+ }
+ 
+ .wizard-body { 
+   padding: 25px 20px; 
+   position: relative; 
+   overflow-y: auto; 
+   flex-grow: 1; 
+ }
 
- .service-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
- .service-card { border: 2px solid var(--border); padding: 20px 10px; border-radius: 16px; cursor: pointer; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; background: white; }
- .service-card i { font-size: 2rem; color: var(--text-muted); transition: 0.3s; }
- .service-card span { font-weight: 700; font-size: 0.95rem; color: var(--text-muted); }
- .service-card.selected { border-color: var(--brand); background: var(--brand-light); }
- .service-card.selected i, .service-card.selected span { color: var(--brand); }
- .controls-row { display: flex; gap: 10px; margin-top: 10px; }
+ .wizard-step { 
+   display: none; 
+   animation: slideUp 0.4s ease forwards; 
+   flex-direction: column; 
+   gap: 18px; 
+   opacity: 0; 
+ }
+ 
+ .wizard-step.active { 
+   display: flex; 
+   opacity: 1; 
+ }
+ 
+ h2 { 
+   font-size: 1.35rem; 
+   color: var(--dark); 
+   font-weight: 800; 
+   line-height: 1.3; 
+   text-align: center; 
+ }
+ 
+ p.instruction { 
+   color: var(--text-muted); 
+   font-size: 0.9rem; 
+   margin-top: -10px; 
+   margin-bottom: 5px; 
+   text-align: center; 
+ }
+
+ .input-field { 
+   width: 100%; 
+   padding: 14px; 
+   border: 2px solid var(--border); 
+   border-radius: 12px; 
+   font-size: 1rem; 
+   font-weight: 600; 
+   color: var(--dark); 
+   transition: all 0.3s; 
+   background: #fafafa; 
+ }
+ 
+ .input-field:focus { 
+   border-color: var(--brand); 
+   outline: none; 
+   background: white; 
+   box-shadow: 0 4px 15px rgba(234, 88, 12, 0.1); 
+ }
+ 
+ select.input-field { 
+   appearance: none; 
+   cursor: pointer; 
+ }
+ 
+ .btn { 
+   width: 100%; 
+   padding: 16px; 
+   background: var(--brand); 
+   color: white; 
+   font-size: 1.1rem; 
+   font-weight: 800; 
+   border: none; 
+   border-radius: 12px; 
+   cursor: pointer; 
+   transition: all 0.3s; 
+   text-transform: uppercase; 
+   letter-spacing: 1px; 
+   display: flex; 
+   justify-content: center; 
+   align-items: center; 
+   gap: 10px; 
+ }
+ 
+ .btn:hover { 
+   background: var(--brand-hover); 
+   transform: translateY(-2px); 
+   box-shadow: 0 8px 20px rgba(234, 88, 12, 0.25); 
+ }
+ 
+ .btn-secondary { 
+   background: var(--bg); 
+   color: var(--text-muted); 
+   width: auto; 
+   padding: 16px 22px; 
+ }
+ 
+ .btn-secondary:hover { 
+   background: #e4e4e7; 
+   box-shadow: none; 
+   color: var(--dark); 
+ }
+ 
+ .btn-whatsapp { 
+   background: #25D366; 
+   font-size: 1rem; 
+ }
+ 
+ .btn-whatsapp:hover { 
+   background: #1ebc5a; 
+   box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3); 
+ }
+
+ .service-grid { 
+   display: grid; 
+   grid-template-columns: 1fr 1fr; 
+   gap: 12px; 
+ }
+ 
+ .service-card { 
+   border: 2px solid var(--border); 
+   padding: 20px 10px; 
+   border-radius: 16px; 
+   cursor: pointer; 
+   transition: all 0.3s; 
+   display: flex; 
+   flex-direction: column; 
+   align-items: center; 
+   text-align: center; 
+   gap: 10px; 
+   background: white; 
+ }
+ 
+ .service-card i { 
+   font-size: 2rem; 
+   color: var(--text-muted); 
+   transition: 0.3s; 
+ }
+ 
+ .service-card span { 
+   font-weight: 700; 
+   font-size: 0.95rem; 
+   color: var(--text-muted); 
+ }
+ 
+ .service-card.selected { 
+   border-color: var(--brand); 
+   background: var(--brand-light); 
+ }
+ 
+ .service-card.selected i, .service-card.selected span { 
+   color: var(--brand); 
+ }
+ 
+ .controls-row { 
+   display: flex; 
+   gap: 10px; 
+   margin-top: 10px; 
+ }
 
  /* ACCESOS Y MAPA */
- .access-grid { display: grid; grid-template-columns: 1fr; gap: 10px; background: #fafafa; padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
- .access-header { font-weight: 800; font-size: 0.95rem; color: var(--brand); margin-bottom: 5px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
- .access-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
- .checkbox-label { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--text-muted); }
- #clientMap { width: 100%; height: 200px; border-radius: 12px; border: 1px solid var(--border); display: none; margin-top: 10px; z-index: 1; }
+ .access-grid { 
+   display: grid; 
+   grid-template-columns: 1fr; 
+   gap: 10px; 
+   background: #fafafa; 
+   padding: 15px; 
+   border-radius: 12px; 
+   border: 1px solid var(--border); 
+ }
+ 
+ .access-header { 
+   font-weight: 800; 
+   font-size: 0.95rem; 
+   color: var(--brand); 
+   margin-bottom: 5px; 
+   border-bottom: 1px solid var(--border); 
+   padding-bottom: 5px; 
+ }
+ 
+ .access-row { 
+   display: flex; 
+   gap: 10px; 
+   align-items: center; 
+   flex-wrap: wrap; 
+ }
+ 
+ .checkbox-label { 
+   display: flex; 
+   align-items: center; 
+   gap: 5px; 
+   font-size: 0.9rem; 
+   font-weight: 600; 
+   cursor: pointer; 
+   color: var(--text-muted); 
+ }
+ 
+ #clientMap { 
+   width: 100%; 
+   height: 200px; 
+   border-radius: 12px; 
+   border: 1px solid var(--border); 
+   display: none; 
+   margin-top: 10px; 
+   z-index: 1; 
+ }
 
  /* INVENTARIO AVANZADO */
- .inventory-list { display: flex; flex-direction: column; gap: 10px; }
- .inventory-group { background: white; border: 2px solid var(--border); border-radius: 12px; overflow: hidden; }
- .inv-header { padding: 12px 15px; background: #fafafa; font-weight: 700; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border); }
- .inv-items { padding: 10px; display: none; flex-direction: column; gap: 8px; }
- .inv-items.open { display: flex; }
- .inv-item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 1px dashed var(--border); }
- .inv-item-row:last-child { border-bottom: none; }
- .inv-item-info { display: flex; flex-direction: column; }
- .inv-item-name { font-size: 0.9rem; font-weight: 700; color: var(--dark); }
- .inv-item-m3 { font-size: 0.75rem; color: var(--text-muted); }
- .counter-controls { display: flex; align-items: center; gap: 10px; }
- .counter-btn { background: var(--bg); border: none; width: 28px; height: 28px; border-radius: 6px; font-weight: 800; font-size: 1.1rem; color: var(--dark); cursor: pointer; display: flex; align-items: center; justify-content: center; }
- .counter-val { font-weight: 800; font-size: 1rem; width: 20px; text-align: center; color: var(--brand); }
+ .inventory-list { 
+   display: flex; 
+   flex-direction: column; 
+   gap: 10px; 
+ }
+ 
+ .inventory-group { 
+   background: white; 
+   border: 2px solid var(--border); 
+   border-radius: 12px; 
+   overflow: hidden; 
+ }
+ 
+ .inv-header { 
+   padding: 12px 15px; 
+   background: #fafafa; 
+   font-weight: 700; 
+   font-size: 0.95rem; 
+   display: flex; 
+   justify-content: space-between; 
+   align-items: center; 
+   cursor: pointer; 
+   border-bottom: 1px solid var(--border); 
+ }
+ 
+ .inv-items { 
+   padding: 10px; 
+   display: none; 
+   flex-direction: column; 
+   gap: 8px; 
+ }
+ 
+ .inv-items.open { 
+   display: flex; 
+ }
+ 
+ .inv-item-row { 
+   display: flex; 
+   justify-content: space-between; 
+   align-items: center; 
+   padding: 8px 5px; 
+   border-bottom: 1px dashed var(--border); 
+ }
+ 
+ .inv-item-row:last-child { 
+   border-bottom: none; 
+ }
+ 
+ .inv-item-info { 
+   display: flex; 
+   flex-direction: column; 
+ }
+ 
+ .inv-item-name { 
+   font-size: 0.9rem; 
+   font-weight: 700; 
+   color: var(--dark); 
+ }
+ 
+ .inv-item-m3 { 
+   font-size: 0.75rem; 
+   color: var(--text-muted); 
+ }
+ 
+ .counter-controls { 
+   display: flex; 
+   align-items: center; 
+   gap: 10px; 
+ }
+ 
+ .counter-btn { 
+   background: var(--bg); 
+   border: none; 
+   width: 28px; 
+   height: 28px; 
+   border-radius: 6px; 
+   font-weight: 800; 
+   font-size: 1.1rem; 
+   color: var(--dark); 
+   cursor: pointer; 
+   display: flex; 
+   align-items: center; 
+   justify-content: center; 
+ }
+ 
+ .counter-val { 
+   font-weight: 800; 
+   font-size: 1rem; 
+   width: 20px; 
+   text-align: center; 
+   color: var(--brand); 
+ }
 
- @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+ @keyframes slideUp { 
+   from { opacity: 0; transform: translateY(15px); } 
+   to { opacity: 1; transform: translateY(0); } 
+ }
  </style>
  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
@@ -82,7 +396,9 @@
      <div class="brand-title">NIVEL 9</div>
      <div class="brand-subtitle">Cotizador Rápido de Movimientos</div>
    </div>
-   <div class="progress-container"><div class="progress-bar" id="wizProgress"></div></div>
+   <div class="progress-container">
+     <div class="progress-bar" id="wizProgress"></div>
+   </div>
 
    <div class="wizard-body">
      
@@ -124,7 +440,6 @@
          <input type="text" class="input-field" id="wizDestino" placeholder="Destino">
        </div>
        
-       <!-- Botón y Mapa solo para Larga Distancia -->
        <button type="button" id="btnCalcRuta" class="btn btn-secondary" style="display:none; width:100%; border:1px solid var(--border); font-size:0.9rem;" onclick="calcularRuta()">
          <i class="fas fa-map-marked-alt"></i> Validar Ruta y Calcular Km
        </button>
@@ -138,7 +453,7 @@
        </div>
      </div>
 
-     <!-- PASO 4 (ACCESOS Y FECHA) -->
+     <!-- PASO 4 -->
      <div class="wizard-step" id="step-4">
        <h2>Detalles de Acceso 🏢</h2>
        
@@ -146,7 +461,8 @@
          <div class="access-header">📍 Origen</div>
          <div class="access-row">
            <select class="input-field" id="acc-ori-tipo" style="padding:10px; width:45%;" onchange="togglePiso('ori')">
-             <option value="PB">Planta Baja</option><option value="Piso">Piso</option>
+             <option value="PB">Planta Baja</option>
+             <option value="Piso">Piso</option>
            </select>
            <input type="number" id="acc-ori-piso" class="input-field" placeholder="N°" style="display:none; padding:10px; width:25%;">
          </div>
@@ -160,7 +476,8 @@
          <div class="access-header">🏁 Destino</div>
          <div class="access-row">
            <select class="input-field" id="acc-des-tipo" style="padding:10px; width:45%;" onchange="togglePiso('des')">
-             <option value="PB">Planta Baja</option><option value="Piso">Piso</option>
+             <option value="PB">Planta Baja</option>
+             <option value="Piso">Piso</option>
            </select>
            <input type="number" id="acc-des-piso" class="input-field" placeholder="N°" style="display:none; padding:10px; width:25%;">
          </div>
@@ -181,7 +498,7 @@
        </div>
      </div>
 
-     <!-- PASO 5 (INVENTARIO DINÁMICO) -->
+     <!-- PASO 5 -->
      <div class="wizard-step" id="step-5">
        <h2>¿Qué llevamos? 🛋️</h2>
        <p class="instruction">Selecciona cantidades exactas.</p>
@@ -215,8 +532,9 @@
  </div>
 
  <script>
+   // VARIABLES GLOBALES
    const oficialWhatsApp = "5493517046541";
-   const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxuDYL34epNjEf5_SEAsOrhgB3seoXW5L6vs7CcbXjLuSkUcxZ6H7gfq-KDKc88j5AK/exec'; // <--- REEMPLAZAR AQUÍ TAMBIÉN
+   const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw9mtXm7NhkqJZbGIUp3F-6EbVcQckgU1YVcsAFAzYq-a0O7U1tEcjrCc7T9OhblsU/exec';
    let map = null;
    let routeLayer = null;
 
@@ -256,17 +574,26 @@
 
    let userInventory = {};
 
+   // RENDERIZAR INVENTARIO AL CARGAR LA PÁGINA
    window.onload = () => {
      const container = document.getElementById('inventoryContainer');
      invDB.forEach((g, idx) => {
-       let html = `<div class="inventory-group">
-         <div class="inv-header" onclick="toggleInvGroup('grp-${idx}')"><span>${g.group}</span><i class="fas fa-chevron-down"></i></div>
-         <div class="inv-items" id="grp-${idx}">`;
+       let html = `
+         <div class="inventory-group">
+           <div class="inv-header" onclick="toggleInvGroup('grp-${idx}')">
+             <span>${g.group}</span>
+             <i class="fas fa-chevron-down"></i>
+           </div>
+           <div class="inv-items" id="grp-${idx}">`;
+       
        g.items.forEach(item => {
          userInventory[item.id] = { count: 0, name: item.name, m3: item.m3 };
          html += `
            <div class="inv-item-row">
-             <div class="inv-item-info"><span class="inv-item-name">${item.name}</span><span class="inv-item-m3">~${item.m3}m³ c/u</span></div>
+             <div class="inv-item-info">
+               <span class="inv-item-name">${item.name}</span>
+               <span class="inv-item-m3">~${item.m3}m³ c/u</span>
+             </div>
              <div class="counter-controls">
                <button type="button" class="counter-btn" onclick="modItem('${item.id}', -1)">-</button>
                <span class="counter-val" id="val-${item.id}">0</span>
@@ -279,11 +606,16 @@
      });
    };
 
-   function toggleInvGroup(id) { document.getElementById(id).classList.toggle('open'); }
+   // FUNCIONES DE INTERFAZ DEL WIZARD
+   function toggleInvGroup(id) {
+     document.getElementById(id).classList.toggle('open');
+   }
 
    function modItem(id, val) {
      userInventory[id].count += val;
-     if(userInventory[id].count < 0) userInventory[id].count = 0;
+     if (userInventory[id].count < 0) {
+         userInventory[id].count = 0;
+     }
      document.getElementById(`val-${id}`).textContent = userInventory[id].count;
    }
 
@@ -292,12 +624,12 @@
      document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
      element.classList.add('selected');
      
-     if(service === 'Mudanza Larga') {
+     if (service === 'Mudanza Larga') {
        document.getElementById('inst-locales').style.display = 'none';
        document.getElementById('inst-larga').style.display = 'block';
        document.getElementById('btnCalcRuta').style.display = 'block';
        document.getElementById('clientMap').style.display = 'block';
-       if(!map) initMap();
+       if (!map) initMap();
      } else {
        document.getElementById('inst-locales').style.display = 'block';
        document.getElementById('inst-larga').style.display = 'none';
@@ -308,6 +640,7 @@
      }
    }
 
+   // MAPA Y CÁLCULO DE RUTAS
    function initMap() {
      map = L.map('clientMap').setView([-31.4201, -64.1888], 5);
      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -318,7 +651,10 @@
      const des = document.getElementById('wizDestino').value.trim();
      const status = document.getElementById('calcStatus');
      
-     if(!ori || !des) { alert("Ingresa origen y destino para calcular."); return; }
+     if (!ori || !des) {
+         alert("Ingresa origen y destino para calcular.");
+         return;
+     }
      
      status.style.display = 'block';
      status.style.color = 'var(--text-muted)';
@@ -327,10 +663,11 @@
      try {
        const resOri = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(ori)}`);
        const dataOri = await resOri.json();
+       
        const resDes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(des)}`);
        const dataDes = await resDes.json();
        
-       if(dataOri.length === 0 || dataDes.length === 0) {
+       if (dataOri.length === 0 || dataDes.length === 0) {
            status.style.color = 'red';
            status.textContent = "Ubicación no encontrada. Verifica la localidad.";
            return;
@@ -342,7 +679,7 @@
        const resRuta = await fetch(`https://router.project-osrm.org/route/v1/driving/${cOri[1]},${cOri[0]};${cDes[1]},${cDes[0]}?overview=full&geometries=geojson`);
        const dataRuta = await resRuta.json();
        
-       if(dataRuta.code !== 'Ok') throw new Error();
+       if (dataRuta.code !== 'Ok') throw new Error();
        
        const kms = (dataRuta.routes[0].distance / 1000).toFixed(1);
        document.getElementById('wizKms').value = kms;
@@ -350,7 +687,8 @@
        status.style.color = 'var(--brand)';
        status.textContent = `¡Ruta trazada! Distancia: ${kms} km`;
        
-       if(routeLayer) map.removeLayer(routeLayer);
+       if (routeLayer) map.removeLayer(routeLayer);
+       
        const coords = dataRuta.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
        routeLayer = L.polyline(coords, {color: '#ea580c', weight: 4}).addTo(map);
        map.fitBounds(routeLayer.getBounds(), {padding: [20,20]});
@@ -361,6 +699,7 @@
      }
    }
 
+   // FORMATEO DE DATOS DE ACCESO
    function togglePiso(modo) {
      const tipo = document.getElementById(`acc-${modo}-tipo`).value;
      document.getElementById(`acc-${modo}-piso`).style.display = (tipo === 'Piso') ? 'block' : 'none';
@@ -380,11 +719,21 @@
      return str;
    }
 
+   // NAVEGACIÓN ENTRE PASOS
    function nextStep(current, next) {
      const nombre = document.getElementById('wizNombre').value.trim();
-     if(current === 1 && nombre === '') { alert("Indícanos tu nombre."); return; }
-     if(current === 3 && (document.getElementById('wizOrigen').value.trim() === '' || document.getElementById('wizDestino').value.trim() === '')) { alert("Indícanos origen y destino."); return; }
-     if(current === 4 && document.getElementById('wizFecha').value === '') { alert("Selecciona una fecha."); return; }
+     if(current === 1 && nombre === '') {
+         alert("Indícanos tu nombre.");
+         return;
+     }
+     if(current === 3 && (document.getElementById('wizOrigen').value.trim() === '' || document.getElementById('wizDestino').value.trim() === '')) {
+         alert("Indícanos origen y destino.");
+         return;
+     }
+     if(current === 4 && document.getElementById('wizFecha').value === '') {
+         alert("Selecciona una fecha.");
+         return;
+     }
      
      document.getElementById(`step-${current}`).classList.remove('active');
      document.getElementById(`step-${next}`).classList.add('active');
@@ -401,6 +750,7 @@
      document.getElementById('wizProgress').style.width = (prev * 16.6) + '%';
    }
 
+   // ENVÍO FINAL A APPS SCRIPT Y WHATSAPP
    async function finalizarYEnviar() {
      const btn = document.getElementById('btnEnviarFinal');
      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
@@ -432,15 +782,8 @@
      const kms = document.getElementById('wizKms').value;
      const ext = document.getElementById('wizDetalles').value.trim();
 
-     // Enviar a la Base de Datos como Autocotización
-     try {
-       // Primero intentamos recuperar la base actual
-       let response = await fetch(WEB_APP_URL);
-       let existingData = await response.json();
-       
-       if(!Array.isArray(existingData)) existingData = [];
-
-       const autoLead = {
+     // CREAR OBJETO ÚNICO PARA APPS SCRIPT (No borra la base)
+     const autoLead = {
          id: 'WEB-' + Date.now(),
          fecha: fec,
          estado: 'Autocotización',
@@ -461,29 +804,30 @@
          ayudante: 0,
          peajescosto: 0,
          total: 0
-       };
+     };
 
-       existingData.push(autoLead);
-
+     // ENVIAR DATOS A GOOGLE SHEETS
+     try {
        await fetch(WEB_APP_URL, {
          method: 'POST',
          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-         body: JSON.stringify(existingData)
+         body: JSON.stringify(autoLead)
        });
      } catch (e) {
-       console.error("No se pudo registrar la autocotización en la base de datos.", e);
-       // Ignoramos el error para no trabar al cliente, igual se manda a WhatsApp.
+       console.error("Error enviando datos:", e);
      }
 
-     // Redirigir a WhatsApp
+     // ARMAR MENSAJE DE WHATSAPP
      let msj = `Hola *NIVEL 9*! 👋 Soy ${nom}.\nSolicito presupuesto generado desde la web:\n\n`;
      msj += `🚚 *Servicio:* ${srv}\n`;
-     if(srv === 'Mudanza Larga' && kms > 0) msj += `🛣️ *Distancia:* ~${kms} km\n`;
-     msj += `📅 *Fecha Ideal:* ${fec}\n\n`;
      
+     if(srv === 'Mudanza Larga' && kms > 0) {
+         msj += `🛣️ *Distancia:* ~${kms} km\n`;
+     }
+     
+     msj += `📅 *Fecha Ideal:* ${fec}\n\n`;
      msj += `📍 *ORIGEN:* ${ori}\n🏢 *Acceso:* ${accOri}\n\n`;
      msj += `🏁 *DESTINO:* ${des}\n🏢 *Acceso:* ${accDes}\n\n`;
-     
      msj += `📦 *INVENTARIO DECLARADO:*\n`;
      msj += invTextLines.length > 0 ? invTextLines.join('\n') : `▪️ Sin muebles detallados`;
      msj += `\n\n`;
@@ -493,10 +837,15 @@
        msj += `🚛 *Vehículo Sugerido:* ${vehiculoSugerido}\n\n`;
      }
      
-     if(ext) msj += `📝 *Detalles Adicionales:*\n"${ext}"\n\n`;
+     if(ext) {
+         msj += `📝 *Detalles Adicionales:*\n"${ext}"\n\n`;
+     }
+     
      msj += `¡Quedo a la espera de la cotización!`;
 
      btn.innerHTML = '<i class="fab fa-whatsapp"></i> Redirigiendo...';
+     
+     // REDIRIGIR A WHATSAPP
      const finalUrl = `https://wa.me/${oficialWhatsApp}?text=${encodeURIComponent(msj)}`;
      window.location.href = finalUrl;
    }
