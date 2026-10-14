@@ -847,7 +847,10 @@
      
      // REDIRIGIR A WHATSAPP
      const finalUrl = `https://wa.me/${oficialWhatsApp}?text=${encodeURIComponent(msj)}`;
-     window.location.href = finalUrl;
+   window.open(finalUrl, '_blank'); // Abre WhatsApp en una pestaña/app nueva
+setTimeout(() => {
+  window.location.reload(); // Reinicia el cotizador dejándolo en blanco
+}, 1500);
    }
  </script>
 </body>
