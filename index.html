@@ -123,7 +123,13 @@
  </style>
 </head>
 <body>
-
+<script>
+  const pinAcceso = prompt("🔒 Acceso Restringido - Nivel 9\nIngrese su PIN de seguridad corporativo:");
+  if(pinAcceso !== "2468") { 
+      document.body.innerHTML = "<h2 style='text-align:center; margin-top:100px; font-family:sans-serif; color:#ea580c;'>Acceso Denegado</h2>";
+      throw new Error("PIN Incorrecto");
+  }
+</script>
  <div class="app-container">
 
    <div id="viewPortal" class="portal-container">
