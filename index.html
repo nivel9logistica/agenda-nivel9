@@ -124,13 +124,16 @@
 </head>
 <body>
 <script>
-  const pinAcceso = prompt("🔒 Acceso Restringido - Nivel 9\nIngrese su PIN de seguridad corporativo:");
-  if(pinAcceso !== "2468") { 
-      document.body.innerHTML = "<h2 style='text-align:center; margin-top:100px; font-family:sans-serif; color:#ea580c;'>Acceso Denegado</h2>";
-      throw new Error("PIN Incorrecto");
-  }
+  (function() {
+    const pinAcceso = prompt("🔒 Acceso Restringido - Nivel 9\nIngrese su PIN de seguridad corporativo:");
+    if (pinAcceso !== "2468") { 
+        alert("Acceso denegado.");
+        window.location.href = "https://www.google.com";
+        throw new Error("PIN Incorrecto");
+    }
+  })();
 </script>
- <div class="app-container">
+<div class="app-container">
 
    <div id="viewPortal" class="portal-container">
      <div class="portal-header-box">
@@ -423,6 +426,20 @@
          <div class="form-group"><label>Destino</label><input type="text" id="ev-destino"></div>
          <div class="form-group full"><label>Distancia (Km Simple)</label><input type="number" id="ev-distancia" step="any"></div>
          <div class="form-group full"><label>Detalles Carga</label><textarea id="ev-detalles"></textarea></div>
+        <!-- BLOQUE DE INVENTARIO Y ACCESOS -->
+<div class="form-group full" style="margin-top: 15px; border-top: 1px solid #e5e7eb; padding-top: 10px;">
+  <label style="font-weight: bold; color: #1f2937; display: block; margin-bottom: 5px;">📦 Inventario y Detalles de Carga:</label>
+  <textarea id="ev-inventario" rows="4" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px;" placeholder="Ej: 1 Juego de comedor, 1 Heladera, 15 Cajas. Acceso: Piso 2 por escalera."></textarea>
+</div>
+<!-- BOTONES DE EXPORTACIÓN PÚBLICA (FILTRO CIEGO) -->
+<div class="form-group full" style="margin-top: 15px; display: flex; gap: 10px;">
+  <button type="button" onclick="copiarFichaWhatsApp()" style="background-color: #25D366; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1;">
+    📱 Copiar Ficha WhatsApp
+  </button>
+  <button type="button" onclick="abrirOpcionesPDF()" style="background-color: #4F46E5; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1;">
+    📄 Generar Presupuesto PDF
+  </button>
+</div>
          <div class="form-group"><label>Presupuesto / Tarifa ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-presupuesto" value="0" oninput="calculateTotal()" required></div></div>
          <div class="form-group"><label>Seña Abonada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-sena" value="0" oninput="calculateTotal()"></div></div>
          <div class="form-group"><label>Combustible ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-combustible" value="0" oninput="calculateTotal()"></div></div>
@@ -859,6 +876,153 @@
    function openAddEventModal(dateStr = null) { closeModals(); document.getElementById('eventForm').reset(); document.getElementById('ev-id').value = ''; document.getElementById('ev-fecha').value = dateStr || new Date().toISOString().split('T')[0]; calculateTotal(); document.getElementById('modalEventForm').classList.add('active'); }
 
    document.addEventListener('DOMContentLoaded', () => { initApp(); });
+// 1. COPIAR FICHA LIMPIA PARA WHATSAPP (SIN COSTOS INTERNOS)
+function copiarFichaWhatsApp() {
+  const cliente = document.getElementById('ev-cliente')?.value || 'Cliente';
+  const fecha = document.getElementById('ev-fecha')?.value || '';
+  const origen = document.getElementById('ev-origen')?.value || '';
+  const destino = document.getElementById('ev-destino')?.value || '';
+  const unidad = document.getElementById('ev-asignacion')?.value || 'A confirmar';
+  const inventario = document.getElementById('ev-inventario')?.value || 'Sin inventario detallado';
+  const tarifa = document.getElementById('ev-tarifafinal')?.value || document.getElementById('ev-presupuesto')?.value || '0';
+  const sena = document.getElementById('ev-sena')?.value || '0';
+  const saldo = parseFloat(tarifa) - parseFloat(sena);
+
+  const ficha = `🚚 *NIVEL 9 - Hoja de Ruta / Orden de Servicio*
+👤 *Cliente:* ${cliente}
+📅 *Fecha:* ${fecha}
+📍 *Origen:* ${origen}
+🏁 *Destino:* ${destino}
+🚛 *Unidad:* ${unidad}
+
+📦 *INVENTARIO Y ACCESOS:*
+${inventario}
+
+💵 *CONDICIONES ECONÓMICAS:*
+• *Tarifa Total:* $${tarifa}
+• *Seña Abonada:* $${sena}
+• *Saldo a Cobrar:* $${saldo}`;
+
+  navigator.clipboard.writeText(ficha).then(() => {
+    alert("✅ Ficha de WhatsApp copiada al portapapeles sin costos internos.");
+  });
+}
+
+// 2. SELECCIONAR TIPO DE PDF Y GENERAR
+function abrirOpcionesPDF() {
+  const tipo = confirm("Haga clic en ACEPTAR para Presupuesto PARTICULAR (Mudanza)\no CANCELAR para Presupuesto EMPRESARIAL (Corporativo)");
+  generarPresupuestoPDF(tipo ? "particular" : "empresa");
+}
+
+function generarPresupuestoPDF(tipoFormato) {
+  const cliente = document.getElementById('ev-cliente')?.value || 'Cliente';
+  const fecha = document.getElementById('ev-fecha')?.value || '';
+  const origen = document.getElementById('ev-origen')?.value || '';
+  const destino = document.getElementById('ev-destino')?.value || '';
+  const inventario = document.getElementById('ev-inventario')?.value || 'Inventario general de mudanza/flete.';
+  const tarifa = document.getElementById('ev-tarifafinal')?.value || document.getElementById('ev-presupuesto')?.value || '0';
+  const sena = document.getElementById('ev-sena')?.value || '0';
+  const saldo = parseFloat(tarifa) - parseFloat(sena);
+
+  let terminosHTML = "";
+
+  if (tipoFormato === "particular") {
+    terminosHTML = `
+      <ol style="font-size: 10px; color: #4b5563; padding-left: 15px;">
+        <li><strong>DECLARACIÓN DE INVENTARIO Y VOLUMEN:</strong> La tarifa se calcula según el inventario y volumen declarados. La incorporación de bultos adicionales podrá reajustar la tarifa.</li>
+        <li><strong>ACCESIBILIDAD Y DIFICULTADES:</strong> El cliente debe informar accesos por escalera, acarreos >30m o restricciones edilicias.</li>
+        <li><strong>OBJETOS DE VALOR Y DOCUMENTACIÓN:</strong> Efectivo, joyas, documentación y dispositivos portátiles deben ser transportados exclusivamente por el cliente.</li>
+        <li><strong>EMBALAJE Y FRÁGILES:</strong> Elementos frágiles deben estar embalados y rotulados "FRÁGIL".</li>
+        <li><strong>SEGURO DE CARGA OPCIONAL:</strong> Si requiere seguro específico, debe solicitarlo con anticipación indicando inventario y valor declarado. El costo de la póliza está a cargo exclusivo del cliente.</li>
+        <li><strong>CONDICIONES DE PAGO Y FACTURACIÓN:</strong> Reserva con 30% de seña. Saldo en destino previo a la descarga. Facturación bajo régimen Monotributo (Factura C — Rodrigo J. Castro | CUIT: 20-24691221-2).</li>
+      </ol>`;
+  } else {
+    terminosHTML = `
+      <ol style="font-size: 10px; color: #4b5563; padding-left: 15px;">
+        <li><strong>VALIDEZ Y CONDICIONES DE LA OFERTA:</strong> Validez de 10 días corridos. Facturación Tipo C (Rodrigo J. Castro — Monotributista | CUIT: 20-24691221-2).</li>
+        <li><strong>TIEMPOS DE CARGA Y DEMORAS:</strong> Incluye hasta 1.5h de carga y 1.5h de descarga. Demoras extraordinarias se facturan como hora de espera.</li>
+        <li><strong>SEGURO Y RESPONSABILIDAD:</strong> La responsabilidad finaliza con la entrega bajo remito u hoja de ruta firmada en conformidad.</li>
+        <li><strong>COBERTURA ADICIONAL / VALOR DECLARADO:</strong> Para seguro específico se requiere nómina de inventario con valor declarado previo. El importe del seguro será a cargo del cliente.</li>
+        <li><strong>CUMPLIMIENTO NORMATIVO Y PERSONAL:</strong> Personal con coberturas de riesgos y E.P.P. vigentes.</li>
+        <li><strong>CANCELACIÓN:</strong> Notificación previa de 24hs hábiles. Caso contrario, se cobra el 50% por reserva de equipo.</li>
+      </ol>`;
+  }
+
+  const ventanaPdf = window.open('', '_blank');
+  ventanaPdf.document.write(`
+    <html>
+      <head>
+        <title>Presupuesto Nivel 9 - ${cliente}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; color: #1f2937; }
+          .header { display: flex; justify-content: space-between; border-bottom: 2px solid #ea580c; padding-bottom: 10px; }
+          .title { color: #ea580c; font-size: 22px; font-weight: bold; }
+          .section { margin-top: 15px; background: #f9fafb; padding: 12px; border-radius: 6px; }
+          .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          .table th, .table td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+          .table th { background: #f3f4f6; }
+          .footer { margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 10px; font-size: 11px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <div class="title">NIVEL 9</div>
+            <div style="font-size: 12px; color: #4b5563;">Logística & Transportes</div>
+            <div style="font-size: 10px; color: #6b7280;">Rodrigo J. Castro | CUIT: 20-24691221-2 (Factura C)</div>
+          </div>
+          <div style="text-align: right; font-size: 12px;">
+            <strong>PRESUPUESTO DE SERVICIO</strong><br>
+            Fecha: ${fecha}
+          </div>
+        </div>
+
+        <div class="section">
+          <strong>Cliente:</strong> ${cliente}<br>
+          <strong>Origen:</strong> ${origen}<br>
+          <strong>Destino:</strong> ${destino}
+        </div>
+
+        <div class="section">
+          <strong>📦 Inventario y Detalle del Servicio:</strong>
+          <p style="white-space: pre-line; font-size: 12px;">${inventario}</p>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th>Importe Total</th>
+              <th>Seña Abonada</th>
+              <th>Saldo a Cancelar</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Servicio Integral de Transporte / Mudanza</td>
+              <td>$${tarifa}</td>
+              <td>$${sena}</td>
+              <td><strong>$${saldo}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <strong>TÉRMINOS Y CONDICIONES (${tipoFormato.toUpperCase()}):</strong>
+          ${terminosHTML}
+          <br><br>
+          <div style="text-align: center; margin-top: 20px;">
+            ________________________________________<br>
+            <strong>Lic. Rodrigo J. Castro</strong><br>
+            Nivel 9 — Logística & Transportes | CUIT: 20-24691221-2
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
+  ventanaPdf.document.close();
+  ventanaPdf.print();
+}
  </script>
 </body>
 </html>
