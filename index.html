@@ -1,126 +1,126 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
- <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
- <title>NIVEL 9 - Sistema de Gestión Logística</title>
- <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
- <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
- <style>
- @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
- :root {
-   --brand: #ea580c; --brand-light: #ffedd5; --dark: #111113; --bg: #e4e4e7;
-   --posible: #71717a; --confirmada: #ea580c; --finalizada: #10b981; --autocotizacion: #facc15; --presupuesto: #8b5cf6;
- }
- * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
- body { background: var(--bg); color: var(--dark); min-height: 100vh; -webkit-text-size-adjust: 100%; }
- .app-container { max-width: 1300px; margin: 0 auto; padding: 12px; }
- .brand-logo-svg { height: 42px; width: auto; vertical-align: middle; }
- 
- .portal-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; text-align: center; gap: 25px; padding: 15px; }
- .portal-header-box { background: var(--dark); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-bottom: 4px solid var(--brand); max-width: 600px; width: 100%; }
- .portal-title { font-size: 1.8rem; font-weight: 700; color: white; margin-top: 15px; }
- .portal-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; width: 100%; max-width: 900px; }
- .portal-card { background: white; padding: 25px 15px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 12px; border: 2px solid #d4d4d8; }
- .portal-card:hover { border-color: var(--brand); transform: translateY(-3px); }
- .portal-card i { font-size: 2.3rem; color: var(--brand); }
- .portal-card h3 { font-size: 1.2rem; font-weight: 700; color: var(--dark); }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>NIVEL 9 - Sistema de Gestión Logística</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+  <style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
+  :root {
+    --brand: #ea580c; --brand-light: #ffedd5; --dark: #111113; --bg: #e4e4e7;
+    --posible: #71717a; --confirmada: #ea580c; --finalizada: #10b981; --autocotizacion: #facc15; --presupuesto: #8b5cf6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+  body { background: var(--bg); color: var(--dark); min-height: 100vh; -webkit-text-size-adjust: 100%; }
+  .app-container { max-width: 1300px; margin: 0 auto; padding: 12px; }
+  .brand-logo-svg { height: 42px; width: auto; vertical-align: middle; }
+  
+  .portal-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; text-align: center; gap: 25px; padding: 15px; }
+  .portal-header-box { background: var(--dark); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-bottom: 4px solid var(--brand); max-width: 600px; width: 100%; }
+  .portal-title { font-size: 1.8rem; font-weight: 700; color: white; margin-top: 15px; }
+  .portal-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; width: 100%; max-width: 900px; }
+  .portal-card { background: white; padding: 25px 15px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 12px; border: 2px solid #d4d4d8; }
+  .portal-card:hover { border-color: var(--brand); transform: translateY(-3px); }
+  .portal-card i { font-size: 2.3rem; color: var(--brand); }
+  .portal-card h3 { font-size: 1.2rem; font-weight: 700; color: var(--dark); }
 
- .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--dark); padding: 12px 18px; border-radius: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 10px; color: white; }
- .top-nav { display: flex; gap: 6px; flex-wrap: wrap; }
- 
- .btn { padding: 9px 14px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; }
- .btn:hover { opacity: 0.9; transform: translateY(-1px); }
- .btn-dark { background: #27272a; color: white; }
- .btn-brand { background: var(--brand); color: white; }
- .btn-purple { background: var(--presupuesto); color: white; }
- .btn-success { background: #25D366; color: white; }
- .btn-outline { background: transparent; border: 1px solid #52525b; color: white; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--dark); padding: 12px 18px; border-radius: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 10px; color: white; }
+  .top-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+  
+  .btn { padding: 9px 14px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; }
+  .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-dark { background: #27272a; color: white; }
+  .btn-brand { background: var(--brand); color: white; }
+  .btn-purple { background: var(--presupuesto); color: white; }
+  .btn-success { background: #25D366; color: white; }
+  .btn-outline { background: transparent; border: 1px solid #52525b; color: white; }
 
- .cotizador-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
- @media (max-width: 850px) { .cotizador-grid { grid-template-columns: 1fr; } }
- .panel-box { background: white; padding: 18px; border-radius: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 12px; border: 1px solid #d4d4d8; margin-bottom: 15px;}
- .panel-title { font-size: 0.95rem; font-weight: 700; color: var(--brand); border-bottom: 2px solid var(--brand-light); padding-bottom: 5px; text-transform: uppercase; }
- #map { width: 100%; height: 330px; border-radius: 10px; border: 1px solid #d4d4d8; z-index: 1; overflow: hidden; }
- 
- .calendar-wrapper { background: white; border-radius: 14px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); border: 1px solid #d4d4d8; overflow-x: auto; }
- .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(40px, 1fr)); gap: 6px; }
- .day-header { text-align: center; font-weight: 700; color: #52525b; padding-bottom: 6px; font-size: 0.8rem; }
- .day-cell { min-height: 95px; border: 1px solid #e4e4e7; border-radius: 8px; padding: 5px; cursor: pointer; transition: all 0.2s; background: #fafafa; display: flex; flex-direction: column; gap: 3px; position: relative; overflow: hidden; }
- .day-cell:hover { border-color: var(--brand); }
- .day-cell.today { border-color: var(--brand); font-weight: bold; }
- 
- .event-chip { padding: 2px 4px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 2; display: flex; align-items: center; justify-content: space-between; }
- .status-Posible { background-color: var(--posible) !important; }
- .status-Confirmada { background-color: var(--confirmada) !important; }
- .status-Finalizada { background-color: var(--finalizada) !important; }
- .status-Autocotización { background-color: var(--autocotizacion) !important; color: #111113 !important; font-weight: 800; }
- .status-Presupuesto { background-color: var(--presupuesto) !important; color: white !important; }
- 
- .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 12px; }
- .modal-overlay.active { display: flex; }
- .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
- .modal-header { padding: 12px 18px; border-bottom: 1px solid #e4e4e7; display: flex; justify-content: space-between; align-items: center; background: #fafafa; border-radius: 16px 16px 0 0; position: sticky; top: 0; z-index: 10; }
- .modal-body { padding: 18px; }
- .modal-footer { padding: 12px 18px; border-top: 1px solid #e4e4e7; display: flex; justify-content: flex-end; gap: 8px; background: #fafafa; border-radius: 0 0 16px 16px; position: sticky; bottom: 0; z-index: 10;}
- .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
- .form-group { display: flex; flex-direction: column; gap: 3px; }
- .form-group.full { grid-column: span 2; }
- label { font-size: 0.75rem; font-weight: 700; color: #52525b; text-transform: uppercase; }
- input, select, textarea { padding: 8px 10px; border: 1px solid #d4d4d8; border-radius: 6px; font-size: 0.88rem; font-family: inherit; }
- input:focus, select:focus, textarea:focus { outline: none; border-color: var(--brand); }
- textarea { resize: vertical; min-height: 65px; }
- 
- .currency-wrapper { position: relative; display: flex; align-items: center; }
- .currency-symbol { position: absolute; left: 10px; font-weight: 700; color: #71717a; font-size: 0.88rem; pointer-events: none; }
- .currency-wrapper input { padding-left: 24px; width: 100%; }
+  .cotizador-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+  @media (max-width: 850px) { .cotizador-grid { grid-template-columns: 1fr; } }
+  .panel-box { background: white; padding: 18px; border-radius: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 12px; border: 1px solid #d4d4d8; margin-bottom: 15px;}
+  .panel-title { font-size: 0.95rem; font-weight: 700; color: var(--brand); border-bottom: 2px solid var(--brand-light); padding-bottom: 5px; text-transform: uppercase; }
+  #map { width: 100%; height: 330px; border-radius: 10px; border: 1px solid #d4d4d8; z-index: 1; overflow: hidden; }
+  
+  .calendar-wrapper { background: white; border-radius: 14px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); border: 1px solid #d4d4d8; overflow-x: auto; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(40px, 1fr)); gap: 6px; }
+  .day-header { text-align: center; font-weight: 700; color: #52525b; padding-bottom: 6px; font-size: 0.8rem; }
+  .day-cell { min-height: 95px; border: 1px solid #e4e4e7; border-radius: 8px; padding: 5px; cursor: pointer; transition: all 0.2s; background: #fafafa; display: flex; flex-direction: column; gap: 3px; position: relative; overflow: hidden; }
+  .day-cell:hover { border-color: var(--brand); }
+  .day-cell.today { border-color: var(--brand); font-weight: bold; }
+  
+  .event-chip { padding: 2px 4px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 2; display: flex; align-items: center; justify-content: space-between; }
+  .status-Posible { background-color: var(--posible) !important; }
+  .status-Confirmada { background-color: var(--confirmada) !important; }
+  .status-Finalizada { background-color: var(--finalizada) !important; }
+  .status-Autocotización { background-color: var(--autocotizacion) !important; color: #111113 !important; font-weight: 800; }
+  .status-Presupuesto { background-color: var(--presupuesto) !important; color: white !important; }
+  
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 12px; }
+  .modal-overlay.active { display: flex; }
+  .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+  .modal-header { padding: 12px 18px; border-bottom: 1px solid #e4e4e7; display: flex; justify-content: space-between; align-items: center; background: #fafafa; border-radius: 16px 16px 0 0; position: sticky; top: 0; z-index: 10; }
+  .modal-body { padding: 18px; }
+  .modal-footer { padding: 12px 18px; border-top: 1px solid #e4e4e7; display: flex; justify-content: flex-end; gap: 8px; background: #fafafa; border-radius: 0 0 16px 16px; position: sticky; bottom: 0; z-index: 10;}
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-group { display: flex; flex-direction: column; gap: 3px; }
+  .form-group.full { grid-column: span 2; }
+  label { font-size: 0.75rem; font-weight: 700; color: #52525b; text-transform: uppercase; }
+  input, select, textarea { padding: 8px 10px; border: 1px solid #d4d4d8; border-radius: 6px; font-size: 0.88rem; font-family: inherit; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--brand); }
+  textarea { resize: vertical; min-height: 65px; }
+  
+  .currency-wrapper { position: relative; display: flex; align-items: center; }
+  .currency-symbol { position: absolute; left: 10px; font-weight: 700; color: #71717a; font-size: 0.88rem; pointer-events: none; }
+  .currency-wrapper input { padding-left: 24px; width: 100%; }
 
- .contact-card { background: white; border: 1px solid #d4d4d8; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 8px; }
- .contact-badge { font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; background: var(--brand-light); color: var(--brand); width: fit-content; }
- .vehicle-specs { background: #f4f4f5; border-radius: 8px; padding: 10px; margin-top: 6px; font-size: 0.82rem; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .contact-card { background: white; border: 1px solid #d4d4d8; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 8px; }
+  .contact-badge { font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; background: var(--brand-light); color: var(--brand); width: fit-content; }
+  .vehicle-specs { background: #f4f4f5; border-radius: 8px; padding: 10px; margin-top: 6px; font-size: 0.82rem; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 
- .event-card { border: 1px solid #e4e4e7; border-left: 5px solid var(--posible); border-radius: 8px; padding: 10px; margin-bottom: 10px; background: #fafafa; }
- .event-card.Confirmada { border-left-color: var(--confirmada); }
- .event-card.Finalizada { border-left-color: var(--finalizada); }
- .event-card.Autocotización { border-left-color: var(--autocotizacion); }
- .event-card.Presupuesto { border-left-color: var(--presupuesto); }
- .event-card-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
- .event-card-title { font-size: 0.95rem; font-weight: 700; }
- .event-card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.82rem; color: #3f3f46; }
+  .event-card { border: 1px solid #e4e4e7; border-left: 5px solid var(--posible); border-radius: 8px; padding: 10px; margin-bottom: 10px; background: #fafafa; }
+  .event-card.Confirmada { border-left-color: var(--confirmada); }
+  .event-card.Finalizada { border-left-color: var(--finalizada); }
+  .event-card.Autocotización { border-left-color: var(--autocotizacion); }
+  .event-card.Presupuesto { border-left-color: var(--presupuesto); }
+  .event-card-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .event-card-title { font-size: 0.95rem; font-weight: 700; }
+  .event-card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.82rem; color: #3f3f46; }
 
- /* KPIs */
- .kpi-cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px; }
- .kpi-card-box { background: white; padding: 18px; border-radius: 12px; border: 1px solid #d4d4d8; box-shadow: 0 4px 6px rgba(0,0,0,0.04); text-align: center; }
- .kpi-card-box h4 { color: #52525b; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 8px; font-weight: 700;}
- .kpi-card-box .kpi-value { font-size: 1.8rem; font-weight: 800; color: var(--brand); }
- .checkbox-group { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #3f3f46; cursor: pointer; }
- .table-responsive { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid #d4d4d8; }
- .report-table { width: 100%; border-collapse: collapse; min-width: 900px; }
- .report-table th, .report-table td { padding: 12px 15px; border-bottom: 1px solid #e4e4e7; text-align: left; font-size: 0.85rem; }
- .report-table th { background: #f4f4f5; color: #111113; font-weight: 700; text-transform: uppercase; }
- .report-table tr:hover { background: #fafafa; }
- 
- /* PDF HIDDEN TEMPLATE */
- #pdf-render-container { display: none; }
- .pdf-page { width: 793px; min-height: 1122px; padding: 40px; background: white; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #111; box-sizing: border-box; }
- .pdf-header { text-align: center; margin-bottom: 20px; }
- .pdf-logo { width: 140px; height: 140px; background: #000; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 10px; color: white; }
- .pdf-title { font-size: 14px; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
- .pdf-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
- .pdf-section-title { font-size: 12px; font-weight: bold; margin: 15px 0 5px; }
- .pdf-text { font-size: 11px; line-height: 1.4; margin-bottom: 5px; }
- .pdf-terms { font-size: 9px; line-height: 1.3; margin-top: 15px; text-align: justify; }
- .pdf-signature { margin-top: 40px; text-align: center; font-size: 11px; }
+  /* KPIs */
+  .kpi-cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 15px; }
+  .kpi-card-box { background: white; padding: 18px; border-radius: 12px; border: 1px solid #d4d4d8; box-shadow: 0 4px 6px rgba(0,0,0,0.04); text-align: center; }
+  .kpi-card-box h4 { color: #52525b; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 8px; font-weight: 700;}
+  .kpi-card-box .kpi-value { font-size: 1.8rem; font-weight: 800; color: var(--brand); }
+  .checkbox-group { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #3f3f46; cursor: pointer; }
+  .table-responsive { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid #d4d4d8; }
+  .report-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+  .report-table th, .report-table td { padding: 12px 15px; border-bottom: 1px solid #e4e4e7; text-align: left; font-size: 0.85rem; }
+  .report-table th { background: #f4f4f5; color: #111113; font-weight: 700; text-transform: uppercase; }
+  .report-table tr:hover { background: #fafafa; }
+  
+  /* PDF HIDDEN TEMPLATE */
+  #pdf-render-container { display: none; }
+  .pdf-page { width: 793px; min-height: 1122px; padding: 40px; background: white; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #111; box-sizing: border-box; }
+  .pdf-header { text-align: center; margin-bottom: 20px; }
+  .pdf-logo { width: 140px; height: 140px; background: #000; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 10px; color: white; }
+  .pdf-title { font-size: 14px; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
+  .pdf-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+  .pdf-section-title { font-size: 12px; font-weight: bold; margin: 15px 0 5px; }
+  .pdf-text { font-size: 11px; line-height: 1.4; margin-bottom: 5px; }
+  .pdf-terms { font-size: 9px; line-height: 1.3; margin-top: 15px; text-align: justify; }
+  .pdf-signature { margin-top: 40px; text-align: center; font-size: 11px; }
 
- @media print {
-   body * { visibility: hidden; }
-   #printArea, #printArea * { visibility: visible; }
-   #printArea { position: absolute; left: 0; top: 0; width: 100%; }
-   .app-container, .modal-overlay { display: none !important; }
- }
- </style>
+  @media print {
+    body * { visibility: hidden; }
+    #printArea, #printArea * { visibility: visible; }
+    #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+    .app-container, .modal-overlay { display: none !important; }
+  }
+  </style>
 </head>
 <body>
 <script>
@@ -135,323 +135,326 @@
 </script>
 <div class="app-container">
 
-   <div id="viewPortal" class="portal-container">
-     <div class="portal-header-box">
-       <svg class="brand-logo-svg" viewBox="0 0 500 120" style="height:60px;">
-         <text x="10" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="70" fill="#ffffff">NIVEL</text>
-         <text x="210" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="75" fill="#ea580c">9</text>
-         <rect x="10" y="85" width="260" height="4" fill="#ea580c" />
-         <text x="10" y="105" font-family="'Outfit', sans-serif" font-weight="600" font-size="14" fill="#a1a1aa" letter-spacing="4">LOGISTICA DE EXCELENCIA</text>
-       </svg>
-       <div class="portal-title">Sistema de Gestión</div>
-     </div>
-     <div class="portal-menu">
-       <div class="portal-card" onclick="showView('Agenda')"><i class="fas fa-calendar-alt"></i><h3>Agenda de Movimientos</h3></div>
-       <div class="portal-card" onclick="showView('Cotizador')"><i class="fas fa-calculator"></i><h3>Cotizador de Rutas</h3></div>
-       <div class="portal-card" onclick="showView('Contactos')"><i class="fas fa-address-book"></i><h3>Directorio de Contactos</h3></div>
-       <div class="portal-card" onclick="showView('Informes')"><i class="fas fa-chart-pie"></i><h3>Informes y KPIs</h3></div>
-       <div class="portal-card" onclick="openConfigModal()"><i class="fas fa-cog"></i><h3>Ajustes de Parámetros</h3></div>
-     </div>
-   </div>
+    <div id="viewPortal" class="portal-container">
+      <div class="portal-header-box">
+        <svg class="brand-logo-svg" viewBox="0 0 500 120" style="height:60px;">
+          <text x="10" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="70" fill="#ffffff">NIVEL</text>
+          <text x="210" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="75" fill="#ea580c">9</text>
+          <rect x="10" y="85" width="260" height="4" fill="#ea580c" />
+          <text x="10" y="105" font-family="'Outfit', sans-serif" font-weight="600" font-size="14" fill="#a1a1aa" letter-spacing="4">LOGISTICA DE EXCELENCIA</text>
+        </svg>
+        <div class="portal-title">Sistema de Gestión</div>
+      </div>
+      <div class="portal-menu">
+        <div class="portal-card" onclick="showView('Agenda')"><i class="fas fa-calendar-alt"></i><h3>Agenda de Movimientos</h3></div>
+        <div class="portal-card" onclick="showView('Cotizador')"><i class="fas fa-calculator"></i><h3>Cotizador de Rutas</h3></div>
+        <div class="portal-card" onclick="showView('Contactos')"><i class="fas fa-address-book"></i><h3>Directorio de Contactos</h3></div>
+        <div class="portal-card" onclick="showView('Informes')"><i class="fas fa-chart-pie"></i><h3>Informes y KPIs</h3></div>
+        <div class="portal-card" onclick="openConfigModal()"><i class="fas fa-cog"></i><h3>Ajustes de Parámetros</h3></div>
+      </div>
+    </div>
 
-   <div id="appHeader" class="header" style="display: none;">
-     <div style="display:flex; align-items:center; gap:12px;">
-       <svg class="brand-logo-svg" viewBox="0 0 500 120">
-         <text x="10" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="70" fill="#ffffff">NIVEL</text>
-         <text x="210" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="75" fill="#ea580c">9</text>
-         <rect x="10" y="85" width="260" height="4" fill="#ea580c" />
-         <text x="10" y="105" font-family="'Outfit', sans-serif" font-weight="600" font-size="14" fill="#a1a1aa" letter-spacing="4">LOGISTICA DE EXCELENCIA</text>
-       </svg>
-     </div>
-     <div class="top-nav">
-       <button class="btn btn-outline" onclick="showView('Portal')"><i class="fas fa-home"></i> Inicio</button>
-       <button class="btn btn-outline" onclick="showView('Agenda')"><i class="fas fa-calendar"></i> Agenda</button>
-       <button class="btn btn-outline" onclick="showView('Cotizador')"><i class="fas fa-calculator"></i> Cotizador</button>
-       <button class="btn btn-outline" onclick="showView('Contactos')"><i class="fas fa-address-book"></i> Contactos</button>
-       <button class="btn btn-outline" onclick="showView('Informes')"><i class="fas fa-chart-pie"></i> Informes</button>
-       <button class="btn btn-outline" onclick="openConfigModal()"><i class="fas fa-cog"></i></button>
-     </div>
-   </div>
+    <div id="appHeader" class="header" style="display: none;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <svg class="brand-logo-svg" viewBox="0 0 500 120">
+          <text x="10" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="70" fill="#ffffff">NIVEL</text>
+          <text x="210" y="70" font-family="'Outfit', sans-serif" font-weight="800" font-size="75" fill="#ea580c">9</text>
+          <rect x="10" y="85" width="260" height="4" fill="#ea580c" />
+          <text x="10" y="105" font-family="'Outfit', sans-serif" font-weight="600" font-size="14" fill="#a1a1aa" letter-spacing="4">LOGISTICA DE EXCELENCIA</text>
+        </svg>
+      </div>
+      <div class="top-nav">
+        <button class="btn btn-outline" onclick="showView('Portal')"><i class="fas fa-home"></i> Inicio</button>
+        <button class="btn btn-outline" onclick="showView('Agenda')"><i class="fas fa-calendar"></i> Agenda</button>
+        <button class="btn btn-outline" onclick="showView('Cotizador')"><i class="fas fa-calculator"></i> Cotizador</button>
+        <button class="btn btn-outline" onclick="showView('Contactos')"><i class="fas fa-address-book"></i> Contactos</button>
+        <button class="btn btn-outline" onclick="showView('Informes')"><i class="fas fa-chart-pie"></i> Informes</button>
+        <button class="btn btn-outline" onclick="openConfigModal()"><i class="fas fa-cog"></i></button>
+      </div>
+    </div>
 
-   <!-- VISTA AGENDA -->
-   <div id="viewAgenda" style="display: none;">
-     <div class="header" style="background: white; color: var(--dark); margin-bottom:12px;">
-       <div class="nav-controls" style="display:flex; gap:6px; align-items:center;">
-         <button class="btn btn-dark" onclick="navigateMonth(-1)"><i class="fas fa-chevron-left"></i></button>
-         <div class="nav-title" id="currentMonthYear" style="font-weight:700; min-width:130px; text-align:center;">Mes Año</div>
-         <button class="btn btn-dark" onclick="navigateMonth(1)"><i class="fas fa-chevron-right"></i></button>
-         <button class="btn btn-dark" onclick="goToday()">Hoy</button>
-       </div>
-       <div style="display: flex; gap: 6px; flex-wrap:wrap;">
-         <button class="btn btn-brand" onclick="openAddEventModal()"><i class="fas fa-plus"></i> Nuevo Movimiento</button>
-         <button class="btn btn-purple" onclick="openPresupuestoModal()"><i class="fas fa-file-pdf"></i> Generar Presupuesto</button>
-       </div>
-     </div>
-     <div class="calendar-wrapper">
-       <div class="calendar-grid" id="calendarDaysHeader">
-         <div class="day-header">Dom</div><div class="day-header">Lun</div><div class="day-header">Mar</div>
-         <div class="day-header">Mié</div><div class="day-header">Jue</div><div class="day-header">Vie</div><div class="day-header">Sáb</div>
-       </div>
-       <div class="calendar-grid" id="calendarGrid"></div>
-     </div>
-   </div>
+    <!-- VISTA AGENDA -->
+    <div id="viewAgenda" style="display: none;">
+      <div class="header" style="background: white; color: var(--dark); margin-bottom:12px;">
+        <div class="nav-controls" style="display:flex; gap:6px; align-items:center;">
+          <button class="btn btn-dark" onclick="navigateMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+          <div class="nav-title" id="currentMonthYear" style="font-weight:700; min-width:130px; text-align:center;">Mes Año</div>
+          <button class="btn btn-dark" onclick="navigateMonth(1)"><i class="fas fa-chevron-right"></i></button>
+          <button class="btn btn-dark" onclick="goToday()">Hoy</button>
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap:wrap;">
+          <button class="btn btn-brand" onclick="openAddEventModal()"><i class="fas fa-plus"></i> Nuevo Movimiento</button>
+          <button class="btn btn-purple" onclick="openPresupuestoModal()"><i class="fas fa-file-pdf"></i> Generar Presupuesto</button>
+        </div>
+      </div>
+      <div class="calendar-wrapper">
+        <div class="calendar-grid" id="calendarDaysHeader">
+          <div class="day-header">Dom</div><div class="day-header">Lun</div><div class="day-header">Mar</div>
+          <div class="day-header">Mié</div><div class="day-header">Jue</div><div class="day-header">Vie</div><div class="day-header">Sáb</div>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+    </div>
 
-   <!-- VISTA COTIZADOR INTERNO -->
-   <div id="viewCotizador" style="display: none;">
-     <div class="cotizador-grid">
-       <div class="panel-box">
-         <div class="panel-title"><i class="fas fa-sliders-h"></i> Datos del Movimiento</div>
-         <div class="form-group"><label>Cliente / Nombre</label><input type="text" id="cot-cliente" placeholder="Ej: Juan Pérez"></div>
-         <div class="form-grid">
-           <div class="form-group"><label>Tipo de Movimiento</label><select id="cot-tipomov"><option value="Mudanza Local">Mudanza Local</option><option value="Mudanza Larga">Mudanza Larga</option></select></div>
-           <div class="form-group"><label>Unidad</label><select id="cot-unidad" onchange="calcularCotizacion()"><option value="Sprinter Furgon">Sprinter Furgon</option><option value="Sprinter Chasis">Sprinter Chasis</option><option value="Camión 712 Gustavo">Camión 712 Gustavo</option></select></div>
-         </div>
-         <div class="form-group"><label>Fecha Estimativa</label><input type="date" id="cot-fecha-estimativa"></div>
-         <div class="form-group"><label>Origen (Ej: Rómula Carbia 3381, Córdoba)</label><input type="text" id="cot-origen" placeholder="Calle y Número, Localidad"></div>
-         <div class="form-group">
-           <div style="display:flex; justify-content:space-between; align-items:center;">
-             <label>Destino(s) (Ej: San Martin 150, Mendoza)</label>
-             <button class="btn btn-dark" style="padding:3px 8px; font-size:0.75rem;" onclick="agregarDestinoIntermedio()"><i class="fas fa-plus"></i> Añadir Parada</button>
-           </div>
-           <div id="destinosContainer"><input type="text" class="cot-destino-input" placeholder="Calle y Número, Localidad"></div>
-         </div>
-         <button class="btn btn-brand" onclick="calcularRutaOSRM()"><i class="fas fa-route"></i> Calcular Ruta y Distancia</button>
-         <div class="form-group">
-           <label>Distancia Simple Ida (Km)</label>
-           <div style="display:flex; gap:8px; align-items:center;">
-             <input type="number" id="cot-kms" value="0" step="any" oninput="calcularCotizacion()">
-             <span style="font-weight:bold;">Km</span>
-           </div>
-         </div>
-         <div class="form-group"><label>Detalles / Inventario Recibido</label><textarea id="cot-detalles-recibidos" placeholder="Pegar información recibida..."></textarea></div>
-       </div>
+    <!-- VISTA COTIZADOR INTERNO -->
+    <div id="viewCotizador" style="display: none;">
+      <div class="cotizador-grid">
+        <div class="panel-box">
+          <div class="panel-title"><i class="fas fa-sliders-h"></i> Datos del Movimiento</div>
+          <div class="form-group"><label>Cliente / Nombre</label><input type="text" id="cot-cliente" placeholder="Ej: Juan Pérez"></div>
+          <div class="form-grid">
+            <div class="form-group"><label>Tipo de Movimiento</label><select id="cot-tipomov"><option value="Mudanza Local">Mudanza Local</option><option value="Mudanza Larga">Mudanza Larga</option></select></div>
+            <div class="form-group"><label>Unidad</label><select id="cot-unidad" onchange="calcularCotizacion()"><option value="Sprinter Furgon">Sprinter Furgon</option><option value="Sprinter Chasis">Sprinter Chasis</option><option value="Camión 712 Gustavo">Camión 712 Gustavo</option></select></div>
+          </div>
+          <div class="form-group"><label>Fecha Estimativa</label><input type="date" id="cot-fecha-estimativa"></div>
+          <div class="form-group"><label>Origen (Ej: Rómula Carbia 3381, Córdoba)</label><input type="text" id="cot-origen" placeholder="Calle y Número, Localidad"></div>
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label>Destino(s) (Ej: San Martin 150, Mendoza)</label>
+              <button class="btn btn-dark" style="padding:3px 8px; font-size:0.75rem;" onclick="agregarDestinoIntermedio()"><i class="fas fa-plus"></i> Añadir Parada</button>
+            </div>
+            <div id="destinosContainer"><input type="text" class="cot-destino-input" placeholder="Calle y Número, Localidad"></div>
+          </div>
+          <button class="btn btn-brand" onclick="calcularRutaOSRM()"><i class="fas fa-route"></i> Calcular Ruta y Distancia</button>
+          <div class="form-group">
+            <label>Distancia Simple Ida (Km)</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="number" id="cot-kms" value="0" step="any" oninput="calcularCotizacion()">
+              <span style="font-weight:bold;">Km</span>
+            </div>
+          </div>
+          <div class="form-group"><label>Detalles / Inventario Recibido</label><textarea id="cot-detalles-recibidos" placeholder="Pegar información recibida..."></textarea></div>
+        </div>
 
-       <div class="panel-box">
-         <div class="panel-title"><i class="fas fa-map-marked-alt"></i> Mapa de Ruta Completa</div>
-         <div id="map"></div>
-         <div class="panel-title" style="margin-top:8px;"><i class="fas fa-calculator"></i> Desglose y Costos Manuales</div>
-         <div class="form-grid">
-           <div class="form-group"><label>Tarifa Presupuestada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-tarifa" placeholder="0" style="font-weight:bold; color:var(--brand);" oninput="calcularCotizacionManual()"></div></div>
-           <div class="form-group"><label>Combustible ($ Ida/Vuelta)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-combustible" value="0" step="any" oninput="calcularCotizacionManual()"></div></div>
-           <div class="form-grid" style="grid-column: span 2;">
-             <div class="form-group"><label>Cant. Peajes</label><input type="number" id="cot-res-peajes-cant" value="0" min="0" oninput="calcularCotizacionManual()"></div>
-             <div class="form-group"><label>Peajes Total ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-peajes-costo" value="0" step="any" oninput="calcularCotizacionManual()"></div></div>
-           </div>
-           <div class="form-group"><label>Gastos / Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-viaticos" value="0" step="any" oninput="calcularCotizacionManual()"></div></div>
-           <div class="form-group"><label>Ayudante ($ Extra)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-ayudante" value="0" step="any" oninput="calcularCotizacionManual()"></div></div>
-           <div class="form-group"><label>Costos Totales ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-costostotales" readonly style="color:red;"></div></div>
-           <div class="form-group full"><label>Utilidad Neta ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-utilidad" readonly style="color:green; font-weight:bold; font-size:1.1rem;"></div></div>
-         </div>
-         <div style="display:flex; gap:8px; margin-top:8px;">
-           <button class="btn btn-brand" style="flex:1;" onclick="generarPresupuestoCliente()"><i class="fas fa-file-invoice"></i> Agendar y Guardar</button>
-         </div>
-       </div>
-     </div>
-   </div>
+        <div class="panel-box">
+          <div class="panel-title"><i class="fas fa-map-marked-alt"></i> Mapa de Ruta Completa</div>
+          <div id="map"></div>
+          <div class="panel-title" style="margin-top:8px;"><i class="fas fa-calculator"></i> Desglose y Costos Manuales</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Tarifa Presupuestada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-tarifa" placeholder="0" style="font-weight:bold; color:var(--brand);" oninput="calcularCotizacionManual()"></div></div>
+            <div class="form-group"><label>Combustible ($ Ida/Vuelta)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-combustible" value="0" step="any" oninput="calcularCotizacionManual()"></div></div>
+            <div class="form-grid" style="grid-column: span 2;">
+              <div class="form-group"><label>Cant. Peajes</label><input type="number" id="cot-res-peajes-cant" value="0" min="0" oninput="calcularCotizacionManual()"></div>
+              <div class="form-group"><label>Peajes Total ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-peajes-costo" value="0" step="any" oninput="calcularCotizacionManual()"></div></div>
+            </div>
+            <div class="form-group"><label>Gastos / Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-viaticos" value="0" step="any" oninput="calcularCotizacionManual()"></div></div>
+            <div class="form-group"><label>Ayudante ($ Extra)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-ayudante" value="0" step="any" oninput="calcularCotizacionManual()"></div></div>
+            <div class="form-group"><label>Costos Totales ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-costostotales" readonly style="color:red;"></div></div>
+            <div class="form-group full"><label>Utilidad Neta ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-utilidad" readonly style="color:green; font-weight:bold; font-size:1.1rem;"></div></div>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button class="btn btn-brand" style="flex:1;" onclick="generarPresupuestoCliente()"><i class="fas fa-file-invoice"></i> Agendar y Guardar</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-   <!-- VISTA CONTACTOS -->
-   <div id="viewContactos" style="display: none;">
-       <div class="panel-box" style="margin-bottom:15px;">
-           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-             <div class="panel-title" style="border:none; margin:0;"><i class="fas fa-address-book"></i> Directorio de Contactos</div>
-             <button class="btn btn-brand" onclick="openContactModal()"><i class="fas fa-user-plus"></i> Nuevo Contacto</button>
-           </div>
-           <div class="form-grid" style="margin-top:10px;">
-             <div class="form-group"><label>Buscar por Texto</label><input type="text" id="cnt-filter-search" placeholder="Nombre, teléfono..." oninput="renderContactList()"></div>
-             <div class="form-group">
-               <label>Categoría</label>
-               <select id="cnt-filter-categoria" onchange="renderContactList()">
-                 <option value="Todas">Todas las Categorías</option>
-                 <option value="Clientes - Empresa">Clientes - Empresa</option>
-                 <option value="Clientes - Particular">Clientes - Particular</option>
-                 <option value="Terceros - Ayudante">Terceros - Ayudante</option>
-                 <option value="Terceros - Camioneta/Furgon">Terceros - Camioneta/Furgón</option>
-                 <option value="Terceros - Camion">Terceros - Camión</option>
-               </select>
-             </div>
-             <div class="form-group"><label>Provincia / Región</label><input type="text" id="cnt-filter-region" placeholder="Ej: Córdoba" oninput="renderContactList()"></div>
-             <div class="form-group"><label>Localidad</label><input type="text" id="cnt-filter-localidad" placeholder="Ej: Villa Allende" oninput="renderContactList()"></div>
-           </div>
-       </div>
-       <div id="contactListContainer"></div>
-   </div>
-   
-   <!-- VISTA: INFORMES Y KPIS -->
-   <div id="viewInformes" style="display: none;">
-     <div class="panel-box">
-       <div class="panel-title"><i class="fas fa-filter"></i> 1. Filtros del Informe</div>
-       <div class="form-grid">
-         <div class="form-group"><label>Fecha Inicio</label><input type="date" id="rep-start"></div>
-         <div class="form-group"><label>Fecha Fin</label><input type="date" id="rep-end"></div>
-         <div class="form-group"><label>Filtrar por Estado</label>
-           <select id="rep-estado">
-             <option value="Todos">Todos los Estados</option>
-             <option value="Finalizada">Finalizadas</option>
-             <option value="Confirmada">Confirmadas</option>
-             <option value="Posible">Posibles</option>
-             <option value="Autocotización">Autocotizaciones</option>
-             <option value="Presupuesto">Presupuestos Emitidos</option>
-           </select>
-         </div>
-         <div class="form-group"><label>Tipo de Movimiento</label>
-           <select id="rep-tipomov">
-             <option value="Todos">Todos los Tipos</option>
-             <option value="Mudanza Local">Mudanza Local</option>
-             <option value="Mudanza Larga">Mudanza Larga</option>
-             <option value="Flete">Flete</option>
-             <option value="Trabajos Especiales">Trabajos Especiales</option>
-             <option value="Cotización PDF">Cotización PDF</option>
-           </select>
-         </div>
-         <div class="form-group"><label>Unidad / Vehículo</label>
-           <select id="rep-unidad">
-             <option value="Todas">Todas las Unidades</option>
-             <option value="Sprinter Furgon">Sprinter Furgon</option>
-             <option value="Sprinter Chasis">Sprinter Chasis</option>
-             <option value="Camión 712 Gustavo">Camión 712 Gustavo</option>
-           </select>
-         </div>
-       </div>
-     </div>
+    <!-- VISTA CONTACTOS -->
+    <div id="viewContactos" style="display: none;">
+        <div class="panel-box" style="margin-bottom:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <div class="panel-title" style="border:none; margin:0;"><i class="fas fa-address-book"></i> Directorio de Contactos</div>
+              <button class="btn btn-brand" onclick="openContactModal()"><i class="fas fa-user-plus"></i> Nuevo Contacto</button>
+            </div>
+            <div class="form-grid" style="margin-top:10px;">
+              <div class="form-group"><label>Buscar por Texto</label><input type="text" id="cnt-filter-search" placeholder="Nombre, teléfono..." oninput="renderContactList()"></div>
+              <div class="form-group">
+                <label>Categoría</label>
+                <select id="cnt-filter-categoria" onchange="renderContactList()">
+                  <option value="Todas">Todas las Categorías</option>
+                  <option value="Clientes - Empresa">Clientes - Empresa</option>
+                  <option value="Clientes - Particular">Clientes - Particular</option>
+                  <option value="Terceros - Ayudante">Terceros - Ayudante</option>
+                  <option value="Terceros - Camioneta/Furgon">Terceros - Camioneta/Furgón</option>
+                  <option value="Terceros - Camion">Terceros - Camión</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Provincia / Región</label><input type="text" id="cnt-filter-region" placeholder="Ej: Córdoba" oninput="renderContactList()"></div>
+              <div class="form-group"><label>Localidad</label><input type="text" id="cnt-filter-localidad" placeholder="Ej: Villa Allende" oninput="renderContactList()"></div>
+            </div>
+        </div>
+        <div id="contactListContainer"></div>
+    </div>
+    
+    <!-- VISTA: INFORMES Y KPIS -->
+    <div id="viewInformes" style="display: none;">
+      <div class="panel-box">
+        <div class="panel-title"><i class="fas fa-filter"></i> 1. Filtros del Informe</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Fecha Inicio</label><input type="date" id="rep-start"></div>
+          <div class="form-group"><label>Fecha Fin</label><input type="date" id="rep-end"></div>
+          <div class="form-group"><label>Filtrar por Estado</label>
+            <select id="rep-estado">
+              <option value="Todos">Todos los Estados</option>
+              <option value="Finalizada">Finalizadas</option>
+              <option value="Confirmada">Confirmadas</option>
+              <option value="Posible">Posibles</option>
+              <option value="Autocotización">Autocotizaciones</option>
+              <option value="Presupuesto">Presupuestos Emitidos</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Tipo de Movimiento</label>
+            <select id="rep-tipomov">
+              <option value="Todos">Todos los Tipos</option>
+              <option value="Mudanza Local">Mudanza Local</option>
+              <option value="Mudanza Larga">Mudanza Larga</option>
+              <option value="Flete">Flete</option>
+              <option value="Trabajos Especiales">Trabajos Especiales</option>
+              <option value="Cotización PDF">Cotización PDF</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Unidad / Vehículo</label>
+            <select id="rep-unidad">
+              <option value="Todas">Todas las Unidades</option>
+              <option value="Sprinter Furgon">Sprinter Furgon</option>
+              <option value="Sprinter Chasis">Sprinter Chasis</option>
+              <option value="Camión 712 Gustavo">Camión 712 Gustavo</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
-     <div class="panel-box">
-       <div class="panel-title"><i class="fas fa-columns"></i> 2. Datos a Incluir en el Listado</div>
-       <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; margin-bottom: 15px;">
-         <label class="checkbox-group"><input type="checkbox" id="col-fecha" checked> Fecha</label>
-         <label class="checkbox-group"><input type="checkbox" id="col-cliente" checked> Cliente</label>
-         <label class="checkbox-group"><input type="checkbox" id="col-estado" checked> Estado</label>
-         <label class="checkbox-group"><input type="checkbox" id="col-ruta"> Origen / Destino</label>
-         <label class="checkbox-group"><input type="checkbox" id="col-vehiculo"> Vehículo</label>
-         <label class="checkbox-group"><input type="checkbox" id="col-ingreso" checked> Tarifa</label>
-         <label class="checkbox-group"><input type="checkbox" id="col-costo" checked> Costos Operativos</label>
-         <label class="checkbox-group"><input type="checkbox" id="col-utilidad" checked> Utilidad Neta</label>
-         <label class="checkbox-group"><input type="checkbox" id="col-acciones" checked> Acciones</label>
-       </div>
-       <div style="display:flex; gap:10px;">
-         <button class="btn btn-brand" onclick="generarReporteUI()"><i class="fas fa-sync"></i> Generar / Actualizar Pantalla</button>
-         <button class="btn btn-dark" onclick="imprimirReporte()"><i class="fas fa-print"></i> Imprimir Informe PDF</button>
-       </div>
-     </div>
+      <div class="panel-box">
+        <div class="panel-title"><i class="fas fa-columns"></i> 2. Datos a Incluir en el Listado</div>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; margin-bottom: 15px;">
+          <label class="checkbox-group"><input type="checkbox" id="col-fecha" checked> Fecha</label>
+          <label class="checkbox-group"><input type="checkbox" id="col-cliente" checked> Cliente</label>
+          <label class="checkbox-group"><input type="checkbox" id="col-estado" checked> Estado</label>
+          <label class="checkbox-group"><input type="checkbox" id="col-ruta"> Origen / Destino</label>
+          <label class="checkbox-group"><input type="checkbox" id="col-vehiculo"> Vehículo</label>
+          <label class="checkbox-group"><input type="checkbox" id="col-ingreso" checked> Tarifa</label>
+          <label class="checkbox-group"><input type="checkbox" id="col-costo" checked> Costos Operativos</label>
+          <label class="checkbox-group"><input type="checkbox" id="col-utilidad" checked> Utilidad Neta</label>
+          <label class="checkbox-group"><input type="checkbox" id="col-acciones" checked> Acciones</label>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-brand" onclick="generarReporteUI()"><i class="fas fa-sync"></i> Generar / Actualizar Pantalla</button>
+          <button class="btn btn-dark" onclick="imprimirReporte()"><i class="fas fa-print"></i> Imprimir Informe PDF</button>
+        </div>
+      </div>
 
-     <div class="kpi-cards-grid" id="kpiDashboardContainer" style="display: none;">
-       <div class="kpi-card-box"><h4>Total de Registros</h4><div class="kpi-value" id="kpi-tot-viajes">0</div></div>
-       <div class="kpi-card-box"><h4>Facturación Bruta</h4><div class="kpi-value" id="kpi-tot-ingresos" style="color:#3b82f6;">$0</div></div>
-       <div class="kpi-card-box"><h4>Costos Operativos</h4><div class="kpi-value" id="kpi-tot-costos" style="color:#ef4444;">$0</div></div>
-       <div class="kpi-card-box"><h4>Utilidad Neta Real</h4><div class="kpi-value" id="kpi-tot-utilidad" style="color:#10b981;">$0</div></div>
-     </div>
+      <div class="kpi-cards-grid" id="kpiDashboardContainer" style="display: none;">
+        <div class="kpi-card-box"><h4>Total de Registros</h4><div class="kpi-value" id="kpi-tot-viajes">0</div></div>
+        <div class="kpi-card-box"><h4>Facturación Bruta</h4><div class="kpi-value" id="kpi-tot-ingresos" style="color:#3b82f6;">$0</div></div>
+        <div class="kpi-card-box"><h4>Costos Operativos</h4><div class="kpi-value" id="kpi-tot-costos" style="color:#ef4444;">$0</div></div>
+        <div class="kpi-card-box"><h4>Utilidad Neta Real</h4><div class="kpi-value" id="kpi-tot-utilidad" style="color:#10b981;">$0</div></div>
+      </div>
 
-     <div class="table-responsive" id="reportTableContainer" style="display: none;">
-       <table class="report-table" id="reportTable"></table>
-     </div>
-   </div>
+      <div class="table-responsive" id="reportTableContainer" style="display: none;">
+        <table class="report-table" id="reportTable"></table>
+      </div>
+    </div>
 
  </div>
 
  <!-- MODALES: AJUSTES, DÍA, EVENTOS, CONTACTOS Y PRESUPUESTOS -->
  <div class="modal-overlay" id="modalConfig">
-   <div class="modal-content" style="max-width:500px;">
-     <div class="modal-header"><h2>Ajustes de Fórmulas y Costos</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
-     <div class="modal-body form-grid">
-       <div class="form-group full"><label>Precio Litro Diésel ($)</label><input type="number" id="cfg-diesel" value="2450"></div>
-       <div class="form-group"><label>Consumo Sprinter Furgón (L/100km)</label><input type="number" id="cfg-cons-furgon" value="14"></div>
-       <div class="form-group"><label>Consumo Sprinter Chasis (L/100km)</label><input type="number" id="cfg-cons-chasis" value="16"></div>
-       <div class="form-group full"><label>Consumo Camión 712 (L/100km)</label><input type="number" id="cfg-cons-camion" value="22"></div>
-       <div class="form-group"><label>Tarifa Base Furgón/Chasis ($/Km)</label><input type="number" id="cfg-tarifa-furgon" value="2200"></div>
-       <div class="form-group"><label>Tarifa Base Camión 712 ($/Km)</label><input type="number" id="cfg-tarifa-camion" value="2400"></div>
-     </div>
-     <div class="modal-footer"><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button><button class="btn btn-brand" onclick="saveConfig()"><i class="fas fa-save"></i> Guardar</button></div>
-   </div>
+    <div class="modal-content" style="max-width:500px;">
+      <div class="modal-header"><h2>Ajustes de Fórmulas y Costos</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
+      <div class="modal-body form-grid">
+        <div class="form-group full"><label>Precio Litro Diésel ($)</label><input type="number" id="cfg-diesel" value="2450"></div>
+        <div class="form-group"><label>Consumo Sprinter Furgón (L/100km)</label><input type="number" id="cfg-cons-furgon" value="14"></div>
+        <div class="form-group"><label>Consumo Sprinter Chasis (L/100km)</label><input type="number" id="cfg-cons-chasis" value="16"></div>
+        <div class="form-group full"><label>Consumo Camión 712 (L/100km)</label><input type="number" id="cfg-cons-camion" value="22"></div>
+        <div class="form-group"><label>Tarifa Base Furgón/Chasis ($/Km)</label><input type="number" id="cfg-tarifa-furgon" value="2200"></div>
+        <div class="form-group"><label>Tarifa Base Camión 712 ($/Km)</label><input type="number" id="cfg-tarifa-camion" value="2400"></div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button><button class="btn btn-brand" onclick="saveConfig()"><i class="fas fa-save"></i> Guardar</button></div>
+    </div>
  </div>
 
  <div class="modal-overlay" id="modalDayView">
-   <div class="modal-content">
-     <div class="modal-header"><h2 id="dayViewTitle">Movimientos del Día</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
-     <div class="modal-body" id="dayViewBody"></div>
-     <div class="modal-footer"><button class="btn btn-brand" onclick="openAddEventModal(selectedDate)"><i class="fas fa-plus"></i> Agregar Nuevo</button><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cerrar</button></div>
-   </div>
+    <div class="modal-content">
+      <div class="modal-header"><h2 id="dayViewTitle">Movimientos del Día</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
+      <div class="modal-body" id="dayViewBody"></div>
+      <div class="modal-footer"><button class="btn btn-brand" onclick="openAddEventModal(selectedDate)"><i class="fas fa-plus"></i> Agregar Nuevo</button><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cerrar</button></div>
+    </div>
  </div>
 
  <div class="modal-overlay" id="modalContactForm">
-   <div class="modal-content">
-     <div class="modal-header"><h2>Contacto</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
-     <div class="modal-body">
-       <form id="contactForm" class="form-grid" onsubmit="return false;">
-         <input type="hidden" id="cnt-id">
-         <div class="form-group full"><label>Categoría</label>
-           <select id="cnt-categoria" required onchange="toggleVehicleFields()">
-             <option value="Clientes - Particular">Clientes - Particular</option><option value="Clientes - Empresa">Clientes - Empresa</option><option value="Terceros - Ayudante">Terceros - Ayudante</option><option value="Terceros - Camioneta/Furgon">Terceros - Camioneta/Furgón</option><option value="Terceros - Camion">Terceros - Camión</option>
-           </select>
-         </div>
-         <div class="form-group"><label>Nombre</label><input type="text" id="cnt-nombre" required></div>
-         <div class="form-group"><label>Teléfono</label><input type="text" id="cnt-tel" required></div>
-         <div class="form-group"><label>Provincia / Región</label><input type="text" id="cnt-region"></div>
-         <div class="form-group"><label>Localidad</label><input type="text" id="cnt-localidad"></div>
-         <div id="vehicleFields" class="form-grid full" style="display:none; border-top:1px solid #e4e4e7; padding-top:10px;">
-           <div class="form-group"><label>Modelo Vehículo</label><input type="text" id="cnt-veh-modelo"></div>
-           <div class="form-group"><label>Capacidad m³</label><input type="number" id="cnt-veh-m3"></div>
-           <div class="form-group"><label>Dimensiones Caja</label><input type="text" id="cnt-veh-dimensiones"></div>
-           <div class="form-group"><label>Peso Máx (Kg)</label><input type="number" id="cnt-veh-peso"></div>
-           <div class="form-group full"><label>URL Foto Vehículo</label><input type="text" id="cnt-veh-foto"></div>
-         </div>
-       </form>
-     </div>
-     <div class="modal-footer"><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button><button class="btn btn-brand" onclick="saveContact()"><i class="fas fa-save"></i> Guardar</button></div>
-   </div>
+    <div class="modal-content">
+      <div class="modal-header"><h2>Contacto</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
+      <div class="modal-body">
+        <form id="contactForm" class="form-grid" onsubmit="return false;">
+          <input type="hidden" id="cnt-id">
+          <div class="form-group full"><label>Categoría</label>
+            <select id="cnt-categoria" required onchange="toggleVehicleFields()">
+              <option value="Clientes - Particular">Clientes - Particular</option><option value="Clientes - Empresa">Clientes - Empresa</option><option value="Terceros - Ayudante">Terceros - Ayudante</option><option value="Terceros - Camioneta/Furgon">Terceros - Camioneta/Furgón</option><option value="Terceros - Camion">Terceros - Camión</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Nombre</label><input type="text" id="cnt-nombre" required></div>
+          <div class="form-group"><label>Teléfono</label><input type="text" id="cnt-tel" required></div>
+          <div class="form-group"><label>Provincia / Región</label><input type="text" id="cnt-region"></div>
+          <div class="form-group"><label>Localidad</label><input type="text" id="cnt-localidad"></div>
+          <div id="vehicleFields" class="form-grid full" style="display:none; border-top:1px solid #e4e4e7; padding-top:10px;">
+            <div class="form-group"><label>Modelo Vehículo</label><input type="text" id="cnt-veh-modelo"></div>
+            <div class="form-group"><label>Capacidad m³</label><input type="number" id="cnt-veh-m3"></div>
+            <div class="form-group"><label>Dimensiones Caja</label><input type="text" id="cnt-veh-dimensiones"></div>
+            <div class="form-group"><label>Peso Máx (Kg)</label><input type="number" id="cnt-veh-peso"></div>
+            <div class="form-group full"><label>URL Foto Vehículo</label><input type="text" id="cnt-veh-foto"></div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer"><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button><button class="btn btn-brand" onclick="saveContact()"><i class="fas fa-save"></i> Guardar</button></div>
+    </div>
  </div>
 
  <div class="modal-overlay" id="modalEventForm">
-   <div class="modal-content">
-     <div class="modal-header"><h2 id="formModalTitle">Cargar / Editar Movimiento</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
-     <div class="modal-body">
-       <form id="eventForm" class="form-grid" onsubmit="return false;">
-         <input type="hidden" id="ev-id">
-         <input type="hidden" id="ev-telefono">
-         <div class="form-group"><label>Fecha</label><input type="date" id="ev-fecha" required></div>
-         <div class="form-group"><label>Estado</label>
-           <select id="ev-estado" required><option value="Posible">Posible</option><option value="Confirmada">Confirmada</option><option value="Finalizada">Finalizada</option><option value="Autocotización">Autocotización</option></select>
-         </div>
-         <div class="form-group"><label>Hora Inicio</label><input type="time" id="ev-hinicio"></div>
-         <div class="form-group"><label>Hora Fin</label><input type="time" id="ev-hfin"></div>
-         <div class="form-group"><label>Tipo de Movimiento</label>
-           <select id="ev-tipomov"><option value="Mudanza Local">Mudanza Local</option><option value="Mudanza Larga">Mudanza Larga</option><option value="Flete">Flete</option><option value="Trabajos Especiales">Trabajos Especiales</option></select>
-         </div>
-         <div class="form-group"><label>Unidad Asignada</label>
-           <select id="ev-asignacion"><option value="Sprinter Furgon">Sprinter Furgon</option><option value="Sprinter Chasis">Sprinter Chasis</option><option value="Camión 712 Gustavo">Camión 712 Gustavo</option></select>
-         </div>
-         <div class="form-group"><label>Tipo de Jornada</label>
-           <select id="ev-jornada"><option value="Completa">Jornada Completa</option><option value="Media Jornada">Media Jornada</option></select>
-         </div>
-         <div class="form-group"><label>Nombre del Cliente</label><input type="text" id="ev-cliente" required></div>
-         <div class="form-group"><label>Origen</label><input type="text" id="ev-origen"></div>
-         <div class="form-group"><label>Destino</label><input type="text" id="ev-destino"></div>
-         <div class="form-group full"><label>Distancia (Km Simple)</label><input type="number" id="ev-distancia" step="any"></div>
-         <div class="form-group full"><label>Detalles Carga</label><textarea id="ev-detalles"></textarea></div>
-        <!-- BLOQUE DE INVENTARIO Y ACCESOS -->
-<div class="form-group full" style="margin-top: 15px; border-top: 1px solid #e5e7eb; padding-top: 10px;">
-  <label style="font-weight: bold; color: #1f2937; display: block; margin-bottom: 5px;">📦 Inventario y Detalles de Carga:</label>
-  <textarea id="ev-inventario" rows="4" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px;" placeholder="Ej: 1 Juego de comedor, 1 Heladera, 15 Cajas. Acceso: Piso 2 por escalera."></textarea>
-</div>
-<!-- BOTONES DE EXPORTACIÓN PÚBLICA (FILTRO CIEGO) -->
-<div class="form-group full" style="margin-top: 15px; display: flex; gap: 10px;">
-  <button type="button" onclick="copiarFichaWhatsApp()" style="background-color: #25D366; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1;">
-    📱 Copiar Ficha WhatsApp
-  </button>
-  <button type="button" onclick="abrirOpcionesPDF()" style="background-color: #4F46E5; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1;">
-    📄 Generar Presupuesto PDF
-  </button>
-</div>
-         <div class="form-group"><label>Presupuesto / Tarifa ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-presupuesto" value="0" oninput="calculateTotal()" required></div></div>
-         <div class="form-group"><label>Seña Abonada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-sena" value="0" oninput="calculateTotal()"></div></div>
-         <div class="form-group"><label>Combustible ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-combustible" value="0" oninput="calculateTotal()"></div></div>
-         <div class="form-group"><label>Peajes ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-peajes-costo" value="0" oninput="calculateTotal()"></div></div>
-         <div class="form-group"><label>Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-gastosviaticos" value="0" oninput="calculateTotal()"></div></div>
-         <div class="form-group"><label>Costo Ayudante ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-ayudante-monto" value="0" oninput="calculateTotal()"></div></div>
-         <div class="form-group"><label>Comisión ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-comision" value="0" oninput="calculateTotal()"></div></div>
-         <div class="form-group"><label>Utilidad Neta Real ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-total" readonly style="font-weight:bold; color:var(--brand);"></div></div>
-       </form>
-     </div>
-     <div class="modal-footer"><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button><button class="btn btn-brand" onclick="saveEvent()"><i class="fas fa-save"></i> Guardar Movimiento</button></div>
-   </div>
+    <div class="modal-content">
+      <div class="modal-header"><h2 id="formModalTitle">Cargar / Editar Movimiento</h2><button class="btn btn-outline" style="color:black;" onclick="closeModals()"><i class="fas fa-times"></i></button></div>
+      <div class="modal-body">
+        <form id="eventForm" class="form-grid" onsubmit="return false;">
+          <input type="hidden" id="ev-id">
+          <input type="hidden" id="ev-telefono">
+          <div class="form-group"><label>Fecha</label><input type="date" id="ev-fecha" required></div>
+          <div class="form-group"><label>Estado</label>
+            <select id="ev-estado" required><option value="Posible">Posible</option><option value="Confirmada">Confirmada</option><option value="Finalizada">Finalizada</option><option value="Autocotización">Autocotización</option></select>
+          </div>
+          <div class="form-group"><label>Hora Inicio</label><input type="time" id="ev-hinicio"></div>
+          <div class="form-group"><label>Hora Fin</label><input type="time" id="ev-hfin"></div>
+          <div class="form-group"><label>Tipo de Movimiento</label>
+            <select id="ev-tipomov"><option value="Mudanza Local">Mudanza Local</option><option value="Mudanza Larga">Mudanza Larga</option><option value="Flete">Flete</option><option value="Trabajos Especiales">Trabajos Especiales</option></select>
+          </div>
+          <div class="form-group"><label>Unidad Asignada</label>
+            <select id="ev-asignacion"><option value="Sprinter Furgon">Sprinter Furgon</option><option value="Sprinter Chasis">Sprinter Chasis</option><option value="Camión 712 Gustavo">Camión 712 Gustavo</option></select>
+          </div>
+          <div class="form-group"><label>Tipo de Jornada</label>
+            <select id="ev-jornada"><option value="Completa">Jornada Completa</option><option value="Media Jornada">Media Jornada</option></select>
+          </div>
+          <div class="form-group"><label>Nombre del Cliente</label><input type="text" id="ev-cliente" required></div>
+          <div class="form-group"><label>Origen</label><input type="text" id="ev-origen"></div>
+          <div class="form-group"><label>Destino</label><input type="text" id="ev-destino"></div>
+          <div class="form-group full"><label>Distancia (Km Simple)</label><input type="number" id="ev-distancia" step="any"></div>
+          <div class="form-group full"><label>Detalles Carga</label><textarea id="ev-detalles"></textarea></div>
+
+          <!-- BLOQUE DE INVENTARIO Y ACCESOS -->
+          <div class="form-group full" style="margin-top: 15px; border-top: 1px solid #e5e7eb; padding-top: 10px;">
+            <label style="font-weight: bold; color: #1f2937; display: block; margin-bottom: 5px;">📦 Inventario y Detalles de Carga:</label>
+            <textarea id="ev-inventario" rows="4" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px;" placeholder="Ej: 1 Juego de comedor, 1 Heladera, 15 Cajas. Acceso: Piso 2 por escalera."></textarea>
+          </div>
+
+          <!-- BOTONES DE EXPORTACIÓN PÚBLICA (FILTRO CIEGO) -->
+          <div class="form-group full" style="margin-top: 15px; display: flex; gap: 10px;">
+            <button type="button" onclick="copiarFichaWhatsApp()" style="background-color: #25D366; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1;">
+              📱 Copiar Ficha WhatsApp
+            </button>
+            <button type="button" onclick="abrirOpcionesPDF()" style="background-color: #4F46E5; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1;">
+              📄 Generar Presupuesto PDF
+            </button>
+          </div>
+
+          <div class="form-group"><label>Presupuesto / Tarifa ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-presupuesto" value="0" oninput="calculateTotal()" required></div></div>
+          <div class="form-group"><label>Seña Abonada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-sena" value="0" oninput="calculateTotal()"></div></div>
+          <div class="form-group"><label>Combustible ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-combustible" value="0" oninput="calculateTotal()"></div></div>
+          <div class="form-group"><label>Peajes ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-peajes-costo" value="0" oninput="calculateTotal()"></div></div>
+          <div class="form-group"><label>Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-gastosviaticos" value="0" oninput="calculateTotal()"></div></div>
+          <div class="form-group"><label>Costo Ayudante ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-ayudante-monto" value="0" oninput="calculateTotal()"></div></div>
+          <div class="form-group"><label>Comisión ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-comision" value="0" oninput="calculateTotal()"></div></div>
+          <div class="form-group"><label>Utilidad Neta Real ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-total" readonly style="font-weight:bold; color:var(--brand);"></div></div>
+        </form>
+      </div>
+      <div class="modal-footer"><button class="btn btn-outline" style="color:black;" onclick="closeModals()">Cancelar</button><button class="btn btn-brand" onclick="saveEvent()"><i class="fas fa-save"></i> Guardar Movimiento</button></div>
+    </div>
  </div>
 
  <div class="modal-overlay" id="modalPresupuesto">
@@ -503,7 +506,7 @@
            <div style="width:80%; height:2px; background:#ea580c; margin:2px 0;"></div>
            <div style="font-size:5px; letter-spacing:2px; color:#ccc;">LOGISTICA DE EXCELENCIA</div>
         </div>
-        <div style="font-size:12px; font-weight:bold; margin-bottom:15px;">NIVEL 9 Logística de Excelencia - Rodrigo J. Castro CUIT: 20-24691221-2</div>
+        <div style="font-size:12px; font-weight:bold; margin-bottom:15px;">NIVEL 9 Logística & Transportes - Rodrigo J. Castro CUIT: 20-24691221-2</div>
         <div class="pdf-title">PRESUPUESTO DE SERVICIOS LOGÍSTICOS EMPRESARIALES</div>
      </div>
      <div class="pdf-row"><strong>N° de Presupuesto:</strong> <span id="pdf-nro"></span></div>
@@ -542,20 +545,20 @@
            <div style="font-size:20px; font-weight:800; line-height:1;">NIVEL<span style="color:#ea580c;">9</span></div>
            <div style="width:80%; height:2px; background:#ea580c; margin:2px 0;"></div>
         </div>
-        <div class="pdf-title" style="font-size:12px;">TÉRMINOS Y CONDICIONES GENERALES DEL SERVICIO<br>NIVEL 9 S.A.S. - Logística de Excelencia</div>
+        <div class="pdf-title" style="font-size:12px;">TÉRMINOS Y CONDICIONES GENERALES DEL SERVICIO<br>NIVEL 9 - Logística & Transportes</div>
      </div>
      <div class="pdf-terms">
        <strong>1. Aceptación del Servicio y Reserva</strong> La confirmación del servicio y la fijación de la fecha y horario estipulados en el presupuesto se harán efectivas únicamente mediante el abono de la seña acordada. El pago de dicha seña implica la lectura, comprensión y aceptación total de los presentes términos y condiciones.<br><br>
-       <strong>2. Declaración de Carga y Modificaciones</strong> El presupuesto emitido se basa exclusivamente en la información (volumen, cantidad de muebles, accesos) proporcionada por el cliente. Si el día de la mudanza el volumen de los bienes o la complejidad del trabajo excede lo declarado inicialmente (por ejemplo, muebles que no pasan por aberturas y requieren desarme no previsto, o necesidad de izajes), Nivel 9 S.A.S. se reserva el derecho de ajustar el valor final del servicio o de negarse a trasladar el excedente.<br><br>
+       <strong>2. Declaración de Carga y Modificaciones</strong> El presupuesto emitido se basa exclusivamente en la información (volumen, cantidad de muebles, accesos) proporcionada por el cliente. Si el día de la mudanza el volumen de los bienes o la complejidad del trabajo excede lo declarado inicialmente (por ejemplo, muebles que no pasan por aberturas y requieren desarme no previsto, o necesidad de izajes), Nivel 9 se reserva el derecho de ajustar el valor final del servicio o de negarse a trasladar el excedente.<br><br>
        <strong>3. Accesos, Permisos y Consorcios</strong> Es responsabilidad exclusiva del cliente gestionar y garantizar los permisos necesarios para el estacionamiento del camión de mudanzas en los domicilios de origen y destino. Asimismo, el cliente debe coordinar con las administraciones de los edificios (consorcios) los horarios permitidos para mudanzas, el uso de ascensores (colocación de cobertores) y la reserva de espacios. Cualquier demora u obstáculo operativo derivado de la falta de estos permisos será facturado como tiempo de espera adicional.<br><br>
        <strong>4. Embalaje y Responsabilidad por Daños</strong><br>
-       - Cajas embaladas por el cliente: Nivel 9 S.A.S. no se hace responsable por roturas o daños de los objetos contenidos en cajas, bolsas o contenedores que hayan sido embalados previamente por el cliente, a menos que el daño sea consecuencia de un accidente evidente del vehículo de transporte.<br>
+       - Cajas embaladas por el cliente: Nivel 9 no se hace responsable por roturas o daños de los objetos contenidos en cajas, bolsas o contenedores que hayan sido embalados previamente por el cliente, a menos que el daño sea consecuencia de un accidente evidente del vehículo de transporte.<br>
        - Servicio de embalaje Nivel 9: La empresa solo responderá por la integridad de aquellos bienes que hayan sido acondicionados y embalados por nuestro propio personal.<br>
        Es obligación del cliente revisar el estado de los muebles y electrodomésticos al finalizar la descarga. Todo reclamo por daños deberá realizarse en el momento de la entrega, antes de que el personal se retire del domicilio.<br><br>
-       <strong>5. Exclusión de Objetos de Valor</strong> El cliente asume la total responsabilidad por el traslado de objetos de alto valor, tales como: dinero en efectivo, joyas, relojes, títulos, acciones, escrituras, documentos personales importantes, obras de arte de alto valor, dispositivos electrónicos pequeños (notebooks, tablets, celulares) y cualquier otro artículo de características similares. Nivel 9 S.A.S. queda exenta de toda responsabilidad ante la pérdida o sustracción de estos bienes durante el servicio.<br><br>
+       <strong>5. Exclusión de Objetos de Valor</strong> El cliente asume la total responsabilidad por el traslado de objetos de alto valor, tales como: dinero en efectivo, joyas, relojes, títulos, acciones, escrituras, documentos personales importantes, obras de arte de alto valor, dispositivos electrónicos pequeños (notebooks, tablets, celulares) y cualquier otro artículo de características similares. Nivel 9 queda exenta de toda responsabilidad ante la pérdida o sustracción de estos bienes durante el servicio.<br><br>
        <strong>6. Suspensión, Cancelación y Fuerza Mayor</strong><br>
        - Cancelaciones: En caso de que el cliente decida cancelar o reprogramar el servicio, deberá notificarlo con un mínimo de 48 horas de anticipación. Las cancelaciones fuera de este plazo implicarán la pérdida total de la seña abonada en concepto de gastos administrativos y lucro cesante.<br>
-       - Fuerza Mayor: Nivel 9 S.A.S. se reserva el derecho de reprogramar el servicio sin incurrir en penalidad alguna frente a situaciones de fuerza mayor que pongan en riesgo al personal, los bienes o los vehículos, tales como: condiciones climáticas severas (tormentas fuertes, inundaciones), cortes de ruta, piquetes, o desperfectos mecánicos imprevistos de fuerza mayor en tránsito.<br><br>
+       - Fuerza Mayor: Nivel 9 se reserva el derecho de reprogramar el servicio sin incurrir en penalidad alguna frente a situaciones de fuerza mayor que pongan en riesgo al personal, los bienes o los vehículos, tales como: condiciones climáticas severas (tormentas fuertes, inundaciones), cortes de ruta, piquetes, o desperfectos mecánicos imprevistos de fuerza mayor en tránsito.<br><br>
        <strong>7. Jurisdicción</strong> Para cualquier controversia que pudiera derivarse de la prestación del servicio, las partes se someten a la jurisdicción de los Tribunales Ordinarios de la Ciudad de Córdoba, renunciando a cualquier otro fuero o jurisdicción que pudiera corresponder.
      </div>
      <div class="pdf-signature">
@@ -563,7 +566,7 @@
          <path d="M 20 40 Q 40 10 60 30 T 100 20 Q 130 50 160 10" fill="transparent" stroke="#000080" stroke-width="2"/>
          <path d="M 30 50 L 180 30" fill="transparent" stroke="#000080" stroke-width="1"/>
        </svg><br>
-       <strong>Firma y Aclaración: Rodrigo Javier Castro | DNI: 24.691.221</strong><br>CEO / Administrador<br>Nivel 9 S.A.S.
+       <strong>Firma y Aclaración: Rodrigo Javier Castro | DNI: 24.691.221</strong><br>CEO / Administrador<br>Nivel 9 Logística & Transportes
      </div>
    </div>
  </div>
@@ -719,13 +722,13 @@
    async function generarPresupuestoCliente() {
      const cliente = document.getElementById('cot-cliente').value.trim(); const tarifa = parseFloat(document.getElementById('cot-res-tarifa').value) || 0;
      if (!cliente) { alert("Ingrese Nombre del Cliente."); return; }
-     const nuevoMov = { id: String(Date.now()), fecha: document.getElementById('cot-fecha-estimativa').value || new Date().toISOString().split('T')[0], estado: 'Posible', tipomov: document.getElementById('cot-tipomov').value, asignacion: document.getElementById('cot-unidad').value, cliente: cliente, origen: document.getElementById('cot-origen').value, destino: document.querySelectorAll('.cot-destino-input')[0].value, distancia: document.getElementById('cot-kms').value, detalles: document.getElementById('cot-detalles-recibidos').value, presupuesto: tarifa, combustible: parseFloat(document.getElementById('cot-res-combustible').value) || 0, peajesCosto: parseFloat(document.getElementById('cot-res-peajes-costo').value) || 0, gastosviaticos: parseFloat(document.getElementById('cot-res-viaticos').value) || 0, total: tarifa - (parseFloat(document.getElementById('cot-res-costostotales').value) || 0) };
+     const nuevoMov = { id: String(Date.now()), fecha: document.getElementById('cot-fecha-estimativa').value || new Date().toISOString().split('T')[0], estado: 'Posible', tipomov: document.getElementById('cot-tipomov').value, asignacion: document.getElementById('cot-unidad').value, cliente: cliente, origen: document.getElementById('cot-origen').value, destino: document.querySelectorAll('.cot-destino-input')[0].value, distancia: document.getElementById('cot-kms').value, detalles: document.getElementById('cot-detalles-recibidos').value, inventario: document.getElementById('cot-detalles-recibidos').value, presupuesto: tarifa, combustible: parseFloat(document.getElementById('cot-res-combustible').value) || 0, peajesCosto: parseFloat(document.getElementById('cot-res-peajes-costo').value) || 0, gastosviaticos: parseFloat(document.getElementById('cot-res-viaticos').value) || 0, total: tarifa - (parseFloat(document.getElementById('cot-res-costostotales').value) || 0) };
      events.push(nuevoMov); try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {} pushCloudData(); renderCalendar(); alert("Movimiento agendado con éxito."); document.getElementById('viewCotizador').style.display = 'none'; document.getElementById('viewAgenda').style.display = 'block';
    }
 
    // --- LÓGICA DE PRESUPUESTOS Y PDF ---
    function getNextPresupuestoID() {
-       let maxId = 1009; // Base
+       let maxId = 1009;
        events.forEach(e => {
            if (e.nro_presupuesto && String(e.nro_presupuesto).includes('-')) {
                let numPart = parseInt(String(e.nro_presupuesto).split('-')[1], 10);
@@ -759,7 +762,7 @@
    }
    function importDataToPresupuesto() {
        let id = document.getElementById('pres-import-select').value; if(!id) return; let e = events.find(x => String(x.id) === String(id)); if(!e) return;
-       document.getElementById('pres-cliente').value = e.cliente; document.getElementById('pres-tel').value = e.telefono || ''; document.getElementById('pres-origen').value = e.origen || ''; document.getElementById('pres-destino').value = e.destino || ''; document.getElementById('pres-km').value = e.distancia || ''; document.getElementById('pres-desc').value = e.detalles || ''; document.getElementById('pres-total').value = e.presupuesto || 0; document.getElementById('pres-sena').value = e.sena || 0; convertirMontoLetras();
+       document.getElementById('pres-cliente').value = e.cliente; document.getElementById('pres-tel').value = e.telefono || ''; document.getElementById('pres-origen').value = e.origen || ''; document.getElementById('pres-destino').value = e.destino || ''; document.getElementById('pres-km').value = e.distancia || ''; document.getElementById('pres-desc').value = e.inventario || e.detalles || ''; document.getElementById('pres-total').value = e.presupuesto || 0; document.getElementById('pres-sena').value = e.sena || 0; convertirMontoLetras();
    }
    async function generarPdfYGuardar() {
        let btn = document.querySelector('#modalPresupuesto .btn-purple'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
@@ -769,7 +772,7 @@
        let element = document.getElementById('pdf-template-content'); let opt = { margin: 0, filename: `Presupuesto_${nro}_${cliente.replace(/[^a-z0-9]/gi, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
        await html2pdf().set(opt).from(element).save();
        let id = document.getElementById('pres-id').value || 'PRE-' + Date.now();
-       let nuevoPresupuesto = { id: id, fecha: document.getElementById('pres-fecha').value, estado: 'Presupuesto', cliente: "PRESUP. " + cliente, origen: document.getElementById('pres-origen').value, destino: document.getElementById('pres-destino').value, distancia: document.getElementById('pres-km').value, presupuesto: document.getElementById('pres-total').value, sena: document.getElementById('pres-sena').value, nro_presupuesto: nro, dni_cuit: document.getElementById('pres-cuit').value, email: document.getElementById('pres-email').value, telefono: document.getElementById('pres-tel').value, detalles: "Fecha estim. serv: " + document.getElementById('pres-fecha-servicio').value + " | " + document.getElementById('pres-desc').value, tipomov: 'Cotización PDF', asignacion: '-', total: document.getElementById('pres-total').value };
+       let nuevoPresupuesto = { id: id, fecha: document.getElementById('pres-fecha').value, estado: 'Presupuesto', cliente: "PRESUP. " + cliente, origen: document.getElementById('pres-origen').value, destino: document.getElementById('pres-destino').value, distancia: document.getElementById('pres-km').value, presupuesto: document.getElementById('pres-total').value, sena: document.getElementById('pres-sena').value, nro_presupuesto: nro, dni_cuit: document.getElementById('pres-cuit').value, email: document.getElementById('pres-email').value, telefono: document.getElementById('pres-tel').value, detalles: "Fecha estim. serv: " + document.getElementById('pres-fecha-servicio').value + " | " + document.getElementById('pres-desc').value, inventario: document.getElementById('pres-desc').value, tipomov: 'Cotización PDF', asignacion: '-', total: document.getElementById('pres-total').value };
        const idx = events.findIndex(x => String(x.id) === String(id)); if (idx >= 0) events[idx] = nuevoPresupuesto; else events.push(nuevoPresupuesto);
        try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {} pushCloudData(); renderCalendar(); if(document.getElementById('viewInformes').style.display === 'block') generarReporteUI();
        closeModals(); btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generar PDF y Guardar en Agenda';
@@ -817,14 +820,59 @@
    
    function editEvent(id) {
      const e = events.find(x => String(x.id) === String(id)); if (!e) return; closeModals();
-     document.getElementById('ev-id').value = e.id; document.getElementById('ev-telefono').value = e.telefono || ''; document.getElementById('ev-fecha').value = parseDateStr(e.fecha); document.getElementById('ev-estado').value = e.estado || 'Posible'; document.getElementById('ev-hinicio').value = e.hinicio || ''; document.getElementById('ev-hfin').value = e.hfin || ''; document.getElementById('ev-tipomov').value = e.tipomov || 'Mudanza Local'; document.getElementById('ev-asignacion').value = e.asignacion || 'Sprinter Furgon'; document.getElementById('ev-jornada').value = e.jornada || 'Completa'; document.getElementById('ev-cliente').value = e.cliente || ''; document.getElementById('ev-origen').value = e.origen || ''; document.getElementById('ev-destino').value = e.destino || ''; document.getElementById('ev-distancia').value = e.distancia || ''; document.getElementById('ev-detalles').value = e.detalles || ''; document.getElementById('ev-presupuesto').value = e.presupuesto || 0; document.getElementById('ev-sena').value = e.sena || 0; document.getElementById('ev-combustible').value = e.combustible || 0; document.getElementById('ev-peajes-costo').value = e.peajesCosto || 0; document.getElementById('ev-gastosviaticos').value = e.gastosviaticos || 0; document.getElementById('ev-ayudante-monto').value = e.ayudante || 0; document.getElementById('ev-comision').value = e.comision || 0;
+     document.getElementById('ev-id').value = e.id; 
+     document.getElementById('ev-telefono').value = e.telefono || ''; 
+     document.getElementById('ev-fecha').value = parseDateStr(e.fecha); 
+     document.getElementById('ev-estado').value = e.estado || 'Posible'; 
+     document.getElementById('ev-hinicio').value = e.hinicio || ''; 
+     document.getElementById('ev-hfin').value = e.hfin || ''; 
+     document.getElementById('ev-tipomov').value = e.tipomov || 'Mudanza Local'; 
+     document.getElementById('ev-asignacion').value = e.asignacion || 'Sprinter Furgon'; 
+     document.getElementById('ev-jornada').value = e.jornada || 'Completa'; 
+     document.getElementById('ev-cliente').value = e.cliente || ''; 
+     document.getElementById('ev-origen').value = e.origen || ''; 
+     document.getElementById('ev-destino').value = e.destino || ''; 
+     document.getElementById('ev-distancia').value = e.distancia || ''; 
+     document.getElementById('ev-detalles').value = e.detalles || ''; 
+     document.getElementById('ev-inventario').value = e.inventario || '';
+     document.getElementById('ev-presupuesto').value = e.presupuesto || 0; 
+     document.getElementById('ev-sena').value = e.sena || 0; 
+     document.getElementById('ev-combustible').value = e.combustible || 0; 
+     document.getElementById('ev-peajes-costo').value = e.peajesCosto || 0; 
+     document.getElementById('ev-gastosviaticos').value = e.gastosviaticos || 0; 
+     document.getElementById('ev-ayudante-monto').value = e.ayudante || 0; 
+     document.getElementById('ev-comision').value = e.comision || 0;
      calculateTotal(); document.getElementById('modalEventForm').classList.add('active');
    }
 
    function saveEvent() {
      const id = document.getElementById('ev-id').value; const cliente = document.getElementById('ev-cliente').value.trim(); if (!cliente) return;
      const pres = parseFloat(document.getElementById('ev-presupuesto').value) || 0, comb = parseFloat(document.getElementById('ev-combustible').value) || 0, peaj = parseFloat(document.getElementById('ev-peajes-costo').value) || 0, viat = parseFloat(document.getElementById('ev-gastosviaticos').value) || 0, ayud = parseFloat(document.getElementById('ev-ayudante-monto').value) || 0, comision = parseFloat(document.getElementById('ev-comision').value) || 0;
-     const updated = { id: id || String(Date.now()), telefono: document.getElementById('ev-telefono').value, fecha: document.getElementById('ev-fecha').value, estado: document.getElementById('ev-estado').value, hinicio: document.getElementById('ev-hinicio').value, hfin: document.getElementById('ev-hfin').value, tipomov: document.getElementById('ev-tipomov').value, asignacion: document.getElementById('ev-asignacion').value, jornada: document.getElementById('ev-jornada').value, cliente: cliente, origen: document.getElementById('ev-origen').value, destino: document.getElementById('ev-destino').value, distancia: document.getElementById('ev-distancia').value, detalles: document.getElementById('ev-detalles').value, presupuesto: pres, sena: parseFloat(document.getElementById('ev-sena').value) || 0, combustible: comb, peajesCosto: peaj, gastosviaticos: viat, ayudante: ayud, comision: comision, total: pres - (comb + peaj + viat + ayud + comision) };
+     const updated = { 
+       id: id || String(Date.now()), 
+       telefono: document.getElementById('ev-telefono').value, 
+       fecha: document.getElementById('ev-fecha').value, 
+       estado: document.getElementById('ev-estado').value, 
+       hinicio: document.getElementById('ev-hinicio').value, 
+       hfin: document.getElementById('ev-hfin').value, 
+       tipomov: document.getElementById('ev-tipomov').value, 
+       asignacion: document.getElementById('ev-asignacion').value, 
+       jornada: document.getElementById('ev-jornada').value, 
+       cliente: cliente, 
+       origen: document.getElementById('ev-origen').value, 
+       destino: document.getElementById('ev-destino').value, 
+       distancia: document.getElementById('ev-distancia').value, 
+       detalles: document.getElementById('ev-detalles').value, 
+       inventario: document.getElementById('ev-inventario').value,
+       presupuesto: pres, 
+       sena: parseFloat(document.getElementById('ev-sena').value) || 0, 
+       combustible: comb, 
+       peajesCosto: peaj, 
+       gastosviaticos: viat, 
+       ayudante: ayud, 
+       comision: comision, 
+       total: pres - (comb + peaj + viat + ayud + comision) 
+     };
      const idx = events.findIndex(x => String(x.id) === String(id)); if (idx >= 0) events[idx] = updated; else events.push(updated);
      try { localStorage.setItem(dbKey, JSON.stringify(events)); } catch(e) {} pushCloudData(); renderCalendar(); closeModals(); if(document.getElementById('viewInformes').style.display === 'block') generarReporteUI();
    }
@@ -876,6 +924,7 @@
    function openAddEventModal(dateStr = null) { closeModals(); document.getElementById('eventForm').reset(); document.getElementById('ev-id').value = ''; document.getElementById('ev-fecha').value = dateStr || new Date().toISOString().split('T')[0]; calculateTotal(); document.getElementById('modalEventForm').classList.add('active'); }
 
    document.addEventListener('DOMContentLoaded', () => { initApp(); });
+
 // 1. COPIAR FICHA LIMPIA PARA WHATSAPP (SIN COSTOS INTERNOS)
 function copiarFichaWhatsApp() {
   const cliente = document.getElementById('ev-cliente')?.value || 'Cliente';
@@ -884,7 +933,7 @@ function copiarFichaWhatsApp() {
   const destino = document.getElementById('ev-destino')?.value || '';
   const unidad = document.getElementById('ev-asignacion')?.value || 'A confirmar';
   const inventario = document.getElementById('ev-inventario')?.value || 'Sin inventario detallado';
-  const tarifa = document.getElementById('ev-tarifafinal')?.value || document.getElementById('ev-presupuesto')?.value || '0';
+  const tarifa = document.getElementById('ev-presupuesto')?.value || '0';
   const sena = document.getElementById('ev-sena')?.value || '0';
   const saldo = parseFloat(tarifa) - parseFloat(sena);
 
@@ -920,7 +969,7 @@ function generarPresupuestoPDF(tipoFormato) {
   const origen = document.getElementById('ev-origen')?.value || '';
   const destino = document.getElementById('ev-destino')?.value || '';
   const inventario = document.getElementById('ev-inventario')?.value || 'Inventario general de mudanza/flete.';
-  const tarifa = document.getElementById('ev-tarifafinal')?.value || document.getElementById('ev-presupuesto')?.value || '0';
+  const tarifa = document.getElementById('ev-presupuesto')?.value || '0';
   const sena = document.getElementById('ev-sena')?.value || '0';
   const saldo = parseFloat(tarifa) - parseFloat(sena);
 
