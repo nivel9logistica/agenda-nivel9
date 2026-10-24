@@ -1553,7 +1553,7 @@
    }
    
    if(viewId === 'Agenda') dibujarCalendarioMes();
-   if(viewId === 'Informes') inyectarFiltrosDeInformes();
+   if(viewId === 'Informes') inyectarFiltrosDeInformes(); // Se fuerza el dibujo de casillas
    if(viewId === 'Cotizador') {
      setTimeout(() => { 
        if(!mapaCotizador) { 
@@ -1632,13 +1632,9 @@
  // LÓGICA FORMULARIO VIAJES (CRUD)
  function calculateTotal() {
    const valor = (id) => parseFloat(document.getElementById(id).value) || 0;
-   
    const tarifa = valor('ev-presupuesto');
-   // Costos normales intactos
    const costosBase = valor('ev-combustible') + valor('ev-peajes-costo') + valor('ev-ayudante-monto') + valor('ev-comision');
-   // Gasto extra aislado
    const gastoExtraordinario = valor('ev-gastoext'); 
-                  
    document.getElementById('ev-total').value = tarifa - (costosBase + gastoExtraordinario);
  }
 
@@ -1654,9 +1650,13 @@
  }
 
  function editEvent(idViaje) {
-   // ESTA FUNCION ES VITAL PARA EDITAR
-   const viaje = eventosGuardados.find(e => e.id === idViaje); 
-   if(!viaje) { alert("Error buscando el viaje."); return; }
+   // CORRECCIÓN 1: Conversión segura a String para evitar rechazo de tipos (Number vs String)
+   const viaje = eventosGuardados.find(e => String(e.id) === String(idViaje)); 
+   
+   if(!viaje) { 
+     alert("Error del sistema: El ID del viaje no se encontró en la memoria local."); 
+     return; 
+   }
    
    document.getElementById('ev-id').value = viaje.id;
    document.getElementById('ev-fecha').value = viaje.fecha; 
@@ -1669,16 +1669,13 @@
    document.getElementById('ev-origen').value = viaje.origen;
    document.getElementById('ev-destino').value = viaje.destino; 
    document.getElementById('ev-distancia').value = viaje.distancia || 0;
-   
    document.getElementById('ev-inventario').value = viaje.inventario || viaje.detalles || '';
-   
    document.getElementById('ev-presupuesto').value = viaje.presupuesto || 0; 
    document.getElementById('ev-sena').value = viaje.sena || 0;
    document.getElementById('ev-combustible').value = viaje.combustible || 0; 
    document.getElementById('ev-peajes-costo').value = viaje.peajesCosto || 0;
    document.getElementById('ev-ayudante-monto').value = viaje.ayudante || 0; 
    document.getElementById('ev-comision').value = viaje.comision || 0;
-   
    document.getElementById('ev-gastoext').value = viaje.gastoext || 0; 
    document.getElementById('ev-detallegastoext').value = viaje.detallegastoext || '';
    
@@ -1800,7 +1797,7 @@
    document.getElementById('ev-presupuesto').value = document.getElementById('cot-res-tarifa').value; 
    document.getElementById('ev-combustible').value = document.getElementById('cot-res-combustible').value;
    document.getElementById('ev-peajes-costo').value = document.getElementById('cot-res-peajes-costo').value; 
-   document.getElementById('ev-gastoext').value = document.getElementById('cot-res-viaticos').value; // Aislado
+   document.getElementById('ev-gastoext').value = document.getElementById('cot-res-viaticos').value; 
    document.getElementById('ev-ayudante-monto').value = document.getElementById('cot-ayudante').value;
    
    calculateTotal(); 
@@ -1835,14 +1832,18 @@
 
  // INFORMES (El Excel Profesional)
  function inyectarFiltrosDeInformes() {
-   const c = document.getElementById('rep-tipos-container');
-   if(c.innerHTML.trim() === '') { 
-     c.innerHTML = configuracionNivel9.tipos.map(t => `<label class="checkbox-group"><input type="checkbox" class="chk-filtro-tipo" value="${t}" checked style="width:16px; height:16px;"> ${t}</label>`).join(''); 
-   }
+   // CORRECCIÓN 2: Fuerza el renderizado siempre para evitar informes vacíos
+   const contenedor = document.getElementById('rep-tipos-container');
+   const tiposSeguros = configuracionNivel9.tipos && configuracionNivel9.tipos.length > 0 ? configuracionNivel9.tipos : ["Mudanza Local", "Flete Comercial"];
+   
+   contenedor.innerHTML = tiposSeguros.map(t => `
+     <label class="checkbox-group">
+       <input type="checkbox" class="chk-filtro-tipo" value="${t}" checked style="width:16px; height:16px;"> ${t}
+     </label>
+   `).join('');
  }
 
  function generarReporteDatos() {
-   inyectarFiltrosDeInformes();
    const start = document.getElementById('rep-start').value; 
    const end = document.getElementById('rep-end').value; 
    const estado = document.getElementById('rep-estado').value;
@@ -1899,8 +1900,6 @@
  }
 
  function exportarExcelPuroNumeros() {
-   // La solución al archivo feo y a los errores de WPS:
-   // En vez de agarrar el HTML, armamos un array de objetos con números puros.
    const checkboxes = document.querySelectorAll('.chk-linea-informe:checked');
    if(checkboxes.length === 0) { alert("No hay filas tildadas para exportar."); return; }
 
@@ -1947,7 +1946,7 @@
    document.querySelectorAll('.dinamico-flota').forEach(e => e.innerHTML = opF); document.querySelectorAll('.dinamico-tipos').forEach(e => e.innerHTML = opT);
  }
 
- // PDF & PRESUPUESTOS (NIVEL 9 ORIGINAL)
+ // PDF & PRESUPUESTOS
  function openPresupuestoModal() { 
    document.getElementById('pres-import-select').innerHTML = '<option value="">-- Cargar un movimiento ya agendado --</option>' + eventosGuardados.map(e => `<option value="${e.id}">${e.fecha.split('-').reverse().join('/')} - ${e.cliente}</option>`).join(''); 
    document.getElementById('pres-nro').value = 'PRE-' + Date.now().toString().slice(-5);
@@ -1956,14 +1955,13 @@
  }
  
  function cargarDatosEnPresupuesto() {
-   const v = eventosGuardados.find(e => e.id === document.getElementById('pres-import-select').value); if(!v) return;
+   const v = eventosGuardados.find(e => String(e.id) === String(document.getElementById('pres-import-select').value)); if(!v) return;
    document.getElementById('pres-cliente').value = v.cliente; document.getElementById('pres-origen').value = v.origen; document.getElementById('pres-destino').value = v.destino; 
    document.getElementById('pres-desc').value = v.inventario || v.detalles || ''; 
    document.getElementById('pres-total').value = v.presupuesto || 0; document.getElementById('pres-sena').value = v.sena || 0;
  }
  
  function prepararPdfDesdeEdicion() {
-    // Si estás editando un viaje y quieres sacar el PDF sin ir al menú principal
     document.getElementById('pres-nro').value = 'PRE-' + Date.now().toString().slice(-5);
     document.getElementById('pres-fecha').value = document.getElementById('ev-fecha').value;
     document.getElementById('pres-cliente').value = document.getElementById('ev-cliente').value;
@@ -1995,7 +1993,7 @@
  // ==========================================
  window.MotorNivel9 = {
    crearViajeEnBaseDeDatos: async function(payload) {
-     const idx = eventosGuardados.findIndex(e => e.id === payload.id);
+     const idx = eventosGuardados.findIndex(e => String(e.id) === String(payload.id));
      if(idx >= 0) eventosGuardados[idx] = payload; else eventosGuardados.push(payload);
      if(payload.telefono && !contactosGuardados.find(c => c.telefono === payload.telefono)) { this.crearContactoEnBaseDeDatos({ id: 'CNT-' + Date.now(), categoria: payload.tipocliente || 'Particular', nombre: payload.cliente, telefono: payload.telefono }); }
      cerrarModalesNativos(); dibujarCalendarioMes();
@@ -2003,26 +2001,25 @@
    },
 
    eliminarViajeEnBaseDeDatos: async function(id) {
-     eventosGuardados = eventosGuardados.filter(e => e.id !== id);
+     eventosGuardados = eventosGuardados.filter(e => String(e.id) !== String(id));
      cerrarModalesNativos(); dibujarCalendarioMes();
      try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'deleteEvent', id: id }) }); } catch(e) {}
    },
 
    crearContactoEnBaseDeDatos: async function(payload) {
-     const idx = contactosGuardados.findIndex(c => c.id === payload.id);
+     const idx = contactosGuardados.findIndex(c => String(c.id) === String(payload.id));
      if(idx >= 0) contactosGuardados[idx] = payload; else contactosGuardados.push(payload);
      cerrarModalesNativos(); renderContactos();
      try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveContact', ...payload }) }); } catch(e) {}
    },
 
    procesarChatMarina: async function() {
-     // Función exacta corregida
      const input = document.getElementById('marina-prompt-input');
      const box = document.getElementById('marina-chat-response');
      const texto = input.value.trim();
      if(!texto) return;
 
-     box.innerHTML = "⏳ <em>Marina está analizando la solicitud operativa...</em>";
+     box.innerHTML = "⏳ <em>Marina está comunicándose con la base de datos...</em>";
      input.value = "";
 
      const miniContexto = eventosGuardados.map(e => ({ fecha: e.fecha, cliente: e.cliente, tipo: e.tipomov, estado: e.estado, dest: e.destino }));
@@ -2031,8 +2028,15 @@
      try {
        const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "consultaMarina", prompt: promptConTiempo, contextoAgenda: miniContexto }) });
        const info = await res.json();
-       box.innerHTML = info.success ? info.result : "⚠️ Error del backend (Code.gs).";
-     } catch(e) { box.innerHTML = "Error de internet."; }
+       
+       // CORRECCIÓN 3: Exposición detallada del error del backend de Google
+       if(info.success) {
+           box.innerHTML = info.result;
+       } else {
+           box.innerHTML = `⚠️ <strong>Error en tu archivo Code.gs de Google:</strong><br><br>` + 
+                           (info.error || info.message || "La función 'consultaMarina' no existe en el Apps Script o falló al ejecutarse. Revisa la consola de Google.");
+       }
+     } catch(e) { box.innerHTML = "⚠️ Error de conexión a internet o bloqueo de CORS."; }
    },
 
    reconocimientoVoz: function() {
@@ -2059,7 +2063,7 @@
        if(data.success && data.result) {
          const inv = document.getElementById('ev-inventario');
          inv.value = inv.value ? inv.value + "\n\n--- MARINA IA M3 ---\n" + data.result : data.result;
-       } else { alert("❌ Marina no detectó muebles."); }
+       } else { alert("❌ Marina no detectó muebles o falló el script."); }
      } catch(e) { alert("Fallo IA."); } finally { btn.innerHTML = '<i class="fas fa-camera"></i> Extraer Inventario'; btn.disabled = false; }
    }
  };
@@ -2069,5 +2073,5 @@
    document.getElementById('modalMarinaAsistente').style.display = 'flex';
  }
  </script>
-</body>
+ </body>
 </html>
