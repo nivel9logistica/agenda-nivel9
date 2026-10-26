@@ -240,7 +240,7 @@
     .currency-wrapper input { padding-left: 35px; font-weight: 700; }
 
     /* =========================================
-       CALENDARIO (GRILLA RESTAURADA Y PROTEGIDA)
+       CALENDARIO
        ========================================= */
     .calendar-wrapper { background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #d4d4d8; }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(35px, 1fr)); gap: 8px; }
@@ -258,7 +258,7 @@
     .status-Autocotización { background-color: var(--autocotizacion) !important; color: #111113 !important; }
 
     /* =========================================
-       MODALES (ESTRUCTURA INTACTA)
+       MODALES
        ========================================= */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px); padding: 15px; }
     .modal-content { background: white; border-radius: 20px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; }
@@ -275,7 +275,7 @@
     .event-card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9rem; color: #3f3f46; font-weight: 600; }
     .contact-badge { font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; background: var(--brand-light); color: var(--brand); }
 
-    /* MAPA Y MARINA IA (AGREGADOS) */
+    /* MAPA Y MARINA IA */
     #map { width: 100%; height: 380px; border-radius: 12px; border: 1px solid #d4d4d8; z-index: 1; overflow: hidden; }
     .marina-scanner-box { background: #eef2ff; border: 2px dashed var(--ia-color); border-radius: 12px; padding: 20px; margin-top: 15px; display: flex; flex-direction: column; gap: 12px; }
     .marina-scanner-box label { color: var(--ia-color); font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
@@ -334,6 +334,10 @@
       #currentMonthYear { font-size: 1.1rem; min-width: 130px; }
       .form-grid { grid-template-columns: 1fr; }
       .form-group.full { grid-column: span 1; }
+      
+      /* CORRECCIÓN: Botones del modal uno debajo del otro en celular */
+      .modal-footer { flex-direction: column; gap: 10px; }
+      .modal-footer .btn { width: 100%; margin: 0 !important; }
     }
   </style>
 </head>
@@ -474,7 +478,7 @@
             <div class="form-group"><label>Tarifa a Presupuestar ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-tarifa" placeholder="0" style="font-weight:800; color:var(--brand); font-size:1.1rem;" oninput="calcularCostosCotizador()"></div></div>
             <div class="form-group"><label>Combustible ($ Ida/Vuelta)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-combustible" value="0" step="any" oninput="calcularCostosCotizador()"></div></div>
             <div class="form-group"><label>Peajes Total ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-peajes-costo" value="0" step="any" oninput="calcularCostosCotizador()"></div></div>
-            <div class="form-group"><label>Gastos / Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-viaticos" value="0" step="any" oninput="calcularCostosCotizador()"></div></div>
+            <div class="form-group"><label>Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-viaticos" value="0" step="any" oninput="calcularCostosCotizador()"></div></div>
             <div class="form-group"><label>Pago Ayudante ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-ayudante" value="0" step="any" oninput="calcularCostosCotizador()"></div></div>
             <div class="form-group"><label style="color:#dc2626;">Costos Operativos ($)</label><div class="currency-wrapper"><span class="currency-symbol" style="color:#dc2626;">$</span><input type="number" id="cot-res-costostotales" readonly style="color:#dc2626; background:#fef2f2; font-weight:800;"></div></div>
             <div class="form-group full" style="margin-top:10px;"><label style="font-size:1rem; color:#16a34a;">Utilidad Neta Esperada ($)</label><div class="currency-wrapper"><span class="currency-symbol" style="color:#16a34a; font-size:1.3rem;">$</span><input type="number" id="cot-res-utilidad" readonly style="color:#16a34a; font-weight:900; font-size:1.4rem; background:#f0fdf4; border-color:#86efac; padding-top:15px; padding-bottom:15px;"></div></div>
@@ -536,7 +540,9 @@
           <div class="panel-title" style="border:none; margin:0;"><i class="fas fa-table"></i> 2. Desglose Línea por Línea</div>
           <div style="display:flex; gap:10px;">
             <button class="btn btn-success" onclick="exportarExcelPuroNumeros()"><i class="fas fa-file-excel"></i> Exportar a Excel</button>
-            <button class="btn btn-dark" onclick="window.print()"><i class="fas fa-print"></i> Imprimir Reporte</button>
+            
+            <!-- CORRECCIÓN: Botón imprimir llama a la nueva función javascript -->
+            <button class="btn btn-dark" onclick="imprimirReporte()"><i class="fas fa-print"></i> Imprimir Reporte</button>
           </div>
         </div>
         
@@ -605,7 +611,11 @@
           <div class="form-group"><label>Tarifa Total Presupuestada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-presupuesto" value="0" oninput="calculateTotal()" style="font-size:1.1rem; color:var(--brand);" required></div></div>
           <div class="form-group"><label>Seña Recibida ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-sena" value="0"></div></div>
           <div class="form-group"><label>Costo Combustible ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-combustible" value="0" oninput="calculateTotal()"></div></div>
-          <div class="form-group"><label>Peajes y Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-peajes-costo" value="0" oninput="calculateTotal()"></div></div>
+          
+          <!-- CORRECCIÓN: Peajes y Viáticos separados en el HTML -->
+          <div class="form-group"><label>Peajes ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-peajes-costo" value="0" oninput="calculateTotal()"></div></div>
+          <div class="form-group"><label>Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-viaticos" value="0" oninput="calculateTotal()"></div></div>
+          
           <div class="form-group"><label>Costo Ayudante(s) ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-ayudante-monto" value="0" oninput="calculateTotal()"></div></div>
           <div class="form-group"><label>Comisión / Terceros ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-comision" value="0" oninput="calculateTotal()"></div></div>
           <div class="form-group" style="margin-top:10px;"><label style="color:#dc2626;">Gastos Extraordinarios No Previstos ($)</label><div class="currency-wrapper"><span class="currency-symbol" style="color:#dc2626;">$</span><input type="number" id="ev-gastoext" value="0" oninput="calculateTotal()"></div></div>
@@ -708,7 +718,7 @@
     </div>
  </div>
 
- <!-- PLANTILLA INVISIBLE DEL PDF -->
+ <!-- PLANTILLA INVISIBLE DEL PDF O ÁREA DE IMPRESIÓN GENERAL -->
  <div id="printArea"></div>
  <div id="pdf-render-container">
    <div id="pdf-template-content" class="pdf-page">
@@ -732,7 +742,7 @@
       MOTOR DE JAVASCRIPT (TOTALMENTE AUDITADO Y SIN MINIFICAR)
       ========================================================================= -->
  <script>
- // URL MAESTRA (¡REEMPLAZA AQUÍ ABAJO TU URL!)
+ // URL MAESTRA
  const webAppUrl = 'https://script.google.com/macros/s/AKfycbzJgp7Q0-LnufrbdYtB1nww9VPWIT-GDOHTGAmhk4qrp44CjhXTErniQQUGgrJofRJt/exec';
 
  let eventosGuardados = [];
@@ -877,7 +887,8 @@
  // LÓGICA DE FORMULARIO DE VIAJE
  function calculateTotal() {
    const valor = (id) => parseFloat(document.getElementById(id).value) || 0;
-   document.getElementById('ev-total').value = valor('ev-presupuesto') - (valor('ev-combustible') + valor('ev-peajes-costo') + valor('ev-ayudante-monto') + valor('ev-comision') + valor('ev-gastoext'));
+   /* CORRECCIÓN: Separamos ev-peajes-costo y ev-viaticos */
+   document.getElementById('ev-total').value = valor('ev-presupuesto') - (valor('ev-combustible') + valor('ev-peajes-costo') + valor('ev-viaticos') + valor('ev-ayudante-monto') + valor('ev-comision') + valor('ev-gastoext'));
  }
 
  function openAddEventModal(fechaPredefinida = null) {
@@ -911,7 +922,11 @@
    document.getElementById('ev-presupuesto').value = viaje.presupuesto || 0; 
    document.getElementById('ev-sena').value = viaje.sena || 0; 
    document.getElementById('ev-combustible').value = viaje.combustible || 0; 
+   
+   /* CORRECCIÓN: Separamos lectura de peajes y viáticos */
    document.getElementById('ev-peajes-costo').value = viaje.peajescosto || 0; 
+   document.getElementById('ev-viaticos').value = viaje.viaticos || 0; 
+   
    document.getElementById('ev-ayudante-monto').value = viaje.ayudante || 0; 
    document.getElementById('ev-comision').value = viaje.comision || 0; 
    document.getElementById('ev-gastoext').value = viaje.gastoext || 0; 
@@ -945,10 +960,15 @@
      destino: document.getElementById('ev-destino').value, 
      distancia: valorNum('ev-distancia'), 
      inventario: document.getElementById('ev-inventario').value, 
-     peajescosto: valorNum('ev-peajes-costo'), 
+     
      presupuesto: valorNum('ev-presupuesto'), 
      sena: valorNum('ev-sena'), 
      combustible: valorNum('ev-combustible'), 
+     
+     /* CORRECCIÓN: Viáticos enviados a base de datos de manera aislada */
+     peajescosto: valorNum('ev-peajes-costo'), 
+     viaticos: valorNum('ev-viaticos'), 
+     
      ayudante: valorNum('ev-ayudante-monto'), 
      comision: valorNum('ev-comision'), 
      gastoext: valorNum('ev-gastoext'), 
@@ -1028,8 +1048,12 @@
    
    document.getElementById('ev-presupuesto').value = document.getElementById('cot-res-tarifa').value; 
    document.getElementById('ev-combustible').value = document.getElementById('cot-res-combustible').value; 
+   
+   /* CORRECCIÓN: Traslado preciso de los campos por separado */
    document.getElementById('ev-peajes-costo').value = document.getElementById('cot-res-peajes-costo').value; 
-   document.getElementById('ev-gastoext').value = document.getElementById('cot-res-viaticos').value; 
+   document.getElementById('ev-viaticos').value = document.getElementById('cot-res-viaticos').value; 
+   document.getElementById('ev-gastoext').value = 0; // Limpiamos el gasto extraordinario
+   
    document.getElementById('ev-ayudante-monto').value = document.getElementById('cot-ayudante').value;
    
    calculateTotal(); 
@@ -1086,7 +1110,10 @@
    
    document.getElementById('reportTableBody').innerHTML = f.map(ev => {
      const p = Number(ev.presupuesto) || 0; 
-     const cF = (Number(ev.combustible)||0) + (Number(ev.peajescosto)||0) + (Number(ev.ayudante)||0) + (Number(ev.comision)||0); 
+     
+     /* CORRECCIÓN: Agregamos ev.viaticos a los costos fijos (cF) */
+     const cF = (Number(ev.combustible)||0) + (Number(ev.peajescosto)||0) + (Number(ev.viaticos)||0) + (Number(ev.ayudante)||0) + (Number(ev.comision)||0); 
+     
      const gE = Number(ev.gastoext) || 0; 
      const n = p - (cF + gE); 
      const m = p > 0 ? ((n / p) * 100).toFixed(1) : 0;
@@ -1150,6 +1177,18 @@
    const wb = XLSX.utils.book_new(); 
    XLSX.utils.book_append_sheet(wb, ws, "Informes Nivel 9"); 
    XLSX.writeFile(wb, "Reporte_Nivel9_Finanzas.xlsx");
+ }
+
+ /* CORRECCIÓN: Función JavaScript para imprimir la tabla de reportes correctamente */
+ function imprimirReporte() {
+   const printArea = document.getElementById('printArea');
+   printArea.innerHTML = `
+     <div style="padding: 20px; font-family: 'Outfit', sans-serif;">
+       <h2 style="color: #ea580c; border-bottom: 2px solid #ea580c; padding-bottom: 10px; margin-bottom: 20px;">Reporte Financiero Operativo - Nivel 9</h2>
+       ${document.querySelector('.table-responsive').outerHTML}
+     </div>
+   `;
+   window.print();
  }
 
  // LÓGICA DE AJUSTES
