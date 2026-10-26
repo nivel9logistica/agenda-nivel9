@@ -297,10 +297,9 @@
     .settings-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 15px; border: 1px solid #d4d4d8; border-radius: 8px; font-size: 0.95rem; font-weight: 700; color: var(--dark); }
 
     /* =========================================
-       DISEÑO DEL PDF ORIGINAL (ACTUALIZADO SIN ESPACIOS BLANCOS)
+       DISEÑO DEL PDF (ACTUALIZADO SIN ESPACIOS BLANCOS)
        ========================================= */
     #pdf-render-container { display: none; }
-    /* CORRECCIÓN: Padding reducido de 50px a 20px arriba para eliminar blancos innecesarios */
     .pdf-page { width: 793px; min-height: 1122px; padding: 20px 45px 40px 45px; background: white; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #111; box-sizing: border-box; }
     .pdf-header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #ea580c; padding-bottom: 15px; }
     .pdf-logo { width: 120px; height: 120px; background: #111; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 10px; color: white; }
@@ -400,7 +399,6 @@
         </div>
         <div style="display: flex; gap: 10px; flex-wrap:wrap; justify-content:center;">
           <button class="btn btn-brand" onclick="openAddEventModal()"><i class="fas fa-plus"></i> Nuevo Movimiento</button>
-          <!-- CORRECCIÓN: Botón renombrado a Generar Presupuesto / HR -->
           <button class="btn btn-purple" onclick="openPresupuestoModal()"><i class="fas fa-file-pdf"></i> Generar Presupuesto / HR</button>
         </div>
       </div>
@@ -602,7 +600,6 @@
             <textarea id="ev-inventario" rows="7" style="margin-top:15px;" placeholder="Detalle técnico de los bienes, cajas, volúmenes, pisos por escalera y observaciones importantes..."></textarea>
           </div>
           
-          <!-- CORRECCIÓN: Campo de Observaciones para la Hoja de Ruta -->
           <div class="form-group full" style="margin-top:10px;">
             <label style="color:var(--brand);">Observaciones Extras para la Hoja de Ruta (Chofer / Cobros)</label>
             <input type="text" id="ev-obs-ruta" placeholder="Ej: Cobrar saldo en destino, llevar sogas extras, etc...">
@@ -633,7 +630,6 @@
       
       <div class="modal-footer">
         <button class="btn btn-danger" style="margin-right:auto; padding:0 20px;" onclick="eliminarEventoViaje()" id="btn-eliminar-evento"><i class="fas fa-trash"></i> Eliminar</button>
-        <!-- CORRECCIÓN: Botones separados para Presupuesto y Hoja de Ruta dentro de la ficha -->
         <button class="btn btn-dark" style="padding:0 15px;" onclick="generarHojaRutaDirecta()"><i class="fas fa-route"></i> Hoja de Ruta</button>
         <button class="btn btn-purple" style="padding:0 15px;" onclick="generarPresupuestoDirecto()"><i class="fas fa-file-invoice-dollar"></i> Presupuesto</button>
         
@@ -652,7 +648,6 @@
           <input type="hidden" id="cnt-id">
           
           <label>Categoría</label>
-          <!-- CORRECCIÓN: Selector dinámico que acciona campos de Proveedor -->
           <select id="cnt-categoria" required onchange="toggleProvFields()">
             <option value="Particular">Particular</option>
             <option value="Empresa">Empresa</option>
@@ -668,7 +663,6 @@
           <label style="margin-top:15px;">Observaciones Generales</label>
           <textarea id="cnt-obs" rows="2" placeholder="Agregue información útil sobre este contacto..."></textarea>
           
-          <!-- CORRECCIÓN: Campos dinámicos exclusivos de PROVEEDORES -->
           <div id="prov-dinamico" style="display:none; margin-top:15px; border:1px solid #d4d4d8; padding:15px; border-radius:10px; background:#fafafa;">
             <label style="color:var(--brand);"><i class="fas fa-tags"></i> Tipo de Proveedor</label>
             <input type="text" id="cnt-prov-tipo" placeholder="Ej: Insumos, Mecánico, Gomería...">
@@ -740,7 +734,6 @@
           <div class="form-group"><label>N° Comprobante interno</label><input type="text" id="pres-nro" readonly style="background: #e4e4e7; font-weight: bold;"></div>
           <div class="form-group"><label>Fecha de Emisión</label><input type="date" id="pres-fecha" required></div>
           
-          <!-- CORRECCIÓN: Selector de Tipo de Formato de Salida -->
           <div class="form-group full" style="background:#fafafa; padding:15px; border:1px solid #d4d4d8; border-radius:10px;">
             <label style="color:var(--presupuesto);">Tipo de Cliente (Define los Términos y Condiciones)</label>
             <select id="pres-tipo-cliente-doc">
@@ -764,14 +757,13 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline-dark" onclick="cerrarModalesNativos()" style="margin-right:auto;">Cancelar</button>
-        <!-- CORRECCIÓN: Dos botones separados manuales -->
         <button class="btn btn-dark" style="padding:0 20px;" onclick="generarPDFBase('HojaRuta')"><i class="fas fa-route"></i> Imprimir Hoja de Ruta</button>
         <button class="btn btn-purple" style="padding:0 20px;" onclick="generarPDFBase('Presupuesto')"><i class="fas fa-file-pdf"></i> Imprimir Presupuesto</button>
       </div>
     </div>
  </div>
 
- <!-- PLANTILLA INVISIBLE DEL PDF (MULTIUSO: HOJA DE RUTA Y PRESUPUESTO) -->
+ <!-- PLANTILLA INVISIBLE DEL PDF -->
  <div id="printArea"></div>
  <div id="pdf-render-container">
    <div id="pdf-template-content" class="pdf-page">
@@ -784,7 +776,6 @@
        <div style="font-size:12px; font-weight:bold; color:#111; margin-bottom:15px; text-transform:uppercase;">
            Nivel 9 Logística de Excelencia - Rodrigo J. Castro CUIT: 20-24691221-2
        </div>
-       <!-- Título dinámico -->
        <div class="pdf-title" id="pdf-title-text" style="color:#ea580c; font-size:18px;">PRESUPUESTO DE SERVICIO</div>
        <div style="font-size:12px; font-weight:bold; text-align:right; border-top:1px solid #d4d4d8; padding-top:10px;">
            N° de Comprobante: <span id="pdf-nro"></span><br>Lugar y Fecha: <span id="pdf-lugar-fecha"></span>
@@ -799,7 +790,6 @@
      
      <div class="pdf-text" style="white-space:pre-wrap; margin-top:15px; border:1px solid #d4d4d8; padding:10px; border-radius:5px;"><strong style="color:#ea580c; display:block; margin-bottom:5px;">INVENTARIO Y DETALLES DE CARGA:</strong><span id="pdf-desc"></span></div>
      
-     <!-- SECCIÓN HOJA DE RUTA (Oculta en presupuestos) -->
      <div id="pdf-obs-ruta-section" style="display:none; margin-top:20px;">
         <div class="pdf-section-title">3. OBSERVACIONES ADMINISTRATIVAS / CHOFER</div>
         <div class="pdf-text" style="border: 2px dashed #ea580c; padding:15px; border-radius:5px; font-size:13px;"><strong id="pdf-obs-ruta-text"></strong></div>
@@ -810,7 +800,6 @@
         </div>
      </div>
 
-     <!-- SECCIÓN FINANCIERA Y TÉRMINOS (Oculta en hoja de ruta) -->
      <div id="pdf-finanzas-section">
         <div class="pdf-section-title" style="margin-top:25px;">3. CONDICIONES ECONÓMICAS Y FORMAS DE PAGO</div>
         <div class="pdf-row"><span style="font-size:15px;">Valor Total Presupuestado: <strong>$ <span id="pdf-total"></span></strong></span><span style="font-size:15px; color:#ea580c;">Seña Inicial Solicitada: <strong>$ <span id="pdf-sena"></span></strong></span></div>
@@ -824,10 +813,9 @@
  </div>
 
  <!-- =========================================================================
-      MOTOR DE JAVASCRIPT (TOTALMENTE AUDITADO Y SIN MINIFICAR)
+      MOTOR DE JAVASCRIPT
       ========================================================================= -->
  <script>
- // URL MAESTRA (¡Protegida!)
  const webAppUrl = 'https://script.google.com/macros/s/AKfycbzJgp7Q0-LnufrbdYtB1nww9VPWIT-GDOHTGAmhk4qrp44CjhXTErniQQUGgrJofRJt/exec';
 
  let eventosGuardados = [];
@@ -905,7 +893,6 @@
    document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); 
  }
 
- // LÓGICA DE CALENDARIO
  function dibujarCalendarioMes() {
    const anio = fechaCalendarioActual.getFullYear(); 
    const mes = fechaCalendarioActual.getMonth();
@@ -969,7 +956,6 @@
    abrirModalNativo('modalDayView');
  }
 
- // LÓGICA DE FORMULARIO DE VIAJE
  function calculateTotal() {
    const valor = (id) => parseFloat(document.getElementById(id).value) || 0;
    document.getElementById('ev-total').value = valor('ev-presupuesto') - (valor('ev-combustible') + valor('ev-peajes-costo') + valor('ev-viaticos') + valor('ev-ayudante-monto') + valor('ev-comision') + valor('ev-gastoext'));
@@ -1002,7 +988,6 @@
    document.getElementById('ev-distancia').value = viaje.distancia || 0; 
    document.getElementById('ev-inventario').value = viaje.inventario || viaje.detalles || ''; 
    
-   /* CORRECCIÓN: Carga de observaciones para Hoja de Ruta */
    document.getElementById('ev-obs-ruta').value = viaje.obsruta || ''; 
    
    document.getElementById('ev-presupuesto').value = viaje.presupuesto || 0; 
@@ -1043,10 +1028,7 @@
      destino: document.getElementById('ev-destino').value, 
      distancia: valorNum('ev-distancia'), 
      inventario: document.getElementById('ev-inventario').value, 
-     
-     /* CORRECCIÓN: obsruta enviada a la Base de Datos */
      obsruta: document.getElementById('ev-obs-ruta').value,
-     
      presupuesto: valorNum('ev-presupuesto'), 
      sena: valorNum('ev-sena'), 
      combustible: valorNum('ev-combustible'), 
@@ -1073,7 +1055,6 @@
    if(tel.length > 9) { window.open(`https://wa.me/549${tel}`); } else { alert("Número inválido."); }
  }
 
- // LÓGICA COTIZADOR
  function addDestinoCotizador() { 
    const c = document.getElementById('destinosContainer'); 
    const i = document.createElement('input'); 
@@ -1141,7 +1122,6 @@
    abrirModalNativo('modalEventForm');
  }
 
- // LÓGICA CONTACTOS V2.0
  function toggleProvFields() {
     const cat = document.getElementById('cnt-categoria').value;
     document.getElementById('prov-dinamico').style.display = (cat === 'Proveedor') ? 'block' : 'none';
@@ -1150,19 +1130,17 @@
  function openContactFormModal() { 
    document.getElementById('contactForm').reset(); 
    document.getElementById('cnt-id').value = 'CNT-' + Date.now(); 
-   toggleProvFields(); // Asegura el estado inicial
+   toggleProvFields(); 
    abrirModalNativo('modalContactForm'); 
  }
  
  function guardarContactoManual() { 
    const cat = document.getElementById('cnt-categoria').value;
-   
    const payload = { 
        id: document.getElementById('cnt-id').value, 
        categoria: cat, 
        nombre: document.getElementById('cnt-nombre').value, 
        telefono: document.getElementById('cnt-tel').value,
-       /* CORRECCIÓN: Se recogen las observaciones y campos de proveedores */
        observaciones: document.getElementById('cnt-obs').value,
        provtipo: cat === 'Proveedor' ? document.getElementById('cnt-prov-tipo').value : '',
        provflota: cat === 'Proveedor' ? document.getElementById('cnt-prov-flota').value : ''
@@ -1183,16 +1161,12 @@
          <strong style="font-size:1.1rem;">${c.nombre}</strong><span class="contact-badge">${c.categoria}</span>
        </div>
        <div style="color:#52525b; margin-top:5px;"><i class="fas fa-phone"></i> ${c.telefono}</div>
-       
-       <!-- CORRECCIÓN: Renderizado visual de Observaciones y Etiquetas de Proveedor -->
        ${c.observaciones ? `<div style="font-size:0.85rem; color:#71717a; margin-top:8px;"><em>"${c.observaciones}"</em></div>` : ''}
        ${c.categoria === 'Proveedor' ? `<div style="font-size:0.8rem; margin-top:8px; background:var(--brand-light); padding:6px; border-radius:6px; color:var(--brand);"><b>Rol:</b> ${c.provtipo || '-'} | <b>Vehículo:</b> ${c.provflota || '-'}</div>` : ''}
-       
        <button class="btn btn-success" style="width:100%; margin-top:10px;" onclick="window.open('https://wa.me/549${c.telefono.replace(/\D/g,'')}')"><i class="fab fa-whatsapp"></i> Chat</button>
      </div>`).join('');
  }
 
- // LÓGICA INFORMES Y EXCEL
  function inyectarFiltrosDeInformes() {
    const cnt = document.getElementById('rep-tipos-container');
    const tipos = configuracionNivel9.tipos && configuracionNivel9.tipos.length > 0 ? configuracionNivel9.tipos : ["Mudanza Local"];
@@ -1280,11 +1254,8 @@
    XLSX.writeFile(wb, "Reporte_Nivel9_Finanzas.xlsx");
  }
 
- /* CORRECCIÓN: Función que genera un PDF Corporativo Apaisado (en vez de imprimir pantalla plana) */
  function imprimirReporte() {
     const tableHtml = document.querySelector('.table-responsive').outerHTML;
-    
-    // Contenedor fantasma para formatear el reporte antes de convertirlo a PDF
     const element = document.createElement('div');
     element.innerHTML = `
       <div style="padding: 20px; font-family: 'Outfit', sans-serif; background: white; width: 1000px;">
@@ -1297,7 +1268,6 @@
       </div>
     `;
 
-    // Se configuran los parámetros para que sea horizontal (landscape)
     html2pdf().set({
       margin: 10,
       filename: `Reporte_Nivel9_${Date.now()}.pdf`,
@@ -1307,7 +1277,6 @@
     }).from(element).save();
  }
 
- // LÓGICA DE AJUSTES
  function openConfigModal() { 
    dibujarListasConfig(); 
    abrirModalNativo('modalConfig'); 
@@ -1347,13 +1316,10 @@
    document.querySelectorAll('.dinamico-tipos').forEach(e => e.innerHTML = opT);
  }
 
- // LÓGICA PDF - HOJA DE RUTA Y PRESUPUESTOS (NUEVO SISTEMA SEPARADO)
  function openPresupuestoModal() { 
    document.getElementById('pres-import-select').innerHTML = '<option value="">-- Cargar un movimiento ya agendado (Opcional) --</option>' + eventosGuardados.map(e => `<option value="${e.id}">${e.fecha.split('-').reverse().join('/')} - ${e.cliente}</option>`).join(''); 
-   
    document.getElementById('pres-nro').value = 'DOC-' + Date.now().toString().slice(-5); 
    document.getElementById('pres-fecha').value = new Date().toISOString().split('T')[0]; 
-   
    abrirModalNativo('modalPresupuesto'); 
  }
  
@@ -1361,7 +1327,6 @@
    const v = eventosGuardados.find(e => String(e.id) === String(document.getElementById('pres-import-select').value)); 
    if(!v) return; 
    
-   // Auto-selector de Empresa/Particular
    if(v.tipocliente === 'Empresa') { document.getElementById('pres-tipo-cliente-doc').value = 'Empresa'; }
    else { document.getElementById('pres-tipo-cliente-doc').value = 'Particular'; }
    
@@ -1374,13 +1339,11 @@
    document.getElementById('pres-sena').value = v.sena || 0; 
  }
 
- // Desde la Ficha del Movimiento: Preparar Hoja de Ruta directamente
  function generarHojaRutaDirecta() {
    mapearDatosFichaHaciaDocumento();
    generarPDFBase('HojaRuta');
  }
 
- // Desde la Ficha del Movimiento: Preparar Presupuesto directamente
  function generarPresupuestoDirecto() {
    mapearDatosFichaHaciaDocumento();
    generarPDFBase('Presupuesto');
@@ -1414,9 +1377,7 @@
    document.getElementById('pdf-destino').innerText = document.getElementById('pres-destino').value; 
    document.getElementById('pdf-desc').innerText = document.getElementById('pres-desc').value; 
    
-   // --- LÓGICA CONDICIONAL DE VISIBILIDAD Y TÉRMINOS ---
    if (tipoDocumento === 'HojaRuta') {
-       // ES HOJA DE RUTA
        document.getElementById('pdf-title-text').innerText = "HOJA DE RUTA OPERATIVA";
        document.getElementById('pdf-finanzas-section').style.display = 'none';
        document.getElementById('pdf-terminos-section').style.display = 'none';
@@ -1425,7 +1386,6 @@
        let obsValor = document.getElementById('pres-obs-ruta').value.trim();
        document.getElementById('pdf-obs-ruta-text').innerText = obsValor !== "" ? obsValor : "No se registraron observaciones adicionales para este viaje.";
    } else {
-       // ES PRESUPUESTO
        document.getElementById('pdf-title-text').innerText = "PRESUPUESTO DE SERVICIO";
        document.getElementById('pdf-finanzas-section').style.display = 'block';
        document.getElementById('pdf-terminos-section').style.display = 'block';
@@ -1434,10 +1394,8 @@
        document.getElementById('pdf-total').innerText = document.getElementById('pres-total').value; 
        document.getElementById('pdf-sena').innerText = document.getElementById('pres-sena').value; 
 
-     // TÉRMINOS Y CONDICIONES (EMPRESA VS PARTICULAR)
        let tipoCli = document.getElementById('pres-tipo-cliente-doc').value;
        
-       // Bloque de Firma HTML igual a la imagen adjunta
        let firmasHTML = `
            <div style="margin-top: 30px; display: flex; justify-content: flex-start; align-items: center; gap: 40px; padding-top: 20px;">
                <div style="text-align: left; font-size: 13px; font-weight: bold; color: #111; line-height: 1.8;">
@@ -1445,7 +1403,6 @@
                    Nivel 9 Logística de Excelencia
                </div>
                <div>
-                   <!-- Firma vectorizada simulando el trazo de la imagen -->
                    <svg width="120" height="60" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
                      <path d="M10,55 Q40,25 110,5 M40,40 Q55,30 65,45 Q75,35 90,38" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/>
                    </svg>
@@ -1476,6 +1433,7 @@
                ${firmasHTML}
            `;
        }
+   }
    
    const prev = document.getElementById('pdf-render-container'); 
    prev.style.display = 'block'; 
@@ -1493,7 +1451,6 @@
    }); 
  }
 
- // MOTOR PRINCIPAL DE BASE DE DATOS E INTELIGENCIA ARTIFICIAL
  window.MotorNivel9 = {
    crearViajeEnBaseDeDatos: async function(payload) { 
      const idx = eventosGuardados.findIndex(e => String(e.id) === String(payload.id)); 
