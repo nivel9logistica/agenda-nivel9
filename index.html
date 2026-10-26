@@ -777,10 +777,18 @@
    <div id="pdf-template-content" class="pdf-page">
      
      <div class="pdf-header">
-       <div class="pdf-logo"><h1>NIVEL 9</h1><div style="width:60%; height:3px; background:#ea580c; margin-top:5px;"></div></div>
+       <div class="pdf-logo">
+           <h1 style="margin:0; font-size:32px; font-family:'Outfit', sans-serif; font-weight:800;">NIVEL<span style="color:#ea580c;">9</span></h1>
+           <div style="font-size:7px; letter-spacing:1px; color:#a1a1aa; margin-top:2px;">LOGISTICA DE EXCELENCIA</div>
+       </div>
+       <div style="font-size:12px; font-weight:bold; color:#111; margin-bottom:15px; text-transform:uppercase;">
+           Nivel 9 Logística de Excelencia - Rodrigo J. Castro CUIT: 20-24691221-2
+       </div>
        <!-- Título dinámico -->
-       <div class="pdf-title" id="pdf-title-text">PRESUPUESTO DE SERVICIO</div>
-       <div style="font-size:13px; font-weight:bold; text-align:right;">Comprobante N°: <span id="pdf-nro"></span><br>Fecha: <span id="pdf-lugar-fecha"></span></div>
+       <div class="pdf-title" id="pdf-title-text" style="color:#ea580c; font-size:18px;">PRESUPUESTO DE SERVICIO</div>
+       <div style="font-size:12px; font-weight:bold; text-align:right; border-top:1px solid #d4d4d8; padding-top:10px;">
+           N° de Comprobante: <span id="pdf-nro"></span><br>Lugar y Fecha: <span id="pdf-lugar-fecha"></span>
+       </div>
      </div>
      
      <div class="pdf-section-title">1. DATOS FISCALES DEL CLIENTE</div>
@@ -1426,14 +1434,48 @@
        document.getElementById('pdf-total').innerText = document.getElementById('pres-total').value; 
        document.getElementById('pdf-sena').innerText = document.getElementById('pres-sena').value; 
 
-       // TÉRMINOS Y CONDICIONES (EMPRESA VS PARTICULAR)
+     // TÉRMINOS Y CONDICIONES (EMPRESA VS PARTICULAR)
        let tipoCli = document.getElementById('pres-tipo-cliente-doc').value;
+       
+       // Bloque de Firma HTML igual a la imagen adjunta
+       let firmasHTML = `
+           <div style="margin-top: 30px; display: flex; justify-content: flex-start; align-items: center; gap: 40px; padding-top: 20px;">
+               <div style="text-align: left; font-size: 13px; font-weight: bold; color: #111; line-height: 1.8;">
+                   CEO / Administrador<br>
+                   Nivel 9 Logística de Excelencia
+               </div>
+               <div>
+                   <!-- Firma vectorizada simulando el trazo de la imagen -->
+                   <svg width="120" height="60" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
+                     <path d="M10,55 Q40,25 110,5 M40,40 Q55,30 65,45 Q75,35 90,38" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                   </svg>
+               </div>
+           </div>
+       `;
+
        if (tipoCli === 'Empresa') {
-           document.getElementById('pdf-terms-text').innerHTML = "<strong>Términos y Condiciones Corporativos:</strong><br>La aceptación de este documento implica la total conformidad del cliente con el inventario detallado. Los pagos y cancelaciones se realizarán estrictamente según los plazos administrativos previamente acordados. Toda cotización queda sujeta a modificaciones por variaciones en volúmenes finales o condiciones de accesibilidad en planta/destino que no hayan sido declaradas inicialmente. Validez del presupuesto: 15 días.";
+           document.getElementById('pdf-terms-text').innerHTML = `
+               <strong style="font-size:12px; color:#ea580c; text-transform:uppercase;">Términos y Condiciones Legales (Servicio Corporativo):</strong><br>
+               <div style="font-size:9px; text-align:justify; margin-top:5px; color:#333; line-height:1.4;">
+                   El presente presupuesto tiene una validez de 10 (diez) días corridos desde su fecha de emisión. La tarifa cotizada contempla la operación de transporte punto a punto; no incluye tiempos de espera, demoras o estadías prolongadas superiores a 2 (dos) horas en los puntos de carga y/o descarga. De superarse dicha franja horaria, se facturará un recargo en concepto de 'Estadía' por cada hora adicional y por unidad asignada. El servicio se ejecuta con unidades de flota certificadas, choferes habilitados (LiNTI) y pólizas de seguro de carga vigentes. La facturación correspondiente se emite bajo condición fiscal Monotributo (Factura C - CUIT: 20-24691221-2). El pago del servicio deberá efectuarse bajo las condiciones acordadas contra entrega del Remito y/o Hoja de Ruta debidamente conformada.
+               </div>
+               ${firmasHTML}
+           `;
        } else {
-           document.getElementById('pdf-terms-text').innerHTML = "<strong>Términos y Condiciones Legales (Mudanzas):</strong><br>La aceptación de este presupuesto implica la total conformidad del cliente con el inventario detallado en el apartado 2. Cualquier modificación estructural, agregados de volumen de última hora o problemas severos de accesibilidad el día de la carga/descarga que no hayan sido declarados, podrán generar reajustes tarifarios automáticos. El transporte se realiza bajo condiciones estándar de seguridad. Los seguros adicionales de bienes de alto valor corren por cuenta y orden del cliente.";
+           document.getElementById('pdf-terms-text').innerHTML = `
+               <strong style="font-size:12px; color:#ea580c; text-transform:uppercase;">Términos y Condiciones Generales del Servicio</strong><br>
+               <div style="font-size:8.5px; text-align:justify; margin-top:5px; color:#333; line-height:1.4;">
+                   <strong>1. Aceptación del Servicio y Reserva:</strong> La confirmación del servicio y la fijación de la fecha y horario estipulados en el presupuesto se harán efectivas únicamente mediante el abono de la seña acordada. El pago de dicha seña implica la lectura, comprensión y aceptación total de los presentes términos.<br>
+                   <strong>2. Declaración de Carga y Modificaciones:</strong> El presupuesto emitido se basa exclusivamente en la información proporcionada por el cliente. Si el día del servicio el volumen o la complejidad excede lo declarado (ej: desarmes no previstos, izajes), Nivel 9 se reserva el derecho de ajustar el valor final o negarse a trasladar el excedente.<br>
+                   <strong>3. Accesos, Permisos y Consorcios:</strong> Es responsabilidad exclusiva del cliente gestionar permisos de estacionamiento y coordinar con consorcios (horarios, uso de ascensores). Cualquier demora derivada de la falta de permisos será facturada como tiempo de espera.<br>
+                   <strong>4. Embalaje y Daños:</strong> Nivel 9 no se hace responsable por roturas de objetos en cajas embaladas por el cliente. Solo responderemos por bienes acondicionados por nuestro personal. Reclamos por daños deben realizarse al finalizar la descarga, antes de que el personal se retire.<br>
+                   <strong>5. Exclusión de Objetos de Valor:</strong> El cliente asume total responsabilidad por el traslado de dinero, joyas, obras de arte o tecnología. Nivel 9 queda exenta de responsabilidad ante la pérdida de estos bienes.<br>
+                   <strong>6. Cancelación y Fuerza Mayor:</strong> Cancelaciones con menos de 48 horas de anticipación implicarán la pérdida total de la seña. Nivel 9 se reserva el derecho de reprogramar sin penalidad ante situaciones de fuerza mayor (clima severo, cortes, desperfectos).<br>
+                   <strong>7. Jurisdicción:</strong> Para cualquier controversia, las partes se someten a la jurisdicción de los Tribunales Ordinarios de la Ciudad de Córdoba.
+               </div>
+               ${firmasHTML}
+           `;
        }
-   }
    
    const prev = document.getElementById('pdf-render-container'); 
    prev.style.display = 'block'; 
