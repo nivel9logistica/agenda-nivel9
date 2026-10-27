@@ -1263,26 +1263,28 @@
     let filasHtml = '';
     cb.forEach(c => {
         const tr = c.closest('tr');
-        // page-break-inside avoid previene que una fila se corte a la mitad de dos páginas
+        // page-break-inside avoid: previene que la fila se corte a la mitad en el salto de página
         filasHtml += `
-            <tr style="page-break-inside: avoid;">
-                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7;">${tr.cells[1].innerText}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7;"><strong>${tr.cells[2].innerText}</strong></td>
-                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7;">${tr.cells[3].innerText}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7; font-weight:bold;">${tr.cells[4].innerText}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7; color: #dc2626;">${tr.cells[5].innerText}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7; color: #ea580c;">${tr.cells[6].innerText}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7; font-weight: bold; color: #16a34a;">${tr.cells[7].innerText}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7;">${tr.cells[8].innerText}</td>
+            <tr style="page-break-inside: avoid; border-bottom: 1px solid #e4e4e7;">
+                <td style="padding: 12px 10px;">${tr.cells[1].innerText}</td>
+                <td style="padding: 12px 10px;"><strong>${tr.cells[2].innerText}</strong></td>
+                <td style="padding: 12px 10px;">${tr.cells[3].innerText}</td>
+                <td style="padding: 12px 10px; font-weight:bold;">${tr.cells[4].innerText}</td>
+                <td style="padding: 12px 10px; color: #dc2626;">${tr.cells[5].innerText}</td>
+                <td style="padding: 12px 10px; color: #ea580c;">${tr.cells[6].innerText}</td>
+                <td style="padding: 12px 10px; font-weight: bold; color: #16a34a;">${tr.cells[7].innerText}</td>
+                <td style="padding: 12px 10px;">${tr.cells[8].innerText}</td>
             </tr>
         `;
     });
 
     const container = document.createElement('div');
-    container.style.padding = '20px';
-    container.style.fontFamily = "'Outfit', sans-serif";
-    container.style.width = '1122px'; // Aproximado A4 horizontal
+    // Forzamos el ancho A4 apaisado para que la captura de columnas sea perfecta
+    container.style.width = '1122px'; 
+    container.style.padding = '30px';
     container.style.background = 'white';
+    container.style.fontFamily = "'Outfit', sans-serif";
+    container.style.color = '#111113';
     
     container.innerHTML = `
       <div style="text-align: center; border-bottom: 4px solid #ea580c; margin-bottom: 25px; padding-bottom: 15px;">
@@ -1290,7 +1292,7 @@
         <h3 style="color: #ea580c; font-size: 16px; margin: 5px 0 0 0; text-transform: uppercase;">REPORTE FINANCIERO OPERATIVO MULTIPÁGINA</h3>
         <p style="font-size: 12px; color: #71717a; margin-top: 10px;">Documento generado el: ${new Date().toLocaleDateString('es-AR')}</p>
       </div>
-      <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: left;">
         <thead>
             <tr style="background: #f4f4f5; color: #111113; text-transform: uppercase;">
                 <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Fecha</th>
@@ -1307,22 +1309,26 @@
       </table>
     `;
 
-    document.body.appendChild(container);
+    // SOLUCIÓN AL BUG BLANCO: Lo metemos físicamente en la pantalla, pero oculto por debajo del todo
     container.style.position = 'absolute';
-    container.style.top = '-9999px'; // Lo escondemos para que no parpadee en la pantalla real
+    container.style.left = '0';
+    container.style.top = '0';
+    container.style.zIndex = '-1000';
+    
+    document.body.appendChild(container);
 
+    // Se agrega windowWidth y el formato exacto para multipágina horizontal
     html2pdf().set({
-      margin: 10,
+      margin: 15,
       filename: `Reporte_Nivel9_Finanzas_${Date.now()}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: { scale: 2, useCORS: true, windowWidth: 1122 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
       pagebreak: { mode: 'avoid-all' }
     }).from(container).save().then(() => {
         document.body.removeChild(container);
     });
  }
-
  function openConfigModal() { 
    dibujarListasConfig(); 
    abrirModalNativo('modalConfig'); 
