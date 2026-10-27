@@ -297,7 +297,7 @@
     .settings-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 15px; border: 1px solid #d4d4d8; border-radius: 8px; font-size: 0.95rem; font-weight: 700; color: var(--dark); }
 
     /* =========================================
-       DISEÑO DEL PDF (ACTUALIZADO SIN ESPACIOS BLANCOS)
+       DISEÑO DEL PDF
        ========================================= */
     #pdf-render-container { display: none; }
     .pdf-page { width: 793px; min-height: 1122px; padding: 20px 45px 40px 45px; background: white; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #111; box-sizing: border-box; }
@@ -317,9 +317,6 @@
       .app-container, .modal-overlay { display: none !important; } 
     }
 
-    /* =========================================
-       MEDIA QUERIES (PROTECCIÓN MÓVIL EXACTA)
-       ========================================= */
     @media (max-width: 768px) {
       .app-container { padding: 10px; }
       .cotizador-grid { grid-template-columns: 1fr; }
@@ -552,8 +549,7 @@
         </div>
       </div>
     </div>
- </div> <!-- FIN APP CONTAINER -->
-
+ </div>
 
  <!-- MODAL 1: VISTA DEL DÍA -->
  <div class="modal-overlay" id="modalDayView">
@@ -587,7 +583,6 @@
           <div class="form-group"><label>Dirección de Destino</label><input type="text" id="ev-destino" placeholder="Dirección de descarga"></div>
           <div class="form-group full"><label>Distancia Total a Recorrer (Km)</label><input type="number" id="ev-distancia" step="any" placeholder="0"></div>
           
-          <!-- MARINA IA INTEGRADA -->
           <div class="form-group full" style="border:1px solid #d4d4d8; padding:20px; border-radius:12px; background:#fafafa; margin-top:15px;">
             <label style="color:var(--brand); font-size:1rem; margin-bottom:15px; display:block;"><i class="fas fa-box-open"></i> Inventario y Detalle de Carga (*Declaración Jurada)</label>
             <div class="marina-scanner-box">
@@ -606,6 +601,9 @@
           </div>
 
           <div class="section-divider"><i class="fas fa-file-invoice-dollar"></i> Finanzas y Costos Operativos</div>
+          <!-- CAMPO NUEVO: N° Comprobante vinculado a la BD -->
+          <div class="form-group full" style="margin-bottom:15px;"><label>N° Comprobante Documentado (Se asigna al hacer PDF)</label><input type="text" id="ev-nrodoc" placeholder="No asignado" style="font-weight:bold; color:var(--brand); background:#fff7ed; border-color:#fed7aa;" title="Podés editarlo si necesitás forzar un número."></div>
+          
           <div class="form-group"><label>Tarifa Total Presupuestada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-presupuesto" value="0" oninput="calculateTotal()" style="font-size:1.1rem; color:var(--brand);" required></div></div>
           <div class="form-group"><label>Seña Recibida ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-sena" value="0"></div></div>
           <div class="form-group"><label>Costo Combustible ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-combustible" value="0" oninput="calculateTotal()"></div></div>
@@ -731,12 +729,12 @@
         </div>
 
         <form id="presupuestoForm" class="form-grid" onsubmit="return false;">
-          <div class="form-group"><label>N° Comprobante interno</label><input type="text" id="pres-nro" readonly style="background: #e4e4e7; font-weight: bold;"></div>
+          <div class="form-group"><label>N° Comprobante interno</label><input type="text" id="pres-nro" style="font-weight: bold; background: #fff;" title="Calculado de la Base de Datos automáticamente"></div>
           <div class="form-group"><label>Fecha de Emisión</label><input type="date" id="pres-fecha" required></div>
           
           <div class="form-group full" style="background:#fafafa; padding:15px; border:1px solid #d4d4d8; border-radius:10px;">
             <label style="color:var(--presupuesto);">Tipo de Cliente (Define los Términos y Condiciones)</label>
-            <select id="pres-tipo-cliente-doc">
+            <select id="pres-tipo-cliente-doc" onchange="actualizarNumeroComprobante()">
               <option value="Particular">Cliente Particular (Mudanza Estándar)</option>
               <option value="Empresa">Cliente Empresa (Formato Corporativo)</option>
             </select>
@@ -966,6 +964,7 @@
    document.getElementById('ev-id').value = 'MOV-' + Date.now(); 
    document.getElementById('ev-fecha').value = fechaPredefinida || new Date().toISOString().split('T')[0]; 
    document.getElementById('btn-eliminar-evento').style.display = 'none'; 
+   document.getElementById('ev-nrodoc').value = ''; // Limpiar campo nuevo
    calculateTotal(); 
    cerrarModalesNativos(); 
    abrirModalNativo('modalEventForm');
@@ -989,6 +988,7 @@
    document.getElementById('ev-inventario').value = viaje.inventario || viaje.detalles || ''; 
    
    document.getElementById('ev-obs-ruta').value = viaje.obsruta || ''; 
+   document.getElementById('ev-nrodoc').value = viaje.nrodoc || ''; // Cargar campo nuevo
    
    document.getElementById('ev-presupuesto').value = viaje.presupuesto || 0; 
    document.getElementById('ev-sena').value = viaje.sena || 0; 
@@ -1029,6 +1029,7 @@
      distancia: valorNum('ev-distancia'), 
      inventario: document.getElementById('ev-inventario').value, 
      obsruta: document.getElementById('ev-obs-ruta').value,
+     nrodoc: document.getElementById('ev-nrodoc').value, // Se guarda en Google Sheets
      presupuesto: valorNum('ev-presupuesto'), 
      sena: valorNum('ev-sena'), 
      combustible: valorNum('ev-combustible'), 
@@ -1254,27 +1255,72 @@
    XLSX.writeFile(wb, "Reporte_Nivel9_Finanzas.xlsx");
  }
 
+ /* == REESCRITURA DE PDF DE INFORMES: MULTIPÁGINA A4 HORIZONTAL PERFECTO == */
  function imprimirReporte() {
-    const tableHtml = document.querySelector('.table-responsive').outerHTML;
-    const element = document.createElement('div');
-    element.innerHTML = `
-      <div style="padding: 20px; font-family: 'Outfit', sans-serif; background: white; width: 1000px;">
-        <div style="text-align: center; border-bottom: 4px solid #ea580c; margin-bottom: 25px; padding-bottom: 15px;">
-          <h1 style="color: #111113; font-size: 32px; font-weight: 800; margin: 0;">NIVEL 9 - LOGÍSTICA</h1>
-          <h3 style="color: #ea580c; font-size: 18px; margin: 5px 0 0 0; text-transform: uppercase;">REPORTE FINANCIERO OPERATIVO</h3>
-          <p style="font-size: 12px; color: #71717a; margin-top: 10px;">Documento generado el: ${new Date().toLocaleDateString('es-AR')}</p>
-        </div>
-        ${tableHtml}
+    const cb = document.querySelectorAll('.chk-linea-informe:checked');
+    if(cb.length === 0) { alert("No hay movimientos para imprimir."); return; }
+
+    let filasHtml = '';
+    cb.forEach(c => {
+        const tr = c.closest('tr');
+        // page-break-inside avoid previene que una fila se corte a la mitad de dos páginas
+        filasHtml += `
+            <tr style="page-break-inside: avoid;">
+                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7;">${tr.cells[1].innerText}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7;"><strong>${tr.cells[2].innerText}</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7;">${tr.cells[3].innerText}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7; font-weight:bold;">${tr.cells[4].innerText}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7; color: #dc2626;">${tr.cells[5].innerText}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7; color: #ea580c;">${tr.cells[6].innerText}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7; font-weight: bold; color: #16a34a;">${tr.cells[7].innerText}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e4e4e7;">${tr.cells[8].innerText}</td>
+            </tr>
+        `;
+    });
+
+    const container = document.createElement('div');
+    container.style.padding = '20px';
+    container.style.fontFamily = "'Outfit', sans-serif";
+    container.style.width = '1122px'; // Aproximado A4 horizontal
+    container.style.background = 'white';
+    
+    container.innerHTML = `
+      <div style="text-align: center; border-bottom: 4px solid #ea580c; margin-bottom: 25px; padding-bottom: 15px;">
+        <h1 style="color: #111113; font-size: 28px; font-weight: 800; margin: 0;">NIVEL 9 - LOGÍSTICA DE EXCELENCIA</h1>
+        <h3 style="color: #ea580c; font-size: 16px; margin: 5px 0 0 0; text-transform: uppercase;">REPORTE FINANCIERO OPERATIVO MULTIPÁGINA</h3>
+        <p style="font-size: 12px; color: #71717a; margin-top: 10px;">Documento generado el: ${new Date().toLocaleDateString('es-AR')}</p>
       </div>
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+        <thead>
+            <tr style="background: #f4f4f5; color: #111113; text-transform: uppercase;">
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Fecha</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Cliente</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Servicio</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Tarifa</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Costos Fijos</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">G. Extraord.</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Utilidad Neta</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Margen</th>
+            </tr>
+        </thead>
+        <tbody>${filasHtml}</tbody>
+      </table>
     `;
+
+    document.body.appendChild(container);
+    container.style.position = 'absolute';
+    container.style.top = '-9999px'; // Lo escondemos para que no parpadee en la pantalla real
 
     html2pdf().set({
       margin: 10,
-      filename: `Reporte_Nivel9_${Date.now()}.pdf`,
+      filename: `Reporte_Nivel9_Finanzas_${Date.now()}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    }).from(element).save();
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+      pagebreak: { mode: 'avoid-all' }
+    }).from(container).save().then(() => {
+        document.body.removeChild(container);
+    });
  }
 
  function openConfigModal() { 
@@ -1316,9 +1362,45 @@
    document.querySelectorAll('.dinamico-tipos').forEach(e => e.innerHTML = opT);
  }
 
+ /* == LÓGICA DE CORRELATIVIDAD ALIMENTADA DESDE BD GOOGLE SHEETS == */
+ function obtenerSiguienteNumeroDoc(tipo) {
+    let maxSeq = 0;
+    let prefix = tipo === 'Empresa' ? 'DOC-01-' : 'DOC-02-';
+    let baseSeq = tipo === 'Empresa' ? 303 : 135;
+
+    // Escanea toda la BD buscando el número más alto guardado
+    eventosGuardados.forEach(e => {
+        if (e.nrodoc && typeof e.nrodoc === 'string' && e.nrodoc.startsWith(prefix)) {
+            let num = parseInt(e.nrodoc.replace(prefix, ''), 10);
+            if (!isNaN(num) && num > maxSeq) { maxSeq = num; }
+        }
+    });
+
+    let nextDbSeq = Math.max(baseSeq, maxSeq + 1);
+    
+    // También chequea el local storage en caso de que hayas impreso uno pero no lo hayas guardado aún
+    let localKey = tipo === 'Empresa' ? 'nivel9_seq_empresa' : 'nivel9_seq_particular';
+    let localSeq = parseInt(localStorage.getItem(localKey)) || 0;
+
+    let finalSeq = Math.max(nextDbSeq, localSeq);
+    return prefix + String(finalSeq).padStart(6, '0');
+ }
+
+ function actualizarNumeroComprobante() {
+    let tipo = document.getElementById('pres-tipo-cliente-doc').value;
+    document.getElementById('pres-nro').value = obtenerSiguienteNumeroDoc(tipo);
+ }
+
+ function incrementarNumeroDoc(tipo) {
+    let current = obtenerSiguienteNumeroDoc(tipo);
+    let num = parseInt(current.split('-')[2], 10);
+    let localKey = tipo === 'Empresa' ? 'nivel9_seq_empresa' : 'nivel9_seq_particular';
+    localStorage.setItem(localKey, num + 1);
+ }
+
  function openPresupuestoModal() { 
    document.getElementById('pres-import-select').innerHTML = '<option value="">-- Cargar un movimiento ya agendado (Opcional) --</option>' + eventosGuardados.map(e => `<option value="${e.id}">${e.fecha.split('-').reverse().join('/')} - ${e.cliente}</option>`).join(''); 
-   document.getElementById('pres-nro').value = 'DOC-' + Date.now().toString().slice(-5); 
+   actualizarNumeroComprobante();
    document.getElementById('pres-fecha').value = new Date().toISOString().split('T')[0]; 
    abrirModalNativo('modalPresupuesto'); 
  }
@@ -1330,6 +1412,7 @@
    if(v.tipocliente === 'Empresa') { document.getElementById('pres-tipo-cliente-doc').value = 'Empresa'; }
    else { document.getElementById('pres-tipo-cliente-doc').value = 'Particular'; }
    
+   actualizarNumeroComprobante();
    document.getElementById('pres-cliente').value = v.cliente; 
    document.getElementById('pres-origen').value = v.origen; 
    document.getElementById('pres-destino').value = v.destino; 
@@ -1350,7 +1433,6 @@
  }
 
  function mapearDatosFichaHaciaDocumento() {
-   document.getElementById('pres-nro').value = 'DOC-' + Date.now().toString().slice(-5); 
    document.getElementById('pres-fecha').value = document.getElementById('ev-fecha').value; 
    
    if(document.getElementById('ev-tipocliente').value === 'Empresa') { 
@@ -1359,6 +1441,7 @@
        document.getElementById('pres-tipo-cliente-doc').value = 'Particular'; 
    }
    
+   actualizarNumeroComprobante(); 
    document.getElementById('pres-cliente').value = document.getElementById('ev-cliente').value; 
    document.getElementById('pres-origen').value = document.getElementById('ev-origen').value; 
    document.getElementById('pres-destino').value = document.getElementById('ev-destino').value; 
@@ -1396,15 +1479,18 @@
 
        let tipoCli = document.getElementById('pres-tipo-cliente-doc').value;
        
+       // FIRMA ACTUALIZADA POR VECTORES Y CON ACLARACIÓN DE RODRIGO
        let firmasHTML = `
            <div style="margin-top: 30px; display: flex; justify-content: flex-start; align-items: center; gap: 40px; padding-top: 20px;">
                <div style="text-align: left; font-size: 13px; font-weight: bold; color: #111; line-height: 1.8;">
                    CEO / Administrador<br>
+                   Rodrigo J. Castro<br>
                    Nivel 9 Logística de Excelencia
                </div>
                <div>
-                   <svg width="120" height="60" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
-                     <path d="M10,55 Q40,25 110,5 M40,40 Q55,30 65,45 Q75,35 90,38" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                   <svg width="180" height="70" viewBox="0 0 180 70" xmlns="http://www.w3.org/2000/svg">
+                       <path d="M30,50 C10,50 15,35 30,30 C50,25 60,35 45,55 C35,70 10,65 35,50 L170,10" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                       <path d="M75,55 Q85,45 90,60 Q95,65 105,60" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/>
                    </svg>
                </div>
            </div>
@@ -1439,6 +1525,16 @@
    prev.style.display = 'block'; 
    
    let nombreFinal = tipoDocumento === 'HojaRuta' ? `HojaDeRuta_${document.getElementById('pres-cliente').value}.pdf` : `Presupuesto_${document.getElementById('pres-cliente').value}.pdf`;
+
+   // Guardar que se consumió este número
+   if (tipoDocumento === 'Presupuesto') {
+       incrementarNumeroDoc(document.getElementById('pres-tipo-cliente-doc').value);
+   }
+
+   // Auto-asignar este nro de doc al evento si estamos imprimiendo desde la ficha del movimiento
+   if (document.getElementById('modalEventForm').style.display === 'flex') {
+       document.getElementById('ev-nrodoc').value = document.getElementById('pres-nro').value;
+   }
 
    html2pdf().set({ 
      margin: 0, 
