@@ -60,7 +60,8 @@
     .btn-danger { background: #dc2626; color: white; }
     .btn-outline { background: transparent; border: 1px solid #71717a; color: white; }
     .btn-outline-dark { background: transparent; border: 1px solid #d4d4d8; color: var(--dark); }
-    .btn-ia { background: var(--ia-color); color: white; font-weight: 800; }
+    .btn-ia { background: var(--ia-color); color: white; font-weight: 800; border: 2px solid transparent; animation: pulseIA 2s infinite; }
+    @keyframes pulseIA { 0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); } 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); } }
 
     .cotizador-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .panel-box { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; border: 1px solid #d4d4d8; margin-bottom: 20px; }
@@ -129,7 +130,8 @@
     .settings-list { display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; background: #fafafa; padding: 15px; border-radius: 10px; border: 1px solid #e4e4e7; margin-top: 15px; }
     .settings-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 15px; border: 1px solid #d4d4d8; border-radius: 8px; font-size: 0.95rem; font-weight: 700; color: var(--dark); }
 
-    #pdf-render-container { display: none; }
+    /* CONTENEDORES PDF OCULTOS */
+    #pdf-render-container, #pdf-report-container { display: none; }
     .pdf-page { width: 793px; min-height: 1122px; padding: 20px 45px 40px 45px; background: white; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #111; box-sizing: border-box; }
     .pdf-header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #ea580c; padding-bottom: 15px; }
     .pdf-logo { width: 120px; height: 120px; background: #111; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 10px; color: white; }
@@ -153,23 +155,18 @@
       .modal-overlay { padding: 5px; }
       .modal-content { max-width: 100%; width: 100%; margin: 0; }
       .modal-header, .modal-body, .modal-footer { padding: 15px; }
-      
       .cotizador-grid { grid-template-columns: 1fr; }
       .header { flex-direction: column; text-align: center; align-items: stretch; padding: 15px; }
       .top-nav { justify-content: center; }
       .btn { padding: 8px 12px; font-size: 0.85rem; }
-      
       .calendar-wrapper { padding: 15px 10px; }
       .calendar-grid { gap: 4px; }
       .day-header { font-size: 0.75rem; padding-bottom: 5px; }
       .day-cell { min-height: 75px; padding: 4px; }
       .event-chip { padding: 2px 4px; font-size: 0.65rem; }
       #currentMonthYear { font-size: 1.1rem; min-width: 130px; }
-      
-      /* Forza todo a una columna en celular para que nada sobresalga */
       .form-grid { display: flex; flex-direction: column; gap: 12px; }
       .form-group.full { grid-column: auto; }
-      
       .modal-footer { flex-direction: column; gap: 10px; }
       .modal-footer .btn { width: 100%; margin: 0 !important; }
     }
@@ -253,26 +250,13 @@
       <div class="cotizador-grid">
         <div class="panel-box">
           <div class="panel-title"><i class="fas fa-sliders-h"></i> Datos del Movimiento</div>
-          
-          <div class="form-group">
-            <label>Cliente / Nombre</label>
-            <input type="text" id="cot-cliente" placeholder="Ej: Juan Pérez">
-          </div>
-          
+          <div class="form-group"><label>Cliente / Nombre</label><input type="text" id="cot-cliente" placeholder="Ej: Juan Pérez"></div>
           <div class="form-grid">
-            <div class="form-group">
-              <label>Tipo de Movimiento</label>
-              <select id="cot-tipomov" class="dinamico-tipos"></select>
-            </div>
-            <div class="form-group">
-              <label>Unidad Asignada</label>
-              <select id="cot-unidad" class="dinamico-flota" onchange="calcularCostosCotizador()"></select>
-            </div>
+            <div class="form-group"><label>Tipo de Movimiento</label><select id="cot-tipomov" class="dinamico-tipos"></select></div>
+            <div class="form-group"><label>Unidad Asignada</label><select id="cot-unidad" class="dinamico-flota" onchange="calcularCostosCotizador()"></select></div>
           </div>
-          
           <div class="form-group"><label>Fecha Estimativa</label><input type="date" id="cot-fecha-estimativa"></div>
           <div class="form-group"><label>Origen</label><input type="text" id="cot-origen" placeholder="Ej: Av. Colón 1000, Córdoba"></div>
-          
           <div class="form-group">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <label>Destino(s)</label>
@@ -280,31 +264,18 @@
             </div>
             <div id="destinosContainer"><input type="text" class="cot-destino-input" placeholder="Destino Final"></div>
           </div>
-          
-          <button class="btn btn-dark" style="margin-top:10px; padding:15px; font-size:1rem;" onclick="calcularRutaOSRM()">
-            <i class="fas fa-route"></i> Trazar Ruta en Mapa
-          </button>
-          
+          <button class="btn btn-dark" style="margin-top:10px; padding:15px; font-size:1rem;" onclick="calcularRutaOSRM()"><i class="fas fa-route"></i> Trazar Ruta en Mapa</button>
           <div class="form-group" style="margin-top:10px;">
             <label>Distancia Simple Calculada (Km)</label>
-            <div style="display:flex; gap:10px; align-items:center;">
-              <input type="number" id="cot-kms" value="0" step="any" oninput="calcularCostosRuta()">
-              <span style="font-weight:800; font-size:1.1rem;">Km</span>
-            </div>
+            <div style="display:flex; gap:10px; align-items:center;"><input type="number" id="cot-kms" value="0" step="any" oninput="calcularCostosRuta()"><span style="font-weight:800; font-size:1.1rem;">Km</span></div>
           </div>
-          
-          <div class="form-group">
-            <label>Inventario a trasladar</label>
-            <textarea id="cot-detalles-recibidos" placeholder="Pegar información o listado de muebles..."></textarea>
-          </div>
+          <div class="form-group"><label>Inventario a trasladar</label><textarea id="cot-detalles-recibidos" placeholder="Pegar información o listado de muebles..."></textarea></div>
         </div>
 
         <div class="panel-box">
           <div class="panel-title"><i class="fas fa-map-marked-alt"></i> Mapa de Ruta Completa</div>
           <div id="map"></div>
-          
           <div class="panel-title" style="margin-top:20px;"><i class="fas fa-calculator"></i> Desglose Financiero</div>
-          
           <div class="form-grid">
             <div class="form-group"><label>Tarifa a Presupuestar ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-tarifa" placeholder="0" style="font-weight:800; color:var(--brand); font-size:1.1rem;" oninput="calcularCostosCotizador()"></div></div>
             <div class="form-group"><label>Combustible ($ Ida/Vuelta)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="cot-res-combustible" value="0" step="any" oninput="calcularCostosCotizador()"></div></div>
@@ -326,7 +297,6 @@
               <div class="panel-title" style="border:none; margin:0;"><i class="fas fa-address-book"></i> Base de Datos de Clientes y Proveedores</div>
               <button class="btn btn-brand" onclick="openContactFormModal()"><i class="fas fa-user-plus"></i> Nuevo Contacto Manual</button>
             </div>
-            
             <div class="form-grid" style="margin-top:20px;">
               <div class="form-group"><label>Buscador Inteligente</label><input type="text" id="cnt-filter-search" placeholder="Buscar por nombre, teléfono..." oninput="renderContactos()"></div>
               <div class="form-group">
@@ -369,7 +339,7 @@
       <div class="panel-box" id="reportTablePanel" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
           <div class="panel-title" style="border:none; margin:0;"><i class="fas fa-table"></i> 2. Desglose Línea por Línea</div>
-          <div style="display:flex; gap:10px;">
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button class="btn btn-success" onclick="exportarExcelPuroNumeros()"><i class="fas fa-file-excel"></i> Exportar a Excel</button>
             <button class="btn btn-dark" onclick="imprimirReporte()"><i class="fas fa-file-pdf"></i> Descargar PDF de Informe</button>
           </div>
@@ -428,16 +398,13 @@
               <label><i class="fas fa-robot"></i> Marina IA - Escáner Visual Automático</label>
               <div style="display:flex; gap:10px; align-items:center;">
                 <input type="file" id="ev-marina-fotos" accept="image/*,video/*" multiple style="font-size:0.9rem; flex:1; background:white;">
-                <button type="button" class="btn btn-ia" onclick="MotorNivel9.escanearCarga()" id="btn-ev-marina"><i class="fas fa-camera"></i> Extraer Inventario</button>
+                <button type="button" class="btn btn-ia" onclick="MotorNivel9.escanearCarga()" id="btn-ev-marina"><i class="fas fa-camera"></i> Extraer</button>
               </div>
             </div>
-            <textarea id="ev-inventario" rows="7" style="margin-top:15px;" placeholder="Detalle técnico de los bienes, cajas, volúmenes, pisos por escalera y observaciones importantes..."></textarea>
+            <textarea id="ev-inventario" rows="7" style="margin-top:15px;" placeholder="Detalle técnico de los bienes, cajas, volúmenes, pisos por escalera..."></textarea>
           </div>
           
-          <div class="form-group full" style="margin-top:10px;">
-            <label style="color:var(--brand);">Observaciones Extras para la Hoja de Ruta (Chofer / Cobros)</label>
-            <input type="text" id="ev-obs-ruta" placeholder="Ej: Cobrar saldo en destino, llevar sogas extras, etc...">
-          </div>
+          <div class="form-group full" style="margin-top:10px;"><label style="color:var(--brand);">Observaciones Extras para la Hoja de Ruta (Chofer / Cobros)</label><input type="text" id="ev-obs-ruta" placeholder="Ej: Cobrar saldo en destino, llevar sogas extras..."></div>
 
           <div class="section-divider"><i class="fas fa-file-invoice-dollar"></i> Finanzas y Costos Operativos</div>
           
@@ -445,32 +412,20 @@
           
           <div class="form-group"><label>Tarifa Total Presupuestada ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-presupuesto" value="0" oninput="calculateTotal()" style="font-size:1.1rem; color:var(--brand);" required></div></div>
           
-          <!-- NUEVOS CAMPOS MODALIDAD POR HORA -->
+          <!-- CAMPOS MODALIDAD POR HORA -->
           <div class="form-group full" style="background:#fff7ed; padding:15px; border:1px solid #fed7aa; border-radius:10px; margin-bottom:15px; margin-top:5px;">
             <label style="color:var(--brand); margin-bottom:10px; display:block;"><i class="fas fa-stopwatch"></i> Modalidad de Cobro (Para el Presupuesto PDF)</label>
             <div class="form-grid" style="margin-bottom:10px;">
-              <div class="form-group">
-                <label>Tarifa x Hora ($)</label>
-                <div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-tarifa-hora" placeholder="Ej: 25000"></div>
-              </div>
-              <div class="form-group">
-                <label>Base Mínima (Tiempo)</label>
-                <input type="text" id="ev-base-minima" placeholder="Ej: 2 horas">
-              </div>
+              <div class="form-group"><label>Tarifa x Hora ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-tarifa-hora" placeholder="Ej: 25000"></div></div>
+              <div class="form-group"><label>Base Mínima (Tiempo)</label><input type="text" id="ev-base-minima" placeholder="Ej: 2 horas"></div>
             </div>
-            <div class="form-group full">
-              <label>Aclaración / Detalle en PDF</label>
-              <input type="text" id="ev-detalle-tarifa" placeholder="Ej: Corresponde a 2 horas de servicio mínimo. Luego se fracciona cada 30 min.">
-            </div>
+            <div class="form-group full"><label>Aclaración / Detalle en PDF</label><input type="text" id="ev-detalle-tarifa" placeholder="Ej: Corresponde a 2 horas de servicio mínimo. Luego se fracciona cada 30 min."></div>
           </div>
-          <!-- FIN NUEVOS CAMPOS -->
           
           <div class="form-group"><label>Seña Recibida ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-sena" value="0"></div></div>
           <div class="form-group"><label>Costo Combustible ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-combustible" value="0" oninput="calculateTotal()"></div></div>
-          
           <div class="form-group"><label>Peajes ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-peajes-costo" value="0" oninput="calculateTotal()"></div></div>
           <div class="form-group"><label>Viáticos ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-viaticos" value="0" oninput="calculateTotal()"></div></div>
-          
           <div class="form-group"><label>Costo Ayudante(s) ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-ayudante-monto" value="0" oninput="calculateTotal()"></div></div>
           <div class="form-group"><label>Comisión / Terceros ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="ev-comision" value="0" oninput="calculateTotal()"></div></div>
           <div class="form-group" style="margin-top:10px;"><label style="color:#dc2626;">Gastos Extraordinarios ($)</label><div class="currency-wrapper"><span class="currency-symbol" style="color:#dc2626;">$</span><input type="number" id="ev-gastoext" value="0" oninput="calculateTotal()"></div></div>
@@ -478,10 +433,7 @@
           
           <div class="form-group full" style="margin-top:20px;">
             <label style="font-size:1.1rem;">Utilidad Neta Real ($)</label>
-            <div class="currency-wrapper">
-              <span class="currency-symbol" style="color:#10b981; font-size:1.4rem;">$</span>
-              <input type="number" id="ev-total" readonly style="font-weight:900; color:#10b981; font-size:1.4rem; background:#f0fdf4; border-color:#86efac; padding-top:15px; padding-bottom:15px;">
-            </div>
+            <div class="currency-wrapper"><span class="currency-symbol" style="color:#10b981; font-size:1.4rem;">$</span><input type="number" id="ev-total" readonly style="font-weight:900; color:#10b981; font-size:1.4rem; background:#f0fdf4; border-color:#86efac; padding-top:15px; padding-bottom:15px;"></div>
           </div>
         </form>
       </div>
@@ -490,7 +442,6 @@
         <button class="btn btn-danger" style="margin-right:auto; padding:0 20px;" onclick="eliminarEventoViaje()" id="btn-eliminar-evento"><i class="fas fa-trash"></i> Eliminar</button>
         <button class="btn btn-dark" style="padding:0 15px;" onclick="generarHojaRutaDirecta()"><i class="fas fa-route"></i> Hoja de Ruta</button>
         <button class="btn btn-purple" style="padding:0 15px;" onclick="generarPresupuestoDirecto()"><i class="fas fa-file-invoice-dollar"></i> Presupuesto</button>
-        
         <button class="btn btn-outline-dark" onclick="cerrarModalesNativos()">Cancelar</button>
         <button class="btn btn-brand" style="padding:0 25px;" onclick="saveEvent()"><i class="fas fa-save"></i> Guardar</button>
       </div>
@@ -505,32 +456,15 @@
         <form id="contactForm" class="form-group" onsubmit="return false;">
           <input type="hidden" id="cnt-id">
           <label>Categoría</label>
-          <select id="cnt-categoria" required onchange="toggleProvFields()">
-            <option value="Particular">Particular</option>
-            <option value="Empresa">Empresa</option>
-            <option value="Proveedor">Proveedor / Tercero</option>
-          </select>
-          <label style="margin-top:15px;">Nombre Completo / Razón Social</label>
-          <input type="text" id="cnt-nombre" required>
-          <label style="margin-top:15px;">Teléfono (WhatsApp)</label>
-          <input type="tel" id="cnt-tel" required>
-          <label style="margin-top:15px;">Observaciones Generales</label>
-          <textarea id="cnt-obs" rows="2" placeholder="Agregue información útil..."></textarea>
+          <select id="cnt-categoria" required onchange="toggleProvFields()"><option value="Particular">Particular</option><option value="Empresa">Empresa</option><option value="Proveedor">Proveedor / Tercero</option></select>
+          <label style="margin-top:15px;">Nombre Completo / Razón Social</label><input type="text" id="cnt-nombre" required>
+          <label style="margin-top:15px;">Teléfono (WhatsApp)</label><input type="tel" id="cnt-tel" required>
+          <label style="margin-top:15px;">Observaciones Generales</label><textarea id="cnt-obs" rows="2" placeholder="Agregue información útil..."></textarea>
           
           <div id="prov-dinamico" style="display:none; margin-top:15px; border:1px solid #d4d4d8; padding:15px; border-radius:10px; background:#fafafa;">
-            <label style="color:var(--brand);"><i class="fas fa-tags"></i> Tipo de Proveedor</label>
-            <input type="text" id="cnt-prov-tipo" placeholder="Ej: Insumos, Mecánico, Gomería...">
+            <label style="color:var(--brand);"><i class="fas fa-tags"></i> Tipo de Proveedor</label><input type="text" id="cnt-prov-tipo" placeholder="Ej: Insumos, Mecánico, Gomería...">
             <label style="margin-top:15px; color:var(--brand);"><i class="fas fa-truck-moving"></i> Tipo de Flota / Vehículo</label>
-            <select id="cnt-prov-flota">
-               <option value="">Seleccione si aplica...</option>
-               <option value="Furgón">Furgón</option>
-               <option value="Chasis">Chasis</option>
-               <option value="Camión Semi">Camión (Semi)</option>
-               <option value="Camión Sider">Camión (Sider)</option>
-               <option value="Camión c/Acoplado">Camión (c/Acoplado)</option>
-               <option value="Pasajeros">Pasajeros</option>
-               <option value="Otro">Otro</option>
-            </select>
+            <select id="cnt-prov-flota"><option value="">Seleccione si aplica...</option><option value="Furgón">Furgón</option><option value="Chasis">Chasis</option><option value="Camión Semi">Camión (Semi)</option><option value="Camión Sider">Camión (Sider)</option><option value="Camión c/Acoplado">Camión (c/Acoplado)</option><option value="Pasajeros">Pasajeros</option><option value="Otro">Otro</option></select>
           </div>
         </form>
       </div>
@@ -553,19 +487,21 @@
     </div>
  </div>
 
- <!-- MODAL 5: MARINA IA CHAT -->
+ <!-- MODAL 5: MARINA IA CHAT - SECRETARIA EJECUTIVA CON VOZ -->
  <div class="modal-overlay" id="modalMarinaAsistente">
-    <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-content" style="max-width: 600px; border: 2px solid var(--ia-color);">
       <div class="modal-header" style="background: var(--dark); color: white;">
-        <h2 style="font-size:1.3rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-robot" style="color:var(--ia-color);"></i> Marina - Coordinadora</h2>
-        <button class="btn btn-outline" style="color:white; border:none; font-size:1.2rem;" onclick="cerrarModalesNativos()"><i class="fas fa-times"></i></button>
+        <h2 style="font-size:1.3rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-robot" style="color:var(--ia-color);"></i> Marina - Secretaria Ejecutiva Nivel 9</h2>
+        <button class="btn btn-outline" style="color:white; border:none; font-size:1.2rem;" onclick="cerrarModalesNativos(); window.speechSynthesis.cancel();"><i class="fas fa-times"></i></button>
       </div>
-      <div class="modal-body">
-        <div id="marina-chat-response" style="background: #f4f4f5; border-radius: 12px; padding: 20px; min-height: 150px; font-size: 1rem; white-space: pre-line; margin-bottom: 20px; border: 1px solid #d4d4d8; line-height: 1.5;">¡Hola Lic. Rodrigo! Soy Marina. Hoy es <span id="marina-fecha-hoy" style="font-weight:bold;"></span>. ¿En qué coordinación te ayudo?</div>
+      <div class="modal-body" style="background: #fafafa;">
+        <div id="marina-chat-response" style="background: white; border-radius: 12px; padding: 20px; min-height: 200px; font-size: 1.05rem; margin-bottom: 20px; border: 1px solid #d4d4d8; line-height: 1.6; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);">
+            Hola Rodri, soy Marina. Hoy es <span id="marina-fecha-hoy" style="font-weight:bold;"></span>.<br><br>Estoy conectada a tu agenda, la base de datos de clientes y al cotizador de flota. ¿En qué coordinación operativa, presupuesto o análisis de costos te ayudo hoy?
+        </div>
         <div style="display: flex; gap: 10px;">
-          <input type="text" id="marina-prompt-input" placeholder="Escribí tu consulta..." style="flex:1; font-size:1rem;" onkeydown="if(event.key === 'Enter'){ MotorNivel9.procesarChatMarina(); }">
-          <button type="button" class="btn btn-dark" onclick="MotorNivel9.reconocimientoVoz()"><i class="fas fa-microphone"></i></button>
-          <button type="button" class="btn btn-ia" onclick="MotorNivel9.procesarChatMarina()">Enviar</button>
+          <input type="text" id="marina-prompt-input" placeholder="Preguntale o pedile ayuda a Marina..." style="flex:1; font-size:1rem; border:2px solid var(--ia-color);" onkeydown="if(event.key === 'Enter'){ MotorNivel9.procesarChatMarina(); }">
+          <button type="button" class="btn btn-dark" style="color:var(--ia-color); padding:0 20px; font-size:1.2rem;" onclick="MotorNivel9.reconocimientoVoz()" title="Hablarle a Marina"><i class="fas fa-microphone"></i></button>
+          <button type="button" class="btn btn-ia" onclick="MotorNivel9.procesarChatMarina()"><i class="fas fa-paper-plane"></i></button>
         </div>
       </div>
     </div>
@@ -600,30 +536,19 @@
           <div class="form-group"><label>Dirección de Descarga (Destino)</label><input type="text" id="pres-destino"></div>
           
           <div class="form-group full"><label>Inventario (Copia fiel de Declaración Jurada)</label><textarea id="pres-desc" style="min-height: 120px;"></textarea></div>
-          
           <div class="form-group full"><label>Observaciones Extras para Chofer (Solo Hoja de Ruta)</label><input type="text" id="pres-obs-ruta"></div>
 
           <div class="form-group"><label>Valor Total Cotizado ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="pres-total" value="0"></div></div>
           
-          <!-- NUEVOS CAMPOS MODALIDAD EN MODAL DE PDF -->
+          <!-- CAMPOS MODALIDAD EN MODAL DE PDF -->
           <div class="form-group full" style="background:#fff7ed; padding:15px; border:1px solid #fed7aa; border-radius:10px; margin-bottom:10px;">
             <label style="color:var(--brand); margin-bottom:10px; display:block;"><i class="fas fa-stopwatch"></i> Modalidad de Cobro (Se imprime debajo del Total)</label>
             <div class="form-grid" style="margin-bottom:10px;">
-              <div class="form-group">
-                <label>Tarifa x Hora ($)</label>
-                <div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="pres-tarifa-hora" placeholder="0"></div>
-              </div>
-              <div class="form-group">
-                <label>Base Mínima (Tiempo)</label>
-                <input type="text" id="pres-base-minima" placeholder="Ej: 2 horas">
-              </div>
+              <div class="form-group"><label>Tarifa x Hora ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="pres-tarifa-hora" placeholder="0"></div></div>
+              <div class="form-group"><label>Base Mínima (Tiempo)</label><input type="text" id="pres-base-minima" placeholder="Ej: 2 horas"></div>
             </div>
-            <div class="form-group full">
-              <label>Aclaración / Detalle en PDF</label>
-              <input type="text" id="pres-detalle-tarifa" placeholder="Ej: Corresponde a 2 hs. Fracción cada 30 min.">
-            </div>
+            <div class="form-group full"><label>Aclaración / Detalle en PDF</label><input type="text" id="pres-detalle-tarifa" placeholder="Ej: Corresponde a 2 hs. Fracción cada 30 min."></div>
           </div>
-          <!-- FIN NUEVOS CAMPOS -->
 
           <div class="form-group"><label>Seña Requerida ($)</label><div class="currency-wrapper"><span class="currency-symbol">$</span><input type="number" id="pres-sena" value="0"></div></div>
         </form>
@@ -636,22 +561,16 @@
     </div>
  </div>
 
- <!-- PLANTILLA INVISIBLE DEL PDF PRESUPUESTOS -->
- <div id="printArea"></div>
+ <!-- ==========================================
+      PLANTILLAS INVISIBLES DE RENDERIZADO PDF
+      ========================================== -->
  <div id="pdf-render-container">
    <div id="pdf-template-content" class="pdf-page">
      <div class="pdf-header">
-       <div class="pdf-logo">
-           <h1 style="margin:0; font-size:32px; font-family:'Outfit', sans-serif; font-weight:800;">NIVEL<span style="color:#ea580c;">9</span></h1>
-           <div style="font-size:7px; letter-spacing:1px; color:#a1a1aa; margin-top:2px;">LOGISTICA DE EXCELENCIA</div>
-       </div>
-       <div style="font-size:12px; font-weight:bold; color:#111; margin-bottom:15px; text-transform:uppercase;">
-           Nivel 9 Logística de Excelencia - Rodrigo J. Castro CUIT: 20-24691221-2
-       </div>
+       <div class="pdf-logo"><h1 style="margin:0; font-size:32px; font-family:'Outfit', sans-serif; font-weight:800;">NIVEL<span style="color:#ea580c;">9</span></h1><div style="font-size:7px; letter-spacing:1px; color:#a1a1aa; margin-top:2px;">LOGISTICA DE EXCELENCIA</div></div>
+       <div style="font-size:12px; font-weight:bold; color:#111; margin-bottom:15px; text-transform:uppercase;">Nivel 9 Logística de Excelencia - Rodrigo J. Castro CUIT: 20-24691221-2</div>
        <div class="pdf-title" id="pdf-title-text" style="color:#ea580c; font-size:18px;">PRESUPUESTO DE SERVICIO</div>
-       <div style="font-size:12px; font-weight:bold; text-align:right; border-top:1px solid #d4d4d8; padding-top:10px;">
-           N° de Comprobante: <span id="pdf-nro"></span><br>Lugar y Fecha: <span id="pdf-lugar-fecha"></span>
-       </div>
+       <div style="font-size:12px; font-weight:bold; text-align:right; border-top:1px solid #d4d4d8; padding-top:10px;">N° de Comprobante: <span id="pdf-nro"></span><br>Lugar y Fecha: <span id="pdf-lugar-fecha"></span></div>
      </div>
      
      <div class="pdf-section-title">1. DATOS FISCALES DEL CLIENTE</div>
@@ -660,22 +579,18 @@
      <div class="pdf-section-title">2. DETALLES OPERATIVOS DEL SERVICIO</div>
      <div class="pdf-row"><span>Dirección de Origen: <strong id="pdf-origen"></strong></span><span>Dirección de Destino: <strong id="pdf-destino"></strong></span></div>
      
-     <div class="pdf-text" style="white-space:pre-wrap; margin-top:15px; border:1px solid #d4d4d8; padding:10px; border-radius:5px;"><strong style="color:#ea580c; display:block; margin-bottom:5px;">INVENTARIO Y DETALLES DE CARGA:</strong><span id="pdf-desc"></span></div>
+     <!-- CORRECCIÓN CELULAR: SE CAMBIÓ SPAN POR DIV Y SE AGREGA <BR> AL INYECTAR -->
+     <div class="pdf-text" style="margin-top:15px; border:1px solid #d4d4d8; padding:10px; border-radius:5px;"><strong style="color:#ea580c; display:block; margin-bottom:5px;">INVENTARIO Y DETALLES DE CARGA:</strong><div id="pdf-desc" style="white-space:pre-wrap; font-size:11px;"></div></div>
      
      <div id="pdf-obs-ruta-section" style="display:none; margin-top:20px;">
         <div class="pdf-section-title">3. OBSERVACIONES ADMINISTRATIVAS / CHOFER</div>
         <div class="pdf-text" style="border: 2px dashed #ea580c; padding:15px; border-radius:5px; font-size:13px;"><strong id="pdf-obs-ruta-text"></strong></div>
-        <div style="margin-top:60px; display:flex; justify-content:space-around; text-align:center;">
-            <div style="width:200px; border-top:1px solid #111; padding-top:5px; font-size:12px;">Firma del Chofer</div>
-            <div style="width:200px; border-top:1px solid #111; padding-top:5px; font-size:12px;">Firma / Conformidad Cliente</div>
-        </div>
+        <div style="margin-top:60px; display:flex; justify-content:space-around; text-align:center;"><div style="width:200px; border-top:1px solid #111; padding-top:5px; font-size:12px;">Firma del Chofer</div><div style="width:200px; border-top:1px solid #111; padding-top:5px; font-size:12px;">Firma / Conformidad Cliente</div></div>
      </div>
 
      <div id="pdf-finanzas-section">
         <div class="pdf-section-title" style="margin-top:25px;">3. CONDICIONES ECONÓMICAS Y FORMAS DE PAGO</div>
         <div class="pdf-row"><span style="font-size:15px;">Valor Total Presupuestado: <strong>$ <span id="pdf-total"></span></strong></span><span style="font-size:15px; color:#ea580c;">Seña Inicial Solicitada: <strong>$ <span id="pdf-sena"></span></strong></span></div>
-        
-        <!-- NUEVO BLOQUE DESGLOSE TARIFA EN PDF -->
         <div id="pdf-desglose-tarifa" style="display:none; margin-top:15px; border:1px solid #fed7aa; background:#fff7ed; padding:12px; border-radius:6px; font-size:12px; color:#111;">
             <div style="margin-bottom:8px;"><strong>Detalle de Tarifa:</strong> <span id="pdf-detalle-texto" style="color:#555;"></span></div>
             <div style="display:flex; justify-content:flex-start; gap:40px;">
@@ -683,15 +598,40 @@
                 <span id="pdf-bm-container">Base Mínima: <strong style="color:#ea580c;"><span id="pdf-base-minima"></span></strong></span>
             </div>
         </div>
-        <!-- FIN NUEVO BLOQUE -->
      </div>
-
-     <div id="pdf-terminos-section" class="pdf-terms">
-        <span id="pdf-terms-text"></span>
-     </div>
+     <div id="pdf-terminos-section" class="pdf-terms"><span id="pdf-terms-text"></span></div>
    </div>
  </div>
 
+ <!-- NUEVA PLANTILLA INVISIBLE Y ESTÁTICA PARA INFORMES FINANCIEROS (SOLUCIÓN PÁGINA BLANCA) -->
+ <div id="pdf-report-container">
+    <div id="pdf-report-content" class="pdf-page" style="width: 1122px; max-width: 1122px; padding: 30px; background: white; color: #111113; font-family: 'Outfit', sans-serif;">
+      <div style="text-align: center; border-bottom: 4px solid #ea580c; margin-bottom: 25px; padding-bottom: 15px;">
+        <h1 style="color: #111113; font-size: 28px; font-weight: 800; margin: 0;">NIVEL 9 - LOGÍSTICA DE EXCELENCIA</h1>
+        <h3 style="color: #ea580c; font-size: 16px; margin: 5px 0 0 0; text-transform: uppercase;">REPORTE FINANCIERO OPERATIVO MULTIPÁGINA</h3>
+        <p style="font-size: 12px; color: #71717a; margin-top: 10px;">Documento generado el: <span id="pdf-report-fecha-doc"></span></p>
+      </div>
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: left;">
+        <thead>
+            <tr style="background: #f4f4f5; color: #111113; text-transform: uppercase;">
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Fecha</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Cliente</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Servicio</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Tarifa</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Costos Fijos</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">G. Extraord.</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Utilidad Neta</th>
+                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Margen</th>
+            </tr>
+        </thead>
+        <tbody id="pdf-report-tbody"></tbody>
+      </table>
+    </div>
+ </div>
+
+ <!-- =========================================================================
+      MOTOR DE JAVASCRIPT - AHORA CON IA SECRETARIA Y LECTURA DE VOZ
+      ========================================================================= -->
  <script>
  const webAppUrl = 'https://script.google.com/macros/s/AKfycbzJgp7Q0-LnufrbdYtB1nww9VPWIT-GDOHTGAmhk4qrp44CjhXTErniQQUGgrJofRJt/exec';
 
@@ -764,100 +704,25 @@
    abrirModalNativo('modalDayView');
  }
 
- function calculateTotal() {
-   const valor = (id) => parseFloat(document.getElementById(id).value) || 0;
-   document.getElementById('ev-total').value = valor('ev-presupuesto') - (valor('ev-combustible') + valor('ev-peajes-costo') + valor('ev-viaticos') + valor('ev-ayudante-monto') + valor('ev-comision') + valor('ev-gastoext'));
- }
+ function calculateTotal() { const valor = (id) => parseFloat(document.getElementById(id).value) || 0; document.getElementById('ev-total').value = valor('ev-presupuesto') - (valor('ev-combustible') + valor('ev-peajes-costo') + valor('ev-viaticos') + valor('ev-ayudante-monto') + valor('ev-comision') + valor('ev-gastoext')); }
 
  function openAddEventModal(fechaPredefinida = null) {
-   document.getElementById('eventForm').reset(); 
-   document.getElementById('ev-id').value = 'MOV-' + Date.now(); 
-   document.getElementById('ev-fecha').value = fechaPredefinida || new Date().toISOString().split('T')[0]; 
-   document.getElementById('btn-eliminar-evento').style.display = 'none'; 
-   document.getElementById('ev-nrodoc').value = ''; 
-   document.getElementById('ev-tarifa-hora').value = ''; 
-   document.getElementById('ev-base-minima').value = ''; 
-   document.getElementById('ev-detalle-tarifa').value = ''; 
-   calculateTotal(); 
-   cerrarModalesNativos(); 
-   abrirModalNativo('modalEventForm');
+   document.getElementById('eventForm').reset(); document.getElementById('ev-id').value = 'MOV-' + Date.now(); document.getElementById('ev-fecha').value = fechaPredefinida || new Date().toISOString().split('T')[0]; document.getElementById('btn-eliminar-evento').style.display = 'none'; 
+   document.getElementById('ev-nrodoc').value = ''; document.getElementById('ev-tarifa-hora').value = ''; document.getElementById('ev-base-minima').value = ''; document.getElementById('ev-detalle-tarifa').value = ''; calculateTotal(); cerrarModalesNativos(); abrirModalNativo('modalEventForm');
  }
 
  function editEvent(idViaje) {
-   const viaje = eventosGuardados.find(e => String(e.id) === String(idViaje)); 
-   if(!viaje) { alert("Error: ID del viaje no encontrado."); return; }
-   
-   document.getElementById('ev-id').value = viaje.id; 
-   document.getElementById('ev-fecha').value = viaje.fecha; 
-   document.getElementById('ev-estado').value = viaje.estado; 
-   document.getElementById('ev-tipocliente').value = viaje.tipocliente || 'Particular'; 
-   document.getElementById('ev-cliente').value = viaje.cliente; 
-   document.getElementById('ev-telefono').value = viaje.telefono || ''; 
-   document.getElementById('ev-tipomov').value = viaje.tipomov; 
-   document.getElementById('ev-asignacion').value = viaje.asignacion; 
-   document.getElementById('ev-origen').value = viaje.origen; 
-   document.getElementById('ev-destino').value = viaje.destino; 
-   document.getElementById('ev-distancia').value = viaje.distancia || 0; 
-   document.getElementById('ev-inventario').value = viaje.inventario || viaje.detalles || ''; 
-   document.getElementById('ev-obs-ruta').value = viaje.obsruta || ''; 
-   document.getElementById('ev-nrodoc').value = viaje.nrodoc || ''; 
-   
-   // Carga de campos tarifa nuevos
-   document.getElementById('ev-tarifa-hora').value = viaje.tarifahora || ''; 
-   document.getElementById('ev-base-minima').value = viaje.baseminima || ''; 
-   document.getElementById('ev-detalle-tarifa').value = viaje.detalletarifa || ''; 
-   
-   document.getElementById('ev-presupuesto').value = viaje.presupuesto || 0; 
-   document.getElementById('ev-sena').value = viaje.sena || 0; 
-   document.getElementById('ev-combustible').value = viaje.combustible || 0; 
-   document.getElementById('ev-peajes-costo').value = viaje.peajescosto || 0; 
-   document.getElementById('ev-viaticos').value = viaje.viaticos || 0; 
-   document.getElementById('ev-ayudante-monto').value = viaje.ayudante || 0; 
-   document.getElementById('ev-comision').value = viaje.comision || 0; 
-   document.getElementById('ev-gastoext').value = viaje.gastoext || 0; 
-   document.getElementById('ev-detallegastoext').value = viaje.detallegastoext || '';
-   
-   document.getElementById('btn-eliminar-evento').style.display = 'inline-flex'; 
-   calculateTotal(); 
-   cerrarModalesNativos(); 
-   abrirModalNativo('modalEventForm');
+   const viaje = eventosGuardados.find(e => String(e.id) === String(idViaje)); if(!viaje) { alert("Error: ID del viaje no encontrado."); return; }
+   document.getElementById('ev-id').value = viaje.id; document.getElementById('ev-fecha').value = viaje.fecha; document.getElementById('ev-estado').value = viaje.estado; document.getElementById('ev-tipocliente').value = viaje.tipocliente || 'Particular'; document.getElementById('ev-cliente').value = viaje.cliente; document.getElementById('ev-telefono').value = viaje.telefono || ''; document.getElementById('ev-tipomov').value = viaje.tipomov; document.getElementById('ev-asignacion').value = viaje.asignacion; document.getElementById('ev-origen').value = viaje.origen; document.getElementById('ev-destino').value = viaje.destino; document.getElementById('ev-distancia').value = viaje.distancia || 0; document.getElementById('ev-inventario').value = viaje.inventario || viaje.detalles || ''; document.getElementById('ev-obs-ruta').value = viaje.obsruta || ''; document.getElementById('ev-nrodoc').value = viaje.nrodoc || ''; 
+   document.getElementById('ev-tarifa-hora').value = viaje.tarifahora || ''; document.getElementById('ev-base-minima').value = viaje.baseminima || ''; document.getElementById('ev-detalle-tarifa').value = viaje.detalletarifa || ''; 
+   document.getElementById('ev-presupuesto').value = viaje.presupuesto || 0; document.getElementById('ev-sena').value = viaje.sena || 0; document.getElementById('ev-combustible').value = viaje.combustible || 0; document.getElementById('ev-peajes-costo').value = viaje.peajescosto || 0; document.getElementById('ev-viaticos').value = viaje.viaticos || 0; document.getElementById('ev-ayudante-monto').value = viaje.ayudante || 0; document.getElementById('ev-comision').value = viaje.comision || 0; document.getElementById('ev-gastoext').value = viaje.gastoext || 0; document.getElementById('ev-detallegastoext').value = viaje.detallegastoext || '';
+   document.getElementById('btn-eliminar-evento').style.display = 'inline-flex'; calculateTotal(); cerrarModalesNativos(); abrirModalNativo('modalEventForm');
  }
 
  function saveEvent() {
-   const fecha = document.getElementById('ev-fecha').value; const cliente = document.getElementById('ev-cliente').value.trim();
-   if(!fecha || !cliente) { alert("Error: Fecha y Cliente obligatorios."); return; } 
-   calculateTotal(); 
-   const valorNum = (id) => parseFloat(document.getElementById(id).value) || 0;
-   
-   const payload = {
-     id: document.getElementById('ev-id').value, 
-     fecha: fecha, 
-     estado: document.getElementById('ev-estado').value, 
-     tipocliente: document.getElementById('ev-tipocliente').value, 
-     cliente: cliente, 
-     telefono: document.getElementById('ev-telefono').value, 
-     tipomov: document.getElementById('ev-tipomov').value, 
-     asignacion: document.getElementById('ev-asignacion').value, 
-     origen: document.getElementById('ev-origen').value, 
-     destino: document.getElementById('ev-destino').value, 
-     distancia: valorNum('ev-distancia'), 
-     inventario: document.getElementById('ev-inventario').value, 
-     obsruta: document.getElementById('ev-obs-ruta').value,
-     nrodoc: document.getElementById('ev-nrodoc').value, 
-     tarifahora: valorNum('ev-tarifa-hora'), // NUEVO CAMPO
-     baseminima: document.getElementById('ev-base-minima').value, // NUEVO CAMPO
-     detalletarifa: document.getElementById('ev-detalle-tarifa').value, // NUEVO CAMPO
-     presupuesto: valorNum('ev-presupuesto'), 
-     sena: valorNum('ev-sena'), 
-     combustible: valorNum('ev-combustible'), 
-     peajescosto: valorNum('ev-peajes-costo'), 
-     viaticos: valorNum('ev-viaticos'), 
-     ayudante: valorNum('ev-ayudante-monto'), 
-     comision: valorNum('ev-comision'), 
-     gastoext: valorNum('ev-gastoext'), 
-     detallegastoext: document.getElementById('ev-detallegastoext').value, 
-     total: valorNum('ev-total')
-   };
+   const fecha = document.getElementById('ev-fecha').value; const cliente = document.getElementById('ev-cliente').value.trim(); if(!fecha || !cliente) { alert("Error: Fecha y Cliente obligatorios."); return; } 
+   calculateTotal(); const valorNum = (id) => parseFloat(document.getElementById(id).value) || 0;
+   const payload = { id: document.getElementById('ev-id').value, fecha: fecha, estado: document.getElementById('ev-estado').value, tipocliente: document.getElementById('ev-tipocliente').value, cliente: cliente, telefono: document.getElementById('ev-telefono').value, tipomov: document.getElementById('ev-tipomov').value, asignacion: document.getElementById('ev-asignacion').value, origen: document.getElementById('ev-origen').value, destino: document.getElementById('ev-destino').value, distancia: valorNum('ev-distancia'), inventario: document.getElementById('ev-inventario').value, obsruta: document.getElementById('ev-obs-ruta').value, nrodoc: document.getElementById('ev-nrodoc').value, tarifahora: valorNum('ev-tarifa-hora'), baseminima: document.getElementById('ev-base-minima').value, detalletarifa: document.getElementById('ev-detalle-tarifa').value, presupuesto: valorNum('ev-presupuesto'), sena: valorNum('ev-sena'), combustible: valorNum('ev-combustible'), peajescosto: valorNum('ev-peajes-costo'), viaticos: valorNum('ev-viaticos'), ayudante: valorNum('ev-ayudante-monto'), comision: valorNum('ev-comision'), gastoext: valorNum('ev-gastoext'), detallegastoext: document.getElementById('ev-detallegastoext').value, total: valorNum('ev-total') };
    window.MotorNivel9.crearViajeEnBaseDeDatos(payload);
  }
 
@@ -870,8 +735,7 @@
    if(!origen || destinosArr.length === 0) { alert("Completar origen y destino."); return; }
    const puntosTotales = [origen, ...destinosArr].map(p => p.includes('Argentina') ? p : p + ', Argentina');
    try { 
-     let coords = []; 
-     for(let lugar of puntosTotales) { const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=ar&q=${encodeURIComponent(lugar)}`).then(x => x.json()); if(res.length > 0) coords.push(L.latLng(res[0].lat, res[0].lon)); }
+     let coords = []; for(let lugar of puntosTotales) { const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=ar&q=${encodeURIComponent(lugar)}`).then(x => x.json()); if(res.length > 0) coords.push(L.latLng(res[0].lat, res[0].lon)); }
      if(controlRutaMapa) mapaCotizador.removeControl(controlRutaMapa);
      controlRutaMapa = L.Routing.control({ waypoints: coords, show: false }).addTo(mapaCotizador);
      controlRutaMapa.on('routesfound', (evento) => { document.getElementById('cot-kms').value = Math.round(evento.routes[0].summary.totalDistance / 1000); calcularCostosRuta(); mapaCotizador.fitBounds(L.latLngBounds(coords), {padding: [40,40]}); });
@@ -939,11 +803,14 @@
    const ws = XLSX.utils.json_to_sheet(dataExcel); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Informes Nivel 9"); XLSX.writeFile(wb, "Reporte_Nivel9_Finanzas.xlsx");
  }
 
- /* == REESCRITURA DE PDF DE INFORMES: MULTIPÁGINA A4 HORIZONTAL PERFECTO (SOLUCIÓN BLANCO) == */
+ /* =======================================================
+    REPORTE PDF ESTÁTICO (SOLUCIÓN DEFINITIVA A HOJA BLANCA) 
+    ======================================================= */
  function imprimirReporte() {
     const cb = document.querySelectorAll('.chk-linea-informe:checked');
     if(cb.length === 0) { alert("No hay movimientos para imprimir."); return; }
 
+    document.getElementById('pdf-report-fecha-doc').innerText = new Date().toLocaleDateString('es-AR');
     let filasHtml = '';
     cb.forEach(c => {
         const tr = c.closest('tr');
@@ -960,54 +827,16 @@
             </tr>
         `;
     });
-
-    const container = document.createElement('div');
-    container.style.width = '1122px'; 
-    container.style.padding = '30px';
-    container.style.background = 'white';
-    container.style.fontFamily = "'Outfit', sans-serif";
-    container.style.color = '#111113';
     
-    container.innerHTML = `
-      <div style="text-align: center; border-bottom: 4px solid #ea580c; margin-bottom: 25px; padding-bottom: 15px;">
-        <h1 style="color: #111113; font-size: 28px; font-weight: 800; margin: 0;">NIVEL 9 - LOGÍSTICA DE EXCELENCIA</h1>
-        <h3 style="color: #ea580c; font-size: 16px; margin: 5px 0 0 0; text-transform: uppercase;">REPORTE FINANCIERO OPERATIVO MULTIPÁGINA</h3>
-        <p style="font-size: 12px; color: #71717a; margin-top: 10px;">Documento generado el: ${new Date().toLocaleDateString('es-AR')}</p>
-      </div>
-      <table style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: left;">
-        <thead>
-            <tr style="background: #f4f4f5; color: #111113; text-transform: uppercase;">
-                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Fecha</th>
-                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Cliente</th>
-                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Servicio</th>
-                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Tarifa</th>
-                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Costos Fijos</th>
-                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">G. Extraord.</th>
-                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Utilidad Neta</th>
-                <th style="padding: 12px; border-bottom: 2px solid #d4d4d8;">Margen</th>
-            </tr>
-        </thead>
-        <tbody>${filasHtml}</tbody>
-      </table>
-    `;
-
-    // SOLUCION DEFINITIVA PARA LA CAMARA HTML2CANVAS: Lo ponemos en primer plano visual y scrolleamos arriba
-    container.style.position = 'absolute';
-    container.style.left = '0';
-    container.style.top = '0';
-    container.style.zIndex = '999999';
-    document.body.appendChild(container);
-    window.scrollTo(0, 0);
+    document.getElementById('pdf-report-tbody').innerHTML = filasHtml;
+    const container = document.getElementById('pdf-report-container');
+    container.style.display = 'block';
 
     html2pdf().set({
-      margin: 15,
-      filename: `Reporte_Nivel9_Finanzas_${Date.now()}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, windowWidth: 1122, scrollY: 0 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-      pagebreak: { mode: 'avoid-all' }
-    }).from(container).save().then(() => {
-        document.body.removeChild(container);
+      margin: 15, filename: `Reporte_Nivel9_Finanzas_${Date.now()}.pdf`, image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, pagebreak: { mode: 'avoid-all' }
+    }).from(document.getElementById('pdf-report-content')).save().then(() => {
+        container.style.display = 'none'; // Se vuelve a esconder al terminar
     });
  }
 
@@ -1058,7 +887,11 @@
  }
  
  function generarPDFBase(tipoDocumento) { 
-   document.getElementById('pdf-nro').innerText = document.getElementById('pres-nro').value; document.getElementById('pdf-lugar-fecha').innerText = `Córdoba, ${document.getElementById('pres-fecha').value.split('-').reverse().join('/')}`; document.getElementById('pdf-cliente').innerText = document.getElementById('pres-cliente').value; document.getElementById('pdf-cuit').innerText = document.getElementById('pres-cuit').value || 'Consumidor Final'; document.getElementById('pdf-origen').innerText = document.getElementById('pres-origen').value; document.getElementById('pdf-destino').innerText = document.getElementById('pres-destino').value; document.getElementById('pdf-desc').innerText = document.getElementById('pres-desc').value; 
+   document.getElementById('pdf-nro').innerText = document.getElementById('pres-nro').value; document.getElementById('pdf-lugar-fecha').innerText = `Córdoba, ${document.getElementById('pres-fecha').value.split('-').reverse().join('/')}`; document.getElementById('pdf-cliente').innerText = document.getElementById('pres-cliente').value; document.getElementById('pdf-cuit').innerText = document.getElementById('pres-cuit').value || 'Consumidor Final'; document.getElementById('pdf-origen').innerText = document.getElementById('pres-origen').value; document.getElementById('pdf-destino').innerText = document.getElementById('pres-destino').value; 
+   
+   // FIX CELULAR INVENTARIO: Convierte saltos de línea (Enter) en formato HTML (<br>) antes de ponerlo en el div
+   let inventarioTexto = document.getElementById('pres-desc').value || '';
+   document.getElementById('pdf-desc').innerHTML = inventarioTexto.replace(/\n/g, '<br>'); 
    
    if (tipoDocumento === 'HojaRuta') {
        document.getElementById('pdf-title-text').innerText = "HOJA DE RUTA OPERATIVA"; document.getElementById('pdf-finanzas-section').style.display = 'none'; document.getElementById('pdf-terminos-section').style.display = 'none'; document.getElementById('pdf-obs-ruta-section').style.display = 'block';
@@ -1067,15 +900,8 @@
        document.getElementById('pdf-title-text').innerText = "PRESUPUESTO DE SERVICIO"; document.getElementById('pdf-finanzas-section').style.display = 'block'; document.getElementById('pdf-terminos-section').style.display = 'block'; document.getElementById('pdf-obs-ruta-section').style.display = 'none';
        document.getElementById('pdf-total').innerText = document.getElementById('pres-total').value; document.getElementById('pdf-sena').innerText = document.getElementById('pres-sena').value; 
        
-       let tHora = document.getElementById('pres-tarifa-hora').value;
-       let bMin = document.getElementById('pres-base-minima').value;
-       let detTar = document.getElementById('pres-detalle-tarifa').value;
-       
-       if (tHora || bMin || detTar) {
-           document.getElementById('pdf-desglose-tarifa').style.display = 'block';
-           document.getElementById('pdf-detalle-texto').innerText = detTar || "-";
-           if(tHora) { document.getElementById('pdf-th-container').style.display = 'inline-block'; document.getElementById('pdf-tarifa-hora').innerText = tHora; } else { document.getElementById('pdf-th-container').style.display = 'none'; }
-           if(bMin) { document.getElementById('pdf-bm-container').style.display = 'inline-block'; document.getElementById('pdf-base-minima').innerText = bMin; } else { document.getElementById('pdf-bm-container').style.display = 'none'; }
+       let tHora = document.getElementById('pres-tarifa-hora').value; let bMin = document.getElementById('pres-base-minima').value; let detTar = document.getElementById('pres-detalle-tarifa').value;
+       if (tHora || bMin || detTar) { document.getElementById('pdf-desglose-tarifa').style.display = 'block'; document.getElementById('pdf-detalle-texto').innerText = detTar || "-"; if(tHora) { document.getElementById('pdf-th-container').style.display = 'inline-block'; document.getElementById('pdf-tarifa-hora').innerText = tHora; } else { document.getElementById('pdf-th-container').style.display = 'none'; } if(bMin) { document.getElementById('pdf-bm-container').style.display = 'inline-block'; document.getElementById('pdf-base-minima').innerText = bMin; } else { document.getElementById('pdf-bm-container').style.display = 'none'; }
        } else { document.getElementById('pdf-desglose-tarifa').style.display = 'none'; }
 
        let tipoCli = document.getElementById('pres-tipo-cliente-doc').value;
@@ -1101,23 +927,96 @@
    },
    eliminarViajeEnBaseDeDatos: async function(id) { eventosGuardados = eventosGuardados.filter(e => String(e.id) !== String(id)); cerrarModalesNativos(); dibujarCalendarioMes(); try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'deleteEvent', id: id }) }); } catch(e) {} },
    crearContactoEnBaseDeDatos: async function(payload) { const idx = contactosGuardados.findIndex(c => String(c.id) === String(payload.id)); if(idx >= 0) { contactosGuardados[idx] = payload; } else { contactosGuardados.push(payload); } cerrarModalesNativos(); renderContactos(); try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveContact', ...payload }) }); } catch(e) {} },
+   
+   /* =======================================================
+      SISTEMA MARINA IA: VOZ, CONTEXTO ABSOLUTO Y PERSONALIDAD 
+      ======================================================= */
+   hablarMarina: function(texto) {
+       if ('speechSynthesis' in window) {
+           window.speechSynthesis.cancel(); // Detener audios anteriores
+           // Eliminar etiquetas HTML para que no las lea en voz alta
+           let textoLimpio = texto.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ');
+           let utterance = new SpeechSynthesisUtterance(textoLimpio);
+           utterance.lang = 'es-AR';
+           utterance.rate = 1.05; // Velocidad un poquito más dinámica
+           
+           // Buscar voz femenina de Google o del sistema
+           let voices = window.speechSynthesis.getVoices();
+           let vozFemenina = voices.find(v => v.lang.includes('es') && (v.name.includes('Female') || v.name.includes('Mujer') || v.name.includes('Google español'))) || voices.find(v => v.lang === 'es-AR') || voices.find(v => v.lang.startsWith('es'));
+           if (vozFemenina) { utterance.voice = vozFemenina; }
+           
+           window.speechSynthesis.speak(utterance);
+       }
+   },
+
    procesarChatMarina: async function() { 
      const i = document.getElementById('marina-prompt-input'); const b = document.getElementById('marina-chat-response'); const t = i.value.trim(); if(!t) return; 
-     b.innerHTML = "⏳ <em>Marina se comunica con el servidor...</em>"; i.value = ""; 
-     try { const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "consultaMarina", prompt: `[Hoy: ${new Date().toLocaleDateString('es-AR')}]. Contexto: ${t}`, contextoAgenda: eventosGuardados.map(e => ({ fecha: e.fecha, cliente: e.cliente, tipo: e.tipomov, estado: e.estado, dest: e.destino })) }) }); const inf = await res.json(); b.innerHTML = inf.success ? inf.result : `⚠️ <strong>Error Code.gs:</strong><br><br>${inf.error}`; } catch(e) { b.innerHTML = "⚠️ Error de red."; } 
+     b.innerHTML = `<strong>Tú:</strong> ${t}<br><br>⏳ <em>Marina está analizando la solicitud...</em>`; i.value = ""; 
+     
+     // RECOPILAR EL CONTEXTO TOTAL DE LA EMPRESA PARA ENVIAR A LA IA
+     const contextoFlota = configuracionNivel9.flota.join(', ');
+     const costoDiesel = configuracionNivel9.diesel;
+     const resumenAgenda = eventosGuardados.map(e => `[${e.fecha}] Cliente: ${e.cliente}, Servicio: ${e.tipomov}, Estado: ${e.estado}, Importe: $${e.presupuesto}, Origen: ${e.origen}, Destino: ${e.destino}`).join(' | ');
+
+     // Super-Prompt inyectado para que el backend (Google Apps Script) sepa quién es Marina
+     const promptDirectivo = `Eres Marina, la secretaria ejecutiva y asesora experta en logística de Nivel 9 (empresa ubicada en Córdoba, Argentina). Tu jefe es el Licenciado Rodrigo Castro, CEO de la empresa. Eres extremadamente amable, profesional, eficiente y tienes un toque conversacional resolutivo. Sabes cotizar rutas, organizar viajes y analizar costos operativos. \n\nDatos actuales de Nivel 9:\nFlota disponible: ${contextoFlota}.\nCosto del Diésel: $${costoDiesel} por litro.\nAgenda actual: ${resumenAgenda}.\n\nResponde de manera ejecutiva a la siguiente solicitud de Rodrigo: "${t}"`;
+
+     try { 
+         const res = await fetch(webAppUrl, { 
+             method: 'POST', 
+             body: JSON.stringify({ 
+                 action: "consultaMarina", 
+                 prompt: promptDirectivo, 
+                 contextoAgenda: eventosGuardados // Se mantiene por retrocompatibilidad con el script
+             }) 
+         }); 
+         const inf = await res.json(); 
+         
+         if (inf.success) {
+             b.innerHTML = inf.result;
+             this.hablarMarina(inf.result); // ¡MARINA HABLA!
+         } else {
+             b.innerHTML = `⚠️ <strong>Error del Servidor Code.gs:</strong><br><br>${inf.error}`; 
+         }
+     } catch(e) { 
+         b.innerHTML = "⚠️ Error de red. No se pudo contactar al servidor."; 
+     } 
    },
-   reconocimientoVoz: function() { if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return alert("No compatible."); const r = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); r.lang = 'es-AR'; r.start(); document.getElementById('marina-chat-response').innerHTML = "🎙️ <em>Escuchando...</em>"; r.onresult = (e) => { document.getElementById('marina-prompt-input').value = e.results[0][0].transcript; this.procesarChatMarina(); }; },
+
+   reconocimientoVoz: function() { 
+     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return alert("Tu navegador no soporta reconocimiento de voz. Intentá con Chrome."); 
+     window.speechSynthesis.cancel(); // Si Marina estaba hablando, se calla para escucharte
+     const r = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); 
+     r.lang = 'es-AR'; 
+     r.start(); 
+     
+     const btnAudio = document.querySelector('.fa-microphone').parentElement;
+     btnAudio.style.color = '#dc2626'; // Se pone rojo mientras escucha
+     document.getElementById('marina-chat-response').innerHTML = "🎙️ <em>Te estoy escuchando, Rodri...</em>"; 
+     
+     r.onresult = (e) => { 
+       btnAudio.style.color = 'var(--ia-color)';
+       document.getElementById('marina-prompt-input').value = e.results[0][0].transcript; 
+       this.procesarChatMarina(); 
+     }; 
+     r.onerror = () => { btnAudio.style.color = 'var(--ia-color)'; document.getElementById('marina-chat-response').innerHTML = "No pude escucharte bien. ¿Podés repetir?"; }
+     r.onend = () => { btnAudio.style.color = 'var(--ia-color)'; }
+   },
+
    escanearCarga: async function() { 
      const i = document.getElementById('ev-marina-fotos'); const b = document.getElementById('btn-ev-marina'); if (!i.files || i.files.length === 0) return alert("Elegir imagen."); 
      b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluando...'; b.disabled = true; 
      try { const p = []; for (let f of i.files) { const c = await new Promise((rs, rj) => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => rs(rd.result.split(',')[1]); rd.onerror = err => rj(err); }); p.push({ mimeType: f.type, base64Data: c }); } 
        const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "escaneoMarina", archivos: p }) }); const d = await res.json(); 
        if(d.success && d.result) { const inv = document.getElementById('ev-inventario'); inv.value = inv.value ? inv.value + "\n\n--- MARINA IA ---\n" + d.result : d.result; } else { alert("❌ Marina falló: " + (d.error || "")); }
-     } catch(e) { alert("Fallo de conexión con IA."); } finally { b.innerHTML = '<i class="fas fa-camera"></i> Extraer Inventario'; b.disabled = false; } 
+     } catch(e) { alert("Fallo de conexión con IA."); } finally { b.innerHTML = '<i class="fas fa-camera"></i> Extraer'; b.disabled = false; } 
    }
  };
 
  function abrirModalAsistenteIA() { cerrarModalesNativos(); document.getElementById('modalMarinaAsistente').style.display = 'flex'; }
+ 
+ // Pre-cargar voces al iniciar la app para que Marina no tartamudee la primera vez
+ if ('speechSynthesis' in window) { window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); }; }
  </script>
 </body>
 </html>
