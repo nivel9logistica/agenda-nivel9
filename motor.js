@@ -1,5 +1,5 @@
 // =========================================================================
-// MOTOR JAVASCRIPT: NIVEL 9 ERP - ARCHITECTURE BY STARK (MARK 85)
+// MOTOR JAVASCRIPT MAESTRO: NIVEL 9 ERP & BROKERAGE 3PL - MARK 85
 // =========================================================================
 
 // ⚠️ ACÁ VA TU URL DE GOOGLE APPS SCRIPT (EL WEBHOOK):
@@ -7,31 +7,44 @@ const webAppUrl = 'https://script.google.com/macros/s/AKfycbzJgp7Q0-LnufrbdYtB1n
 
 // --- BASES DE DATOS EN MEMORIA ---
 let eventosGuardados = []; 
-let cargasGuardadas = []; 
+let contactosGuardados = []; 
+let bolsaCargasGuardadas = []; 
 let transportistasGuardados = []; 
 let intermediacionesGuardadas = [];
-let contactosGuardados = [];
-let fechaCalendarioActual = new Date();
+let fechaCalendarioActual = new Date(); 
+let fechaSeleccionadaDia = null; 
 
-// --- VARIABLES 3PL Y MAPAS ---
-let cargaAbiertaActual = null;
-let telChoferAsignado = null;
+// --- VARIABLES MAPA Y 3PL ---
 let mapaCotizador = null; 
 let controlRutaMapa = null;
+let cargaAbiertaActual = null;
+let telChoferAsignado = null;
 
+let configuracionNivel9 = { 
+  diesel: 2450, 
+  flota: ["Sprinter Furgon", "Sprinter Chasis", "Iveco Daily", "Camión MB 712"], 
+  tipos: ["Mudanza Local", "Mudanza Larga", "Flete Comercial", "Trabajos Especiales", "Autocotización"] 
+};
+
+// ACUERDOS COMERCIALES FIJOS 3PL
 const ACUERDO_FIJO_CHOFER = "1. Liberación Estricta: El pago se liberará exclusivamente tras la recepción vía WhatsApp de la fotografía nítida del Remito Conformado (Firma, Aclaración, DNI y Sello). Sin este documento, no se procesará la liquidación.\n2. Deslinde de Responsabilidad: Nivel 9 interviene exclusivamente como coordinador. El Transportista asume la responsabilidad total por daños, faltantes o siniestros durante el tránsito.";
-const ACUERDO_FIJO_DADOR = "1. Deslinde Tránsito.\n2. Control Estadías.\n3. Falsas Escuadras.";
+const ACUERDO_FIJO_DADOR = "1. Deslinde Tránsito.\n2. Control Estadías (2hs libres).\n3. Falsas Escuadras (30%).";
 
 // ==========================================
-// 1. INICIALIZACIÓN Y MENÚ MÓVIL
+// 1. INICIALIZACIÓN Y NAVEGACIÓN MÓVIL
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
+  const cacheParams = localStorage.getItem('nivel9_config');
+  if(cacheParams) configuracionNivel9 = JSON.parse(cacheParams);
+  document.getElementById('cfg-diesel').value = configuracionNivel9.diesel;
   document.getElementById('marina-fecha-hoy').textContent = new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  actualizarListasDesplegables(); 
   sincronizarConServidor();
 });
 
 function toggleMenu() {
-  document.getElementById('sidebarMenu').classList.toggle('active');
+  const nav = document.getElementById('topNavMenu');
+  if(nav) nav.classList.toggle('active');
 }
 
 async function sincronizarConServidor() {
@@ -39,24 +52,18 @@ async function sincronizarConServidor() {
     const res = await fetch(webAppUrl + '?action=getAppData');
     const data = await res.json();
     
-    // Normalizar eventos de Agenda (convierte mayúsculas a minúsculas y estandariza fechas)
+    // Normalizador de eventos contra fallos de mayúsculas y formatos de fecha de Google Sheets
     if(data.eventos && Array.isArray(data.eventos)) {
       eventosGuardados = data.eventos.map(item => {
         let obj = {};
-        // Pasa todas las claves a minúsculas (ej: "Fecha" -> "fecha")
         Object.keys(item).forEach(k => { obj[k.toLowerCase()] = item[k]; });
-        
-        // Estandariza la fecha a YYYY-MM-DD
         if(obj.fecha) {
           let strF = String(obj.fecha).trim();
           if(strF.includes('T')) strF = strF.split('T')[0];
           if(strF.includes('/')) {
             const p = strF.split('/');
-            if(p.length === 3) {
-              // Si está en formato DD/MM/YYYY
-              if(p[0].length === 2 && p[2].length === 4) {
-                strF = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
-              }
+            if(p.length === 3 && p[0].length === 2 && p[2].length === 4) {
+              strF = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
             }
           }
           obj.fecha = strF;
@@ -65,47 +72,49 @@ async function sincronizarConServidor() {
       });
     }
 
-    if(data.cargas) cargasGuardadas = data.cargas;
+    if(data.contactos) contactosGuardados = data.contactos;
+    if(data.cargas) bolsaCargasGuardadas = data.cargas;
     if(data.transportistas) transportistasGuardados = data.transportistas;
     if(data.intermediaciones) intermediacionesGuardadas = data.intermediaciones;
-    if(data.contactos) contactosGuardados = data.contactos;
     
     document.getElementById('sync-status-portal').innerHTML = '<i class="fas fa-check-circle"></i> Base Conectada (' + eventosGuardados.length + ' viajes)';
     document.getElementById('sync-status-portal').style.color = 'var(--finalizada)';
-    
-    dibujarCalendarioMes();
   } catch(error) {
-    document.getElementById('sync-status-portal').innerHTML = '<i class="fas fa-wifi"></i> Modo Offline - Error de Conexión';
-    document.getElementById('sync-status-portal').style.color = 'var(--cancelada)';
+    document.getElementById('sync-status-portal').innerHTML = '<i class="fas fa-wifi"></i> Modo Offline'; 
+    document.getElementById('sync-status-portal').style.color = '#dc2626';
   }
+  dibujarCalendarioMes(); 
+  renderContactos(); 
+  renderBolsaCargas(); 
+  renderTransportistas(); 
+  renderIntermediaciones();
 }
+
 function showView(viewId) {
   document.getElementById('viewPortal').style.display = 'none'; 
   document.getElementById('appHeader').style.display = 'flex';
   
-  const views = ['Agenda', 'Cotizador', 'Informes', 'Contactos', 'BolsaCargas', 'Transportistas', 'Intermediaciones'];
-  views.forEach(v => { const el = document.getElementById('view' + v); if(el) el.style.display = 'none'; });
-  
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  if(event && event.currentTarget) event.currentTarget.classList.add('active');
+  ['Agenda', 'Cotizador', 'BolsaCargas', 'RedTransportistas', 'Intermediacion', 'Contactos', 'Informes'].forEach(v => {
+    const el = document.getElementById('view' + v);
+    if(el) el.style.display = 'none';
+  });
 
   if (viewId === 'Portal') { 
-    document.getElementById('viewPortal').style.display = 'block'; 
+    document.getElementById('viewPortal').style.display = 'flex'; 
     document.getElementById('appHeader').style.display = 'none'; 
   } else { 
-    const target = document.getElementById('view' + viewId);
-    if(target) target.style.display = 'block'; 
-    document.getElementById('viewTitleText').innerText = viewId;
+    document.getElementById('view' + viewId).style.display = 'block'; 
   }
   
-  // Cierra menú móvil al hacer clic
-  if(window.innerWidth <= 768) { document.getElementById('sidebarMenu').classList.remove('active'); }
+  // Cierra el menú desplegable en celular al hacer clic
+  const nav = document.getElementById('topNavMenu');
+  if(nav && nav.classList.contains('active')) nav.classList.remove('active');
 
-  if(viewId === 'BolsaCargas') renderBolsaCargas();
-  if(viewId === 'Transportistas') renderTransportistas();
   if(viewId === 'Agenda') dibujarCalendarioMes();
-  if(viewId === 'Intermediaciones') renderIntermediaciones();
-  if(viewId === 'Contactos') renderContactos();
+  if(viewId === 'Informes') inyectarFiltrosDeInformes(); 
+  if(viewId === 'BolsaCargas') renderBolsaCargas();
+  if(viewId === 'RedTransportistas') renderTransportistas();
+  if(viewId === 'Intermediacion') renderIntermediaciones();
   if(viewId === 'Cotizador') { 
     setTimeout(() => { 
       if(!mapaCotizador) { 
@@ -117,267 +126,331 @@ function showView(viewId) {
   }
 }
 
-function abrirModalNativo(id) { cerrarModalesNativos(); const m = document.getElementById(id); if(m) m.style.display = 'flex'; }
+function abrirModalNativo(id) { cerrarModalesNativos(); document.getElementById(id).style.display = 'flex'; }
 function cerrarModalesNativos() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
 // ==========================================
-// 2. AGENDA DE FLOTA (RESTAURACIÓN TOTAL)
+// 2. CALENDARIO DE AGENDA Y MOVIMIENTOS
 // ==========================================
 function dibujarCalendarioMes() {
   const anio = fechaCalendarioActual.getFullYear(); 
   const mes = fechaCalendarioActual.getMonth();
   document.getElementById('currentMonthYear').textContent = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fechaCalendarioActual);
-  const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
   
-  const primerDia = new Date(anio, mes, 1).getDay(); 
-  const diasMes = new Date(anio, mes + 1, 0).getDate();
-  for(let i = 0; i < primerDia; i++) grid.innerHTML += `<div class="day-cell" style="background:transparent; border:none;"></div>`; 
+  const grid = document.getElementById('calendarGrid'); 
+  grid.innerHTML = '';
+  const primerDiaSemana = new Date(anio, mes, 1).getDay(); 
+  const diasDelMes = new Date(anio, mes + 1, 0).getDate();
+  
+  for(let i = 0; i < primerDiaSemana; i++) { grid.innerHTML += `<div class="day-cell empty"></div>`; }
   
   const strHoy = new Date().toISOString().split('T')[0];
-  for(let dia = 1; dia <= diasMes; dia++) {
-    const strF = `${anio}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
-    const esHoy = (strF === strHoy) ? 'today' : '';
-    const viajes = eventosGuardados.filter(e => e.fecha === strF);
+  for(let dia = 1; dia <= diasDelMes; dia++) {
+    const strFechaLoop = `${anio}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+    const claseHoy = (strFechaLoop === strHoy) ? 'today' : '';
+    const viajesDelDia = eventosGuardados.filter(e => e.fecha === strFechaLoop);
     
-    const htmlV = viajes.map(v => `<div class="event-chip status-${v.estado}" onclick="editarEventoViaje('${v.id}'); event.stopPropagation();"><span>${v.cliente}</span></div>`).join('');
-    grid.innerHTML += `<div class="day-cell ${esHoy}" onclick="prepararNuevoViaje('${strF}')"><div class="day-number">${dia}</div>${htmlV}</div>`;
+    const pastillasHTML = viajesDelDia.map(viaje => {
+      const estadoLimpio = (viaje.estado || 'Posible').replace(/\s+/g, '');
+      return `<div class="event-chip status-${estadoLimpio}"><span>${viaje.cliente}</span></div>`;
+    }).join('');
+    
+    grid.innerHTML += `<div class="day-cell ${claseHoy}" onclick="abrirVistaDelDia('${strFechaLoop}')"><div class="day-number">${dia}</div>${pastillasHTML}</div>`;
   }
 }
 
 function navigateMonth(dir) { fechaCalendarioActual.setMonth(fechaCalendarioActual.getMonth() + dir); dibujarCalendarioMes(); }
 function goToday() { fechaCalendarioActual = new Date(); dibujarCalendarioMes(); }
 
-function prepararNuevoViaje(fecha) {
-  document.getElementById('ev-id').value = '';
-  document.getElementById('ev-fecha').value = fecha;
-  document.getElementById('ev-estado').value = 'Posible';
-  ['ev-cliente','ev-telefono','ev-origen','ev-destino','ev-inventario'].forEach(id => document.getElementById(id).value = '');
-  ['ev-presupuesto','ev-combustible','ev-extra','ev-ayudante'].forEach(id => document.getElementById(id).value = 0);
-  calculateAgendaTotal();
-  document.getElementById('btn-eliminar-evento').style.display = 'none';
+function abrirVistaDelDia(fechaString) {
+  fechaSeleccionadaDia = fechaString; 
+  const viajes = eventosGuardados.filter(e => e.fecha === fechaString); 
+  const [ano, mes, dia] = fechaString.split('-');
+  
+  document.getElementById('dayViewTitle').textContent = `Movimientos del ${dia}/${mes}/${ano}`;
+  if (viajes.length === 0) { 
+    document.getElementById('dayViewBody').innerHTML = '<p style="color:#71717a; text-align:center; margin-top:15px;">Sin agenda para este día.</p>'; 
+  } else { 
+    document.getElementById('dayViewBody').innerHTML = viajes.map(v => {
+      const estadoLimpio = (v.estado || 'Posible').replace(/\s+/g, '');
+      return `
+      <div class="event-card ${estadoLimpio}">
+        <div class="event-card-header"><div class="event-card-title">${v.cliente}</div><span class="contact-badge status-${estadoLimpio}" style="color:white; margin:0;">${v.estado}</span></div>
+        <div class="event-card-meta"><div><i class="fas fa-truck"></i> ${v.tipomov || '-'}</div><div><i class="fas fa-dollar-sign"></i> Tarifa: $${Number(v.presupuesto||0).toLocaleString('es-AR')}</div></div>
+        <button class="btn btn-outline-dark" style="padding:5px 10px; font-size:0.8rem; margin-top:10px; width:100%;" onclick="editEvent('${v.id}')"><i class="fas fa-edit"></i> Editar / Ver Ficha</button>
+      </div>`;
+    }).join(''); 
+  }
+  abrirModalNativo('modalDayView');
+}
+
+function calculateTotal() { 
+  const valor = (id) => parseFloat(document.getElementById(id).value) || 0; 
+  document.getElementById('ev-total').value = valor('ev-presupuesto') - (valor('ev-combustible') + valor('ev-peajes-costo') + valor('ev-viaticos') + valor('ev-ayudante-monto') + valor('ev-comision') + valor('ev-gastoext')); 
+}
+
+function openAddEventModal(fechaPredefinida = null) {
+  document.getElementById('eventForm').reset(); 
+  document.getElementById('ev-id').value = 'MOV-' + Date.now(); 
+  document.getElementById('ev-fecha').value = fechaPredefinida || new Date().toISOString().split('T')[0]; 
+  document.getElementById('btn-eliminar-evento').style.display = 'none'; 
+  document.getElementById('ev-nrodoc').value = ''; 
+  document.getElementById('ev-tarifa-hora').value = ''; 
+  document.getElementById('ev-base-minima').value = ''; 
+  document.getElementById('ev-detalle-tarifa').value = ''; 
+  calculateTotal(); 
+  cerrarModalesNativos(); 
   abrirModalNativo('modalEventForm');
 }
 
-function editarEventoViaje(id) {
-  const v = eventosGuardados.find(e => String(e.id) === String(id));
-  if(!v) return;
-  document.getElementById('ev-id').value = v.id;
-  document.getElementById('ev-fecha').value = v.fecha;
-  document.getElementById('ev-estado').value = v.estado;
-  document.getElementById('ev-cliente').value = v.cliente;
-  document.getElementById('ev-telefono').value = v.telefono || '';
-  document.getElementById('ev-origen').value = v.origen || '';
-  document.getElementById('ev-destino').value = v.destino || '';
-  document.getElementById('ev-inventario').value = v.inventario || '';
-  document.getElementById('ev-presupuesto').value = v.presupuesto || 0;
-  document.getElementById('ev-combustible').value = v.combustible || 0;
-  document.getElementById('ev-extra').value = v.extra || 0;
-  document.getElementById('ev-ayudante').value = v.ayudante || 0;
-  calculateAgendaTotal();
-  document.getElementById('btn-eliminar-evento').style.display = 'block';
+function editEvent(idViaje) {
+  const viaje = eventosGuardados.find(e => String(e.id) === String(idViaje)); 
+  if(!viaje) return;
+  document.getElementById('ev-id').value = viaje.id; 
+  document.getElementById('ev-fecha').value = viaje.fecha; 
+  document.getElementById('ev-estado').value = viaje.estado || 'Posible'; 
+  document.getElementById('ev-tipocliente').value = viaje.tipocliente || 'Particular'; 
+  document.getElementById('ev-cliente').value = viaje.cliente; 
+  document.getElementById('ev-telefono').value = viaje.telefono || ''; 
+  document.getElementById('ev-tipomov').value = viaje.tipomov || ''; 
+  document.getElementById('ev-asignacion').value = viaje.asignacion || ''; 
+  document.getElementById('ev-origen').value = viaje.origen || ''; 
+  document.getElementById('ev-destino').value = viaje.destino || ''; 
+  document.getElementById('ev-distancia').value = viaje.distancia || 0; 
+  document.getElementById('ev-inventario').value = viaje.inventario || viaje.detalles || ''; 
+  document.getElementById('ev-obs-ruta').value = viaje.obsruta || ''; 
+  document.getElementById('ev-nrodoc').value = viaje.nrodoc || ''; 
+  document.getElementById('ev-tarifa-hora').value = viaje.tarifahora || ''; 
+  document.getElementById('ev-base-minima').value = viaje.baseminima || ''; 
+  document.getElementById('ev-detalle-tarifa').value = viaje.detalletarifa || ''; 
+  document.getElementById('ev-presupuesto').value = viaje.presupuesto || 0; 
+  document.getElementById('ev-sena').value = viaje.sena || 0; 
+  document.getElementById('ev-combustible').value = viaje.combustible || 0; 
+  document.getElementById('ev-peajes-costo').value = viaje.peajescosto || 0; 
+  document.getElementById('ev-viaticos').value = viaje.viaticos || 0; 
+  document.getElementById('ev-ayudante-monto').value = viaje.ayudante || 0; 
+  document.getElementById('ev-comision').value = viaje.comision || 0; 
+  document.getElementById('ev-gastoext').value = viaje.gastoext || 0; 
+  document.getElementById('ev-detallegastoext').value = viaje.detallegastoext || '';
+  
+  document.getElementById('btn-eliminar-evento').style.display = 'inline-flex'; 
+  calculateTotal(); 
+  cerrarModalesNativos(); 
   abrirModalNativo('modalEventForm');
-}
-
-function calculateAgendaTotal() { 
-  const v = (id) => parseFloat(document.getElementById(id).value) || 0; 
-  document.getElementById('ev-total').value = v('ev-presupuesto') - (v('ev-combustible') + v('ev-extra') + v('ev-ayudante')); 
 }
 
 function saveEvent() {
+  const fecha = document.getElementById('ev-fecha').value; 
+  const cliente = document.getElementById('ev-cliente').value.trim(); 
+  if(!fecha || !cliente) { alert("Error: Fecha y Cliente obligatorios."); return; } 
+  calculateTotal(); 
+  const valorNum = (id) => parseFloat(document.getElementById(id).value) || 0;
+  
   const payload = { 
-    id: document.getElementById('ev-id').value || 'MOV-' + Date.now(), 
-    fecha: document.getElementById('ev-fecha').value, 
+    id: document.getElementById('ev-id').value, 
+    fecha: fecha, 
     estado: document.getElementById('ev-estado').value, 
-    cliente: document.getElementById('ev-cliente').value, 
-    telefono: document.getElementById('ev-telefono').value,
-    origen: document.getElementById('ev-origen').value,
-    destino: document.getElementById('ev-destino').value,
+    tipocliente: document.getElementById('ev-tipocliente').value, 
+    cliente: cliente, 
+    telefono: document.getElementById('ev-telefono').value, 
+    tipomov: document.getElementById('ev-tipomov').value, 
+    asignacion: document.getElementById('ev-asignacion').value, 
+    origen: document.getElementById('ev-origen').value, 
+    destino: document.getElementById('ev-destino').value, 
+    distancia: valorNum('ev-distancia'), 
     inventario: document.getElementById('ev-inventario').value, 
-    presupuesto: parseFloat(document.getElementById('ev-presupuesto').value)||0, 
-    combustible: parseFloat(document.getElementById('ev-combustible').value)||0, 
-    extra: parseFloat(document.getElementById('ev-extra').value)||0,
-    ayudante: parseFloat(document.getElementById('ev-ayudante').value)||0 
+    obsruta: document.getElementById('ev-obs-ruta').value, 
+    nrodoc: document.getElementById('ev-nrodoc').value, 
+    tarifahora: valorNum('ev-tarifa-hora'), 
+    baseminima: document.getElementById('ev-base-minima').value, 
+    detalletarifa: document.getElementById('ev-detalle-tarifa').value, 
+    presupuesto: valorNum('ev-presupuesto'), 
+    sena: valorNum('ev-sena'), 
+    combustible: valorNum('ev-combustible'), 
+    peajescosto: valorNum('ev-peajes-costo'), 
+    viaticos: valorNum('ev-viaticos'), 
+    ayudante: valorNum('ev-ayudante-monto'), 
+    comision: valorNum('ev-comision'), 
+    gastoext: valorNum('ev-gastoext'), 
+    detallegastoext: document.getElementById('ev-detallegastoext').value, 
+    total: valorNum('ev-total') 
   };
-  const idx = eventosGuardados.findIndex(e => String(e.id) === String(payload.id)); 
-  if(idx >= 0) eventosGuardados[idx] = payload; else eventosGuardados.push(payload);
-  dibujarCalendarioMes(); cerrarModalesNativos();
-  fetch(webAppUrl, { method: 'POST', body: JSON.stringify(payload) });
+  window.MotorNivel9.crearViajeEnBaseDeDatos(payload);
 }
 
-function eliminarEventoViaje() {
-  const id = document.getElementById('ev-id').value;
-  if(!confirm("¿Eliminar viaje definitivamente?")) return;
-  eventosGuardados = eventosGuardados.filter(e => String(e.id) !== String(id));
-  dibujarCalendarioMes(); cerrarModalesNativos();
-  fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'deleteEvent', id: id }) });
+function eliminarEventoViaje() { 
+  if(confirm("¿Eliminar viaje de la base de datos?")) { 
+    window.MotorNivel9.eliminarViajeEnBaseDeDatos(document.getElementById('ev-id').value); 
+  } 
 }
 
-// ==========================================
-// 3. RESTAURACIÓN CONTACTOS Y FINANZAS
-// ==========================================
-function renderContactos() {
-  const q = document.getElementById('cnt-filter-search').value.toLowerCase();
-  const arr = contactosGuardados.filter(c => ((c.nombre && c.nombre.toLowerCase().includes(q)) || (c.empresa && c.empresa.toLowerCase().includes(q))));
-  
-  document.getElementById('contactListContainer').innerHTML = arr.length === 0 ? '<p>No hay contactos agendados.</p>' : arr.map(c => `
-    <div class="broker-card">
-      <div class="broker-card-header"><strong>${c.nombre}</strong><span class="status-badge" style="background:var(--brand-light); color:var(--brand);">${c.tipo}</span></div>
-      <div style="font-size:0.9rem; margin-bottom:8px;"><i class="fas fa-building"></i> <b>Empresa:</b> ${c.empresa || 'Particular'}</div>
-      <div style="font-size:0.9rem; margin-bottom:10px;"><i class="fab fa-whatsapp" style="color:#16a34a;"></i> <b>Tel:</b> ${c.telefono}</div>
-      <button class="btn btn-outline" style="width:100%; font-size:0.8rem;" onclick="window.open('https://wa.me/549${(c.telefono||'').replace(/\D/g,'')}')">Enviar WhatsApp</button>
-    </div>`).join('');
-}
-
-function saveContact() {
-  const payload = {
-    action: 'saveContact',
-    id: document.getElementById('cnt-id').value || 'CNT-' + Date.now(),
-    nombre: document.getElementById('cnt-nombre').value,
-    telefono: document.getElementById('cnt-telefono').value,
-    empresa: document.getElementById('cnt-empresa').value,
-    tipo: document.getElementById('cnt-tipo').value,
-    notas: document.getElementById('cnt-notas').value
-  };
-  const idx = contactosGuardados.findIndex(c => String(c.id) === String(payload.id));
-  if(idx >= 0) contactosGuardados[idx] = payload; else contactosGuardados.push(payload);
-  renderContactos(); cerrarModalesNativos();
-  fetch(webAppUrl, { method: 'POST', body: JSON.stringify(payload) });
-}
-
-function generarReporteDatos() {
-  document.getElementById('kpiDashboardContainer').style.display = 'grid';
-  // Calcula en base a Agenda de Flota
-  const realizados = eventosGuardados.filter(e => e.estado === 'Realizado');
-  const ingresos = realizados.reduce((acc, curr) => acc + (parseFloat(curr.presupuesto)||0), 0);
-  const costos = realizados.reduce((acc, curr) => acc + (parseFloat(curr.combustible)||0) + (parseFloat(curr.extra)||0) + (parseFloat(curr.ayudante)||0), 0);
-  
-  document.getElementById('kpi-tot-viajes').innerText = realizados.length;
-  document.getElementById('kpi-tot-ingresos').innerText = '$' + ingresos.toLocaleString('es-AR');
-  document.getElementById('kpi-tot-costos').innerText = '$' + costos.toLocaleString('es-AR');
-  document.getElementById('kpi-tot-utilidad').innerText = '$' + (ingresos - costos).toLocaleString('es-AR');
+function abrirWhatsAppFormulario() { 
+  const tel = document.getElementById('ev-telefono').value.replace(/\D/g, ''); 
+  if(tel.length > 9) { window.open(`https://wa.me/549${tel}`); } else { alert("Número de teléfono inválido."); } 
 }
 
 // ==========================================
-// 4. COTIZADOR OSRM (ARREGLO TEXTO SOBRE MAPA)
+// 3. COTIZADOR GPS OSRM Y COSTOS
 // ==========================================
 function addDestinoCotizador() { 
   const c = document.getElementById('destinosContainer'); 
   const i = document.createElement('input'); 
-  i.type = 'text'; i.className = 'cot-destino-input'; i.placeholder = 'Otra parada...'; i.style.marginTop = '10px'; 
+  i.type = 'text'; i.className = 'cot-destino-input'; i.placeholder = 'Otra parada...'; i.style.marginTop = '8px'; 
   c.appendChild(i); 
 }
 
 async function calcularRutaOSRM() {
-  const orig = document.getElementById('cot-origen').value; 
-  const dest = Array.from(document.querySelectorAll('.cot-destino-input')).map(i => i.value).filter(v => v);
-  if(!orig || dest.length === 0) return alert("Falta origen o destino.");
+  const origen = document.getElementById('cot-origen').value; 
+  const destinosArr = Array.from(document.querySelectorAll('.cot-destino-input')).map(i => i.value).filter(v => v);
+  if(!origen || destinosArr.length === 0) { alert("Completar origen y destino."); return; }
   
-  const puntos = [orig, ...dest].map(p => p + ', Argentina');
+  const puntosTotales = [origen, ...destinosArr].map(p => p.includes('Argentina') ? p : p + ', Argentina');
   try { 
     let coords = []; 
-    for(let l of puntos) { 
-      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(l)}`).then(x => x.json()); 
-      if(r.length > 0) coords.push(L.latLng(r[0].lat, r[0].lon)); 
+    for(let lugar of puntosTotales) { 
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=ar&q=${encodeURIComponent(lugar)}`).then(x => x.json()); 
+      if(res.length > 0) coords.push(L.latLng(res[0].lat, res[0].lon)); 
     }
     if(controlRutaMapa) mapaCotizador.removeControl(controlRutaMapa);
-    // Instrucción para no mostrar las instrucciones de texto de OSRM (además del CSS)
-    controlRutaMapa = L.Routing.control({ waypoints: coords, show: false, addWaypoints: false, routeWhileDragging: false }).addTo(mapaCotizador);
-    controlRutaMapa.on('routesfound', (e) => { 
-      document.getElementById('cot-kms').value = Math.round(e.routes[0].summary.totalDistance / 1000); 
-      mapaCotizador.fitBounds(L.latLngBounds(coords)); 
+    controlRutaMapa = L.Routing.control({ waypoints: coords, show: false, addWaypoints: false }).addTo(mapaCotizador);
+    controlRutaMapa.on('routesfound', (evento) => { 
+      document.getElementById('cot-kms').value = Math.round(evento.routes[0].summary.totalDistance / 1000); 
+      calcularCostosRuta(); 
+      mapaCotizador.fitBounds(L.latLngBounds(coords), {padding: [30,30]}); 
     });
-  } catch(e) { alert("Error al conectar con satélite OSRM."); }
+  } catch(e) { alert("Error calculando la ruta con el satélite OSRM."); }
+}
+
+function calcularCostosRuta() { 
+  document.getElementById('cot-res-combustible').value = Math.round((((parseFloat(document.getElementById('cot-kms').value) || 0) * 2) / 100) * 15 * (parseFloat(configuracionNivel9.diesel) || 2450)); 
+  calcularCostosCotizador(); 
 }
 
 function calcularCostosCotizador() { 
   const v = (id) => parseFloat(document.getElementById(id).value) || 0; 
-  const costos = v('cot-res-combustible') + v('cot-res-extra'); 
+  const costos = v('cot-res-combustible') + v('cot-res-peajes-costo') + v('cot-res-viaticos') + v('cot-ayudante'); 
   document.getElementById('cot-res-costostotales').value = costos; 
   document.getElementById('cot-res-utilidad').value = v('cot-res-tarifa') - costos; 
 }
 
-// ==========================================
-// 5. MÓDULO 3PL: BOLSA Y TRANSPORTISTAS
-// ==========================================
-function guardarCargaManual() {
-  const payload = {
-    action: 'saveCarga', id: 'CGA-' + Date.now(), fecha: new Date().toISOString().split('T')[0], estado: 'Disponible',
-    dador: document.getElementById('mc-dador').value, origen: document.getElementById('mc-origen').value, destino: document.getElementById('mc-destino').value,
-    vehiculo: document.getElementById('mc-vehiculo').value, descripcion: document.getElementById('mc-desc').value, tarifa: document.getElementById('mc-tarifa').value
-  };
-  cargasGuardadas.push(payload); renderBolsaCargas(); cerrarModalesNativos();
-  fetch(webAppUrl, { method: 'POST', body: JSON.stringify(payload) });
+function trasladarCotizacion() {
+  document.getElementById('ev-id').value = 'MOV-' + Date.now(); 
+  document.getElementById('ev-fecha').value = document.getElementById('cot-fecha-estimativa').value || new Date().toISOString().split('T')[0]; 
+  document.getElementById('ev-estado').value = 'Posible'; 
+  document.getElementById('ev-cliente').value = document.getElementById('cot-cliente').value; 
+  document.getElementById('ev-tipomov').value = document.getElementById('cot-tipomov').value; 
+  document.getElementById('ev-asignacion').value = document.getElementById('cot-unidad').value; 
+  document.getElementById('ev-origen').value = document.getElementById('cot-origen').value; 
+  document.getElementById('ev-destino').value = Array.from(document.querySelectorAll('.cot-destino-input')).map(i => i.value).filter(v => v).join(' -> '); 
+  document.getElementById('ev-distancia').value = document.getElementById('cot-kms').value; 
+  document.getElementById('ev-inventario').value = document.getElementById('cot-detalles-recibidos').value; 
+  
+  document.getElementById('ev-presupuesto').value = document.getElementById('cot-res-tarifa').value; 
+  document.getElementById('ev-combustible').value = document.getElementById('cot-res-combustible').value; 
+  document.getElementById('ev-peajes-costo').value = document.getElementById('cot-res-peajes-costo').value; 
+  document.getElementById('ev-viaticos').value = document.getElementById('cot-res-viaticos').value; 
+  document.getElementById('ev-gastoext').value = 0; 
+  document.getElementById('ev-ayudante-monto').value = document.getElementById('cot-ayudante').value;
+  
+  calculateTotal(); 
+  abrirModalNativo('modalEventForm');
 }
 
-function guardarTransportistaManual() {
-  const payload = {
-    action: 'saveTransportista', id: 'TRP-' + Date.now(),
-    chofer: document.getElementById('mt-chofer').value, telefono: document.getElementById('mt-telefono').value,
-    vehiculo: document.getElementById('mt-vehiculo').value, patente: document.getElementById('mt-patente').value, ubicacion: document.getElementById('mt-ubicacion').value
+// ==========================================
+// 4. MÓDULO BROKERAGE 3PL, DOSSIER Y BÓVEDA
+// ==========================================
+function abrirModalNuevaCarga() { document.getElementById('formCarga').reset(); document.getElementById('bc-id').value = 'CARGA-' + Date.now(); abrirModalNativo('modalPublicarCarga'); }
+function abrirModalNuevoTransportista() { document.getElementById('formTransportista').reset(); document.getElementById('rt-id').value = 'TRANSP-' + Date.now(); abrirModalNativo('modalPublicarTransportista'); }
+function abrirModalNuevaIntermediacion() { document.getElementById('im-id').value = 'INT-' + Date.now(); document.getElementById('im-fecha').value = new Date().toISOString().split('T')[0]; document.getElementById('im-tarifa-dador').value = 0; document.getElementById('im-tarifa-transp').value = 0; document.getElementById('im-comision').value = 0; abrirModalNativo('modalIntermediacion'); }
+
+function guardarCargasEnBase() {
+  const payload = { 
+    id: document.getElementById('bc-id').value, 
+    origen: document.getElementById('bc-origen').value, 
+    destino: document.getElementById('bc-destino').value, 
+    vehiculo: document.getElementById('bc-vehiculo').value, 
+    peso: document.getElementById('bc-peso').value, 
+    estado: document.getElementById('bc-estado').value,
+    tarifa: parseFloat(document.getElementById('bc-tarifa').value)||0, 
+    contacto: document.getElementById('bc-contacto').value, 
+    telefono: document.getElementById('bc-tel').value, 
+    descripcion: document.getElementById('bc-desc').value 
   };
-  transportistasGuardados.push(payload); renderTransportistas(); cerrarModalesNativos();
-  fetch(webAppUrl, { method: 'POST', body: JSON.stringify(payload) });
+  if(!payload.origen || !payload.destino || !payload.contacto) { alert("Faltan datos obligatorios de la carga."); return; }
+  window.MotorNivel9.guardarCargaEnBase(payload);
+}
+
+function guardarTransportistaEnBase() {
+  const payload = { 
+    id: document.getElementById('rt-id').value, 
+    nombre: document.getElementById('rt-nombre').value, 
+    telefono: document.getElementById('rt-tel').value, 
+    tipo: document.getElementById('rt-tipo').value, 
+    ubicacion: document.getElementById('rt-ubicacion').value, 
+    capacidad: document.getElementById('rt-capacidad').value, 
+    patente: document.getElementById('rt-patente').value 
+  };
+  if(!payload.nombre || !payload.telefono || !payload.ubicacion) { alert("Faltan datos obligatorios del transportista."); return; }
+  window.MotorNivel9.guardarTransportistaEnBase(payload);
 }
 
 function renderBolsaCargas() {
-  const orig = document.getElementById('cga-filtro-origen').value.toLowerCase(); const dest = document.getElementById('cga-filtro-destino').value.toLowerCase(); const veh = document.getElementById('cga-filtro-vehiculo').value.toLowerCase();
-  const arr = cargasGuardadas.filter(c => (!orig || (c.origen && c.origen.toLowerCase().includes(orig))) && (!dest || (c.destino && c.destino.toLowerCase().includes(dest))) && (veh === 'todos' || (c.vehiculo && c.vehiculo.toLowerCase().includes(veh))) );
-  
-  document.getElementById('bolsaCargasGrid').innerHTML = arr.length === 0 ? '<p style="grid-column:span 3; text-align:center;">No hay cargas en radar.</p>' : arr.map(c => `
-    <div class="broker-card" style="${c.estado === 'ASIGNADA' ? 'border: 2px solid #16a34a; background:#f0fdf4;' : ''}">
-      <div class="broker-card-header"><strong>${c.origen} ➔ ${c.destino}</strong><span class="status-badge" style="background:${c.estado === 'ASIGNADA' ? '#16a34a' : 'var(--brand-light)'}; color:${c.estado === 'ASIGNADA' ? 'white' : 'var(--brand)'};">${c.vehiculo}</span></div>
-      <div style="font-size:0.95rem; margin-bottom:10px;"><b>Carga:</b> ${c.descripcion}</div>
-      <div style="font-size:0.85rem; color:#71717a; margin-bottom:12px;"><b>Dador:</b> ${c.dador} | <b>Estado:</b> ${c.estado || 'Disponible'}</div>
-      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e4e4e7; padding-top:10px;">
-        <strong style="color:var(--brand); font-size:1.1rem;">$${Number(c.tarifa).toLocaleString('es-AR')}</strong>
-        <button class="btn btn-dark" style="padding:6px 12px; font-size:0.85rem;" onclick="abrirFichaOperacion('${c.id}')"><i class="fas fa-folder-open"></i> Ficha Operación</button>
+  const container = document.getElementById('bolsaCargasCardsContainer');
+  if(!container) return;
+  const o = (document.getElementById('bc-filter-origen')?.value || '').toLowerCase();
+  const d = (document.getElementById('bc-filter-destino')?.value || '').toLowerCase();
+  const v = document.getElementById('bc-filter-vehiculo')?.value || 'Todos';
+  const est = document.getElementById('bc-filter-estado')?.value || 'Todos';
+
+  let arr = bolsaCargasGuardadas.filter(c => 
+    (v === 'Todos' || c.vehiculo === v) && 
+    (est === 'Todos' || (c.estado || 'Disponible') === est) &&
+    c.origen.toLowerCase().includes(o) && 
+    c.destino.toLowerCase().includes(d)
+  );
+
+  container.innerHTML = arr.length === 0 ? '<p style="color:#71717a; grid-column:span 2;">No hay cargas registradas con estos filtros.</p>' : arr.map(c => `
+    <div class="broker-card card-status-${(c.estado || 'Disponible').replace(/\s+/g,'')}">
+      <div class="broker-card-header">
+        <div class="broker-route"><i class="fas fa-map-marker-alt" style="color:var(--brand);"></i> ${c.origen} <i class="fas fa-arrow-right" style="color:#a1a1aa; font-size:0.8rem;"></i> ${c.destino}</div>
+        <span class="contact-badge">${c.vehiculo}</span>
+      </div>
+      <div style="font-size:0.88rem; color:#52525b;"><i class="fas fa-box"></i> <b>Carga:</b> ${c.descripcion || c.peso || 'Carga General'}</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+        <div><span style="font-size:0.8rem; color:#71717a;">Tarifa Ofertada:</span><div class="broker-price">$${Number(c.tarifa||0).toLocaleString('es-AR')}</div></div>
+        <span class="status-badge status-${(c.estado || 'Disponible').replace(/\s+/g,'')}" style="padding:4px 8px; border-radius:6px; font-weight:800;">${c.estado || 'Disponible'}</span>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="btn btn-dark" style="flex:1;" onclick="abrirFichaOperacion('${c.id}')"><i class="fas fa-folder-open"></i> Ficha Dossier</button>
+        <button class="btn btn-success" style="flex:1;" onclick="window.open('https://wa.me/549${(c.telefono||'').replace(/\D/g,'')}?text=Hola%20${encodeURIComponent(c.contacto)},%20te%20contacto%20desde%20Nivel%209%20por%20la%20carga%20de%20${encodeURIComponent(c.origen)}%20a%20${encodeURIComponent(c.destino)}')"><i class="fab fa-whatsapp"></i> Chat</button>
       </div>
     </div>`).join('');
 }
 
-function renderTransportistas() {
-  const q = document.getElementById('trp-filtro-search').value.toLowerCase(); const veh = document.getElementById('trp-filtro-vehiculo').value.toLowerCase();
-  const arr = transportistasGuardados.filter(t => ((t.chofer && t.chofer.toLowerCase().includes(q)) || (t.patente && t.patente.toLowerCase().includes(q))) && (veh === 'todos' || (t.vehiculo && t.vehiculo.toLowerCase().includes(veh))) );
-  
-  document.getElementById('transportistasGrid').innerHTML = arr.length === 0 ? '<p style="grid-column:span 3; text-align:center;">No hay unidades en radar.</p>' : arr.map(t => `
-    <div class="broker-card">
-      <div class="broker-card-header"><strong>${t.chofer}</strong><span class="status-badge" style="background:#e0f2fe; color:#0284c7;">${t.vehiculo}</span></div>
-      <div style="font-size:0.9rem; margin-bottom:8px;"><b>Patente:</b> ${t.patente} | <b>Tel:</b> ${t.telefono}</div>
-      <div style="font-size:0.85rem; color:#71717a;"><i class="fas fa-map-marker-alt"></i> <b>Ubicación:</b> ${t.ubicacion || 'En Tránsito'}</div>
-    </div>`).join('');
-}
-
-function renderIntermediaciones() {
-  document.getElementById('intermediacionesTableBody').innerHTML = intermediacionesGuardadas.map(i => `<tr><td>${i.fecha}</td><td><strong>${i.dador}</strong></td><td><strong>${i.transportista}</strong></td><td>${i.tramo}</td><td style="color:#0284c7; font-weight:bold;">$${Number(i.cobrado).toLocaleString('es-AR')}</td><td style="color:#dc2626;">$${Number(i.pagado).toLocaleString('es-AR')}</td><td style="color:#16a34a; font-weight:bold;">$${Number(i.comision).toLocaleString('es-AR')}</td></tr>`).join('');
-}
-
-// ==========================================
-// 6. DOSSIER 3PL, BÓVEDA Y WHATSAPP GPS
-// ==========================================
 function abrirFichaOperacion(cargaId) {
-  cargaAbiertaActual = cargasGuardadas.find(c => String(c.id) === String(cargaId));
+  cargaAbiertaActual = bolsaCargasGuardadas.find(c => String(c.id) === String(cargaId));
   if(!cargaAbiertaActual) return;
   
   document.getElementById('fo-id-carga').innerText = cargaAbiertaActual.id;
-  document.getElementById('fo-dador').innerText = cargaAbiertaActual.dador;
+  document.getElementById('fo-dador').innerText = cargaAbiertaActual.contacto || cargaAbiertaActual.dador;
   document.getElementById('fo-origen').innerText = cargaAbiertaActual.origen;
   document.getElementById('fo-destino').innerText = cargaAbiertaActual.destino;
-  document.getElementById('fo-desc').innerText = cargaAbiertaActual.descripcion;
+  document.getElementById('fo-desc').innerText = cargaAbiertaActual.descripcion || cargaAbiertaActual.peso;
   document.getElementById('fo-cobro').value = cargaAbiertaActual.tarifa || 0;
   
-  document.getElementById('fo-select-chofer').innerHTML = '<option value="">-- Buscar Camión en Red --</option>' + transportistasGuardados.map(t => `<option value="${t.id}">${t.chofer} - ${t.vehiculo}</option>`).join('');
+  document.getElementById('fo-select-chofer').innerHTML = '<option value="">-- Buscar Camión en Red --</option>' + transportistasGuardados.map(t => `<option value="${t.id}">${t.nombre} - ${t.tipo} (${t.patente||'Sin Patente'})</option>`).join('');
 
-  if(cargaAbiertaActual.estado === 'ASIGNADA') {
+  if(cargaAbiertaActual.estado === 'ASIGNADA' || cargaAbiertaActual.estado === 'En Tránsito') {
     document.getElementById('fo-seccion-asignar').style.display = 'none';
     document.getElementById('fo-seccion-chofer').style.display = 'block';
     const intm = intermediacionesGuardadas.find(i => String(i.id) === 'ITM-' + cargaAbiertaActual.id);
     
     if(intm) {
        document.getElementById('fo-chofer-nombre').innerText = intm.transportista;
-       document.getElementById('fo-pago').value = intm.pagado;
+       document.getElementById('fo-pago').value = intm.tarifatransp || 0;
        document.getElementById('fo-cond-chofer-libre').value = intm.condChoferLibre || '';
        document.getElementById('fo-cond-dador-libre').value = intm.condDadorLibre || '';
-       const transp = transportistasGuardados.find(t => t.chofer === intm.transportista);
+       const transp = transportistasGuardados.find(t => t.nombre === intm.transportista);
        if(transp) telChoferAsignado = transp.telefono;
        calcularComisionDossier();
     }
@@ -393,7 +466,11 @@ function abrirFichaOperacion(cargaId) {
   abrirModalNativo('modalFichaOperacion');
 }
 
-function calcularComisionDossier() { const c = parseFloat(document.getElementById('fo-cobro').value)||0; const p = parseFloat(document.getElementById('fo-pago').value)||0; document.getElementById('fo-comision').innerText = '$' + (c - p).toLocaleString('es-AR'); }
+function calcularComisionDossier() { 
+  const c = parseFloat(document.getElementById('fo-cobro').value)||0; 
+  const p = parseFloat(document.getElementById('fo-pago').value)||0; 
+  document.getElementById('fo-comision').innerText = '$' + (c - p).toLocaleString('es-AR'); 
+}
 
 function asignarTransportistaDossier() {
   const transpId = document.getElementById('fo-select-chofer').value;
@@ -404,59 +481,574 @@ function asignarTransportistaDossier() {
   const cobro = parseFloat(document.getElementById('fo-cobro').value)||0;
   const pago = parseFloat(document.getElementById('fo-pago').value)||0;
   
-  const idx = cargasGuardadas.findIndex(c => String(c.id) === String(cargaAbiertaActual.id));
-  if(idx >= 0) cargasGuardadas[idx] = cargaAbiertaActual; 
-  fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveCarga', ...cargaAbiertaActual }) });
-  renderBolsaCargas();
+  window.MotorNivel9.guardarCargaEnBase(cargaAbiertaActual);
   
   const payloadIntm = {
-    action: 'saveIntermediacion', id: 'ITM-' + cargaAbiertaActual.id, fecha: new Date().toISOString().split('T')[0], 
-    dador: cargaAbiertaActual.dador, transportista: transp.chofer, tramo: `${cargaAbiertaActual.origen} -> ${cargaAbiertaActual.destino}`, 
-    cobrado: cobro, pagado: pago, comision: cobro - pago, condChoferLibre: document.getElementById('fo-cond-chofer-libre').value, condDadorLibre: document.getElementById('fo-cond-dador-libre').value
+    id: 'ITM-' + cargaAbiertaActual.id, 
+    fecha: new Date().toISOString().split('T')[0], 
+    dador: cargaAbiertaActual.contacto || cargaAbiertaActual.dador, 
+    transportista: transp.nombre, 
+    tramo: `${cargaAbiertaActual.origen} -> ${cargaAbiertaActual.destino}`, 
+    tarifadador: cobro, 
+    tarifatransp: pago, 
+    comision: cobro - pago, 
+    estado: 'En Curso',
+    condChoferLibre: document.getElementById('fo-cond-chofer-libre').value, 
+    condDadorLibre: document.getElementById('fo-cond-dador-libre').value
   };
   
-  const idxi = intermediacionesGuardadas.findIndex(i => String(i.id) === String(payloadIntm.id));
-  if(idxi >= 0) intermediacionesGuardadas[idxi] = payloadIntm; else intermediacionesGuardadas.push(payloadIntm);
-  renderIntermediaciones();
-  fetch(webAppUrl, { method: 'POST', body: JSON.stringify(payloadIntm) });
-  
-  abrirFichaOperacion(cargaAbiertaActual.id); alert("¡Match Exitoso! Carga Asignada.");
+  window.MotorNivel9.guardarIntermediacionEnBase(payloadIntm);
+  telChoferAsignado = transp.telefono;
+  abrirFichaOperacion(cargaAbiertaActual.id); 
+  alert("¡Carga Asignada exitosamente!");
 }
 
 function enviarWhatsAppGPS() {
-  if(!telChoferAsignado) return alert("El transportista no tiene teléfono.");
-  const orig = cargaAbiertaActual.origen; const dest = cargaAbiertaActual.destino;
-  const linkO = `https://maps.google.com/?q=${encodeURIComponent(orig)}`; const linkD = `https://maps.google.com/?q=${encodeURIComponent(dest)}`;
+  if(!telChoferAsignado) return alert("El transportista no tiene teléfono configurado.");
+  const orig = cargaAbiertaActual.origen; 
+  const dest = cargaAbiertaActual.destino;
+  const linkO = `https://maps.google.com/?q=${encodeURIComponent(orig)}`; 
+  const linkD = `https://maps.google.com/?q=${encodeURIComponent(dest)}`;
   
-  let msg = `*ORDEN DE CARGA ASIGNADA - NIVEL 9* 🚚\n\n📍 *Retira en:* ${orig}\n🌐 *GPS:* ${linkO}\n\n📍 *Entrega en:* ${dest}\n🌐 *GPS:* ${linkD}\n\n📦 *Detalle:* ${cargaAbiertaActual.descripcion}\n💵 *Tarifa Acordada:* $${Number(document.getElementById('fo-pago').value).toLocaleString('es-AR')}\n\n📝 *ACUERDOS FIJOS:*\n${ACUERDO_FIJO_CHOFER}\n`;
+  let msg = `*ORDEN DE CARGA Y RUTA GPS - NIVEL 9* 🚚\n\n📍 *Retira en:* ${orig}\n🌐 *GPS Origen:* ${linkO}\n\n📍 *Entrega en:* ${dest}\n🌐 *GPS Destino:* ${linkD}\n\n📦 *Detalle:* ${cargaAbiertaActual.descripcion || 'Carga General'}\n💵 *Tarifa Acordada Chofer:* $${Number(document.getElementById('fo-pago').value).toLocaleString('es-AR')}\n\n📝 *ACUERDOS FIJOS DE OPERACIÓN:*\n${ACUERDO_FIJO_CHOFER}\n`;
   const condLibre = document.getElementById('fo-cond-chofer-libre').value;
-  if(condLibre) msg += `\n*Condiciones Libres:* ${condLibre}\n`;
+  if(condLibre) msg += `\n*Condiciones Adicionales:* ${condLibre}\n`;
   msg += `\nPor favor, confirmame recepción de esta orden.`;
   
   window.open(`https://wa.me/549${telChoferAsignado.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
 }
 
 async function subirArchivoBoveda(inputId, btnId) {
-  const input = document.getElementById(inputId); const btn = document.getElementById(btnId);
-  if (!input.files || input.files.length === 0) return alert("Seleccioná un archivo.");
+  const input = document.getElementById(inputId); 
+  const btn = document.getElementById(btnId);
+  if (!input.files || input.files.length === 0) return alert("Seleccioná un archivo o foto.");
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...'; btn.disabled = true;
   try {
     const file = input.files[0];
     const base64 = await new Promise((rs, rj) => { const rd = new FileReader(); rd.readAsDataURL(file); rd.onload = () => rs(rd.result.split(',')[1]); rd.onerror = e => rj(e); }); 
     const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "uploadFileDrive", fileName: `${cargaAbiertaActual.id}_${file.name}`, mimeType: file.type, base64Data: base64 }) }); 
     const d = await res.json(); 
-    if(d.success) { document.getElementById('fo-boveda-links').innerHTML += `<div style="background:#e0f2fe; padding:6px; border-radius:4px; border:1px solid #7dd3fc;"><a href="${d.fileUrl}" target="_blank" style="color:#0284c7; font-weight:bold; text-decoration:none;"><i class="fas fa-external-link-alt"></i> Ver Archivo: ${file.name}</a></div>`; input.value = ""; } else alert("Error de Drive: " + d.error);
-  } catch(e) { alert("Error de red."); } finally { btn.innerHTML = 'Subir'; btn.disabled = false; }
+    if(d.success) { 
+      document.getElementById('fo-boveda-links').innerHTML += `<div style="background:#e0f2fe; padding:8px; border-radius:6px; border:1px solid #7dd3fc;"><a href="${d.fileUrl}" target="_blank" style="color:#0284c7; font-weight:bold; text-decoration:none;"><i class="fas fa-external-link-alt"></i> Ver Documento / Foto Book: ${file.name}</a></div>`; 
+      input.value = ""; 
+    } else alert("Error de Drive: " + d.error);
+  } catch(e) { alert("Error de conexión al subir imagen."); } finally { btn.innerHTML = 'Subir a Drive'; btn.disabled = false; }
+}
+
+function renderTransportistas() {
+  const container = document.getElementById('transportistasCardsContainer');
+  if(!container) return;
+  const u = (document.getElementById('rt-filter-ubicacion')?.value || '').toLowerCase();
+  const t = document.getElementById('rt-filter-tipo')?.value || 'Todos';
+
+  let arr = transportistasGuardados.filter(tr => (t === 'Todos' || tr.tipo === t) && tr.ubicacion.toLowerCase().includes(u));
+  container.innerHTML = arr.length === 0 ? '<p style="color:#71717a; grid-column:span 2;">No hay transportistas registrados.</p>' : arr.map(tr => `
+    <div class="broker-card">
+      <div class="broker-card-header">
+        <div class="broker-route"><i class="fas fa-truck" style="color:#10b981;"></i> ${tr.nombre}</div>
+        <span class="contact-badge" style="background:#dcfce7; color:#15803d;">${tr.tipo}</span>
+      </div>
+      <div style="font-size:0.88rem; color:#52525b;"><i class="fas fa-map-pin"></i> <b>Ubicación/Retorno:</b> ${tr.ubicacion}</div>
+      <div style="font-size:0.85rem; color:#71717a;"><i class="fas fa-weight-hanging"></i> Capacidad: ${tr.capacidad || 'No especificada'} | Patente: ${tr.patente || '-'}</div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="btn btn-success" style="width:100%;" onclick="window.open('https://wa.me/549${(tr.telefono||'').replace(/\D/g,'')}?text=Hola%20${encodeURIComponent(tr.nombre)},%20te%20contacto%20desde%20Nivel%209%20por%20disponibilidad%20de%20tu%20${encodeURIComponent(tr.tipo)}')"><i class="fab fa-whatsapp"></i> Chat WhatsApp</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderIntermediaciones() {
+  const tbody = document.getElementById('tablaIntermediacionesBody');
+  if(!tbody) return;
+  let totComision = 0, totVolumen = 0, ops = intermediacionesGuardadas.length;
+  
+  tbody.innerHTML = intermediacionesGuardadas.length === 0 ? '<tr><td colspan="9" style="text-align:center; color:#71717a;">Sin intermediaciones registradas.</td></tr>' : intermediacionesGuardadas.map(im => {
+    totComision += (Number(im.comision)||0);
+    totVolumen += (Number(im.tarifadador)||0);
+    const est = im.estado || 'En Curso';
+    return `<tr>
+      <td><strong>${im.id}</strong></td>
+      <td>${(im.fecha||'').split('-').reverse().join('/')}</td>
+      <td><strong>${im.dador}</strong></td>
+      <td>${im.transportista}</td>
+      <td><span class="status-badge status-${est.replace(/\s+/g,'')}" style="padding:4px 8px; border-radius:6px; font-weight:800;">${est}</span></td>
+      <td style="color:#0284c7; font-weight:700;">$${Number(im.tarifadador||0).toLocaleString('es-AR')}</td>
+      <td style="color:#dc2626;">$${Number(im.tarifatransp||0).toLocaleString('es-AR')}</td>
+      <td style="color:#8b5cf6; font-weight:900;">$${Number(im.comision||0).toLocaleString('es-AR')}</td>
+      <td><button class="btn btn-dark" style="padding:4px 8px; font-size:0.75rem;" onclick="imprimirOrdenFlete('${im.id}')"><i class="fas fa-print"></i> Orden Flete</button></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('kpi-broker-comision').textContent = `$${totComision.toLocaleString('es-AR')}`;
+  document.getElementById('kpi-broker-ops').textContent = ops;
+  document.getElementById('kpi-broker-volumen').textContent = `$${totVolumen.toLocaleString('es-AR')}`;
+}
+
+function calcularComisionBroker() {
+  const dador = parseFloat(document.getElementById('im-tarifa-dador').value) || 0;
+  const transp = parseFloat(document.getElementById('im-tarifa-transp').value) || 0;
+  document.getElementById('im-comision').value = dador - transp;
+}
+
+function guardarIntermediacionEnBase() {
+  calcularComisionBroker();
+  const payload = { 
+    id: document.getElementById('im-id').value, 
+    fecha: document.getElementById('im-fecha').value, 
+    dador: document.getElementById('im-dador').value, 
+    transportista: document.getElementById('im-transportista').value, 
+    tramo: document.getElementById('im-tramo').value, 
+    estado: document.getElementById('im-estado').value,
+    tarifadador: parseFloat(document.getElementById('im-tarifa-dador').value)||0, 
+    tarifatransp: parseFloat(document.getElementById('im-tarifa-transp').value)||0, 
+    comision: parseFloat(document.getElementById('im-comision').value)||0 
+  };
+  if(!payload.dador || !payload.transportista) { alert("Completar partes del acuerdo."); return; }
+  window.MotorNivel9.guardarIntermediacionEnBase(payload);
+}
+
+function imprimirOrdenFlete(idOp) {
+  const op = intermediacionesGuardadas.find(i => String(i.id) === String(idOp));
+  if(!op) return;
+  alert(`GENERANDO ORDEN DE FLETE Y CARGA 3PL:\n\nOperación: ${op.id}\nTransportista: ${op.transportista}\nDador: ${op.dador}\nTramo: ${op.tramo}\nTarifa Chofer: $${op.tarifatransp}`);
+}
+
+function filtrarBolsaCargas() { renderBolsaCargas(); }
+function limpiarFiltrosCargas() { document.getElementById('bc-filter-origen').value = ''; document.getElementById('bc-filter-destino').value = ''; document.getElementById('bc-filter-vehiculo').value = 'Todos'; document.getElementById('bc-filter-estado').value = 'Todos'; renderBolsaCargas(); }
+function filtrarTransportistas() { renderTransportistas(); }
+function limpiarFiltrosTransportistas() { document.getElementById('rt-filter-ubicacion').value = ''; document.getElementById('rt-filter-tipo').value = 'Todos'; renderTransportistas(); }
+
+// ==========================================
+// 5. DIRECTORIO Y AJUSTES DE FLOTA
+// ==========================================
+function toggleProvFields() { const cat = document.getElementById('cnt-categoria').value; document.getElementById('prov-dinamico').style.display = (cat === 'Proveedor' || cat === 'Chofer') ? 'block' : 'none'; }
+function openContactFormModal() { document.getElementById('contactForm').reset(); document.getElementById('cnt-id').value = 'CNT-' + Date.now(); toggleProvFields(); abrirModalNativo('modalContactForm'); }
+
+function guardarContactoManual() { 
+  const cat = document.getElementById('cnt-categoria').value;
+  const payload = { 
+    id: document.getElementById('cnt-id').value, 
+    categoria: cat, 
+    nombre: document.getElementById('cnt-nombre').value, 
+    telefono: document.getElementById('cnt-tel').value, 
+    observaciones: document.getElementById('cnt-obs').value, 
+    provtipo: (cat === 'Proveedor' || cat === 'Chofer') ? document.getElementById('cnt-prov-tipo').value : '', 
+    provflota: (cat === 'Proveedor' || cat === 'Chofer') ? document.getElementById('cnt-prov-flota').value : '' 
+  }; 
+  if(!payload.nombre || !payload.telefono) { alert("Faltan datos obligatorios del contacto."); return; } 
+  window.MotorNivel9.crearContactoEnBaseDeDatos(payload); 
+}
+
+function renderContactos() {
+  const q = (document.getElementById('cnt-filter-search')?.value || '').toLowerCase(); 
+  const cat = document.getElementById('cnt-filter-categoria')?.value || 'Todas';
+  const arr = contactosGuardados.filter(c => (cat === 'Todas' || c.categoria === cat) && (c.nombre.toLowerCase().includes(q) || (c.telefono||'').includes(q)));
+  
+  document.getElementById('contactListContainer').innerHTML = arr.length === 0 ? '<p style="color:#71717a;">Sin contactos en el directorio.</p>' : arr.map(c => `
+    <div class="contact-card" style="background:white; padding:15px; border-radius:12px; border:1px solid #d4d4d8;">
+      <div style="display:flex; justify-content:space-between; align-items:center;"><strong style="font-size:1.05rem;">${c.nombre}</strong><span class="contact-badge">${c.categoria}</span></div>
+      <div style="color:#52525b; margin-top:5px; font-size:0.9rem;"><i class="fas fa-phone"></i> ${c.telefono}</div>
+      ${c.observaciones ? `<div style="font-size:0.82rem; color:#71717a; margin-top:6px;"><em>"${c.observaciones}"</em></div>` : ''}
+      ${(c.categoria === 'Proveedor' || c.categoria === 'Chofer') ? `<div style="font-size:0.78rem; margin-top:6px; background:var(--brand-light); padding:5px; border-radius:6px; color:var(--brand);"><b>Rol:</b> ${c.provtipo || '-'} | <b>Vehículo:</b> ${c.provflota || '-'}</div>` : ''}
+      <button class="btn btn-success" style="width:100%; margin-top:8px; padding:6px;" onclick="window.open('https://wa.me/549${(c.telefono||'').replace(/\D/g,'')}')"><i class="fab fa-whatsapp"></i> Chat</button>
+    </div>`).join('');
+}
+
+function inyectarFiltrosDeInformes() { 
+  const cnt = document.getElementById('rep-tipos-container'); 
+  const tipos = configuracionNivel9.tipos && configuracionNivel9.tipos.length > 0 ? configuracionNivel9.tipos : ["Mudanza Local"]; 
+  cnt.innerHTML = tipos.map(t => `<label class="checkbox-group"><input type="checkbox" class="chk-filtro-tipo" value="${t}" checked style="width:15px; height:15px;"> ${t}</label>`).join(''); 
+}
+
+function generarReporteDatos() {
+  const start = document.getElementById('rep-start').value; 
+  const end = document.getElementById('rep-end').value; 
+  const est = document.getElementById('rep-estado').value; 
+  const t = Array.from(document.querySelectorAll('.chk-filtro-tipo:checked')).map(c => c.value);
+  
+  let f = eventosGuardados.filter(ev => t.includes(ev.tipomov));
+  if(start) f = f.filter(ev => ev.fecha >= start); 
+  if(end) f = f.filter(ev => ev.fecha <= end); 
+  if(est !== 'Todos') f = f.filter(ev => ev.estado === est);
+  f.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  document.getElementById('reportTableBody').innerHTML = f.map(ev => {
+    const p = Number(ev.presupuesto) || 0; 
+    const cF = (Number(ev.combustible)||0) + (Number(ev.peajescosto)||0) + (Number(ev.viaticos)||0) + (Number(ev.ayudante)||0) + (Number(ev.comision)||0); 
+    const gE = Number(ev.gastoext) || 0; 
+    const n = p - (cF + gE); 
+    const m = p > 0 ? ((n / p) * 100).toFixed(1) : 0;
+    
+    return `<tr class="${m < 30 ? 'row-alert' : ''}">
+      <td style="text-align:center;"><input type="checkbox" class="chk-linea-informe" data-t="${p}" data-c="${cF}" data-e="${gE}" data-n="${n}" checked onchange="recalcularTotalesPanelKpi()" style="width:15px; height:15px; cursor:pointer;"></td>
+      <td>${(ev.fecha||'').split('-').reverse().join('/')}</td>
+      <td><strong>${ev.cliente}</strong></td>
+      <td>${ev.tipomov || '-'}</td>
+      <td style="font-weight:700;">$${p.toLocaleString('es-AR')}</td>
+      <td style="color:#dc2626;">$${cF.toLocaleString('es-AR')}</td>
+      <td style="color:#ea580c; font-weight:700;">$${gE.toLocaleString('es-AR')}</td>
+      <td style="font-weight:900; color:#16a34a;">$${n.toLocaleString('es-AR')}</td>
+      <td style="color:${m < 30 ? '#dc2626' : '#16a34a'}; font-weight:900;">${m}%</td>
+    </tr>`;
+  }).join('');
+  
+  document.getElementById('kpiDashboardContainer').style.display = 'grid'; 
+  document.getElementById('reportTablePanel').style.display = 'block'; 
+  document.getElementById('chk-all-rows').checked = true; 
+  recalcularTotalesPanelKpi();
+}
+
+function toggleAllRowsReporte() { const mst = document.getElementById('chk-all-rows').checked; document.querySelectorAll('.chk-linea-informe').forEach(c => c.checked = mst); recalcularTotalesPanelKpi(); }
+
+function recalcularTotalesPanelKpi() {
+  let v = 0, b = 0, c = 0, n = 0; 
+  document.querySelectorAll('.chk-linea-informe:checked').forEach(x => { 
+    v++; 
+    b += parseFloat(x.dataset.t); 
+    c += (parseFloat(x.dataset.c) + parseFloat(x.dataset.e)); 
+    n += parseFloat(x.dataset.n); 
+  });
+  document.getElementById('kpi-tot-viajes').textContent = v; 
+  document.getElementById('kpi-tot-ingresos').textContent = `$${b.toLocaleString('es-AR')}`; 
+  document.getElementById('kpi-tot-costos').textContent = `$${c.toLocaleString('es-AR')}`; 
+  document.getElementById('kpi-tot-utilidad').textContent = `$${n.toLocaleString('es-AR')}`;
+}
+
+function exportarExcelPuroNumeros() {
+  const cb = document.querySelectorAll('.chk-linea-informe:checked'); 
+  if(cb.length === 0) { alert("Nada para exportar."); return; }
+  const dataExcel = []; 
+  cb.forEach(c => { 
+    const f = c.closest('tr'); 
+    dataExcel.push({ 
+      "Fecha": f.cells[1].innerText, 
+      "Cliente": f.cells[2].innerText, 
+      "Tipo de Servicio": f.cells[3].innerText, 
+      "Tarifa Bruta ($)": parseFloat(c.dataset.t), 
+      "Costos Fijos ($)": parseFloat(c.dataset.c), 
+      "Gastos Extraordinarios ($)": parseFloat(c.dataset.e), 
+      "Utilidad Neta ($)": parseFloat(c.dataset.n), 
+      "Margen": f.cells[8].innerText 
+    }); 
+  });
+  const ws = XLSX.utils.json_to_sheet(dataExcel); 
+  const wb = XLSX.utils.book_new(); 
+  XLSX.utils.book_append_sheet(wb, ws, "Informes Nivel 9"); 
+  XLSX.writeFile(wb, "Reporte_Nivel9_Finanzas.xlsx");
+}
+
+function imprimirReporte() {
+    const cb = document.querySelectorAll('.chk-linea-informe:checked');
+    if(cb.length === 0) { alert("No hay movimientos seleccionados para imprimir."); return; }
+
+    document.getElementById('pdf-report-fecha-doc').innerText = new Date().toLocaleDateString('es-AR');
+    let filasHtml = '';
+    cb.forEach(c => {
+        const tr = c.closest('tr');
+        filasHtml += `
+            <tr style="page-break-inside: avoid; border-bottom: 1px solid #e4e4e7;">
+                <td style="padding: 10px;">${tr.cells[1].innerText}</td>
+                <td style="padding: 10px;"><strong>${tr.cells[2].innerText}</strong></td>
+                <td style="padding: 10px;">${tr.cells[3].innerText}</td>
+                <td style="padding: 10px; font-weight:bold;">${tr.cells[4].innerText}</td>
+                <td style="padding: 10px; color: #dc2626;">${tr.cells[5].innerText}</td>
+                <td style="padding: 10px; color: #ea580c;">${tr.cells[6].innerText}</td>
+                <td style="padding: 10px; font-weight: bold; color: #16a34a;">${tr.cells[7].innerText}</td>
+                <td style="padding: 10px;">${tr.cells[8].innerText}</td>
+            </tr>
+        `;
+    });
+    
+    document.getElementById('pdf-report-tbody').innerHTML = filasHtml;
+    const container = document.getElementById('pdf-report-container');
+    container.style.display = 'block';
+
+    html2pdf().set({
+      margin: 12, filename: `Reporte_Nivel9_Finanzas_${Date.now()}.pdf`, image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, pagebreak: { mode: 'avoid-all' }
+    }).from(document.getElementById('pdf-report-content')).save().then(() => {
+        container.style.display = 'none';
+    });
+}
+
+function openConfigModal() { dibujarListasConfig(); abrirModalNativo('modalConfig'); }
+function dibujarListasConfig() { const iny = (arr, id, clv) => { document.getElementById(id).innerHTML = arr.map((item, i) => `<div class="settings-item">${item} <button class="btn btn-danger" style="padding:4px 8px;" onclick="eliminarItemAjustes('${clv}', ${i})"><i class="fas fa-trash"></i></button></div>`).join(''); }; iny(configuracionNivel9.flota, 'lista-unidades-config', 'flota'); iny(configuracionNivel9.tipos, 'lista-tipos-config', 'tipos'); }
+function agregarItemAjustes(c, i) { const v = document.getElementById(i).value.trim(); if(v) { configuracionNivel9[c].push(v); document.getElementById(i).value = ''; dibujarListasConfig(); } }
+function eliminarItemAjustes(c, i) { configuracionNivel9[c].splice(i, 1); dibujarListasConfig(); }
+function guardarAjustes() { configuracionNivel9.diesel = document.getElementById('cfg-diesel').value; localStorage.setItem('nivel9_config', JSON.stringify(configuracionNivel9)); actualizarListasDesplegables(); document.getElementById('rep-tipos-container').innerHTML = ''; cerrarModalesNativos(); alert("Ajustes guardados exitosamente."); }
+function actualizarListasDesplegables() { const opF = configuracionNivel9.flota.map(f => `<option value="${f}">${f}</option>`).join(''); const opT = configuracionNivel9.tipos.map(t => `<option value="${t}">${t}</option>`).join(''); document.querySelectorAll('.dinamico-flota').forEach(e => e.innerHTML = opF); document.querySelectorAll('.dinamico-tipos').forEach(e => e.innerHTML = opT); }
+
+// ==========================================
+// 6. GENERACIÓN DE COMPROBANTES Y PDF
+// ==========================================
+function obtenerSiguienteNumeroDoc(tipo) {
+    let maxSeq = 0; let prefix = tipo === 'Empresa' ? 'DOC-01-' : 'DOC-02-'; let baseSeq = tipo === 'Empresa' ? 303 : 135;
+    eventosGuardados.forEach(e => { if (e.nrodoc && typeof e.nrodoc === 'string' && e.nrodoc.startsWith(prefix)) { let num = parseInt(e.nrodoc.replace(prefix, ''), 10); if (!isNaN(num) && num > maxSeq) { maxSeq = num; } } });
+    let nextDbSeq = Math.max(baseSeq, maxSeq + 1);
+    let localKey = tipo === 'Empresa' ? 'nivel9_seq_empresa' : 'nivel9_seq_particular'; let localSeq = parseInt(localStorage.getItem(localKey)) || 0;
+    let finalSeq = Math.max(nextDbSeq, localSeq); return prefix + String(finalSeq).padStart(6, '0');
+}
+
+function actualizarNumeroComprobante() { let tipo = document.getElementById('pres-tipo-cliente-doc').value; document.getElementById('pres-nro').value = obtenerSiguienteNumeroDoc(tipo); }
+function incrementarNumeroDoc(tipo) { let current = obtenerSiguienteNumeroDoc(tipo); let num = parseInt(current.split('-')[2], 10); let localKey = tipo === 'Empresa' ? 'nivel9_seq_empresa' : 'nivel9_seq_particular'; localStorage.setItem(localKey, num + 1); }
+
+function openPresupuestoModal() { 
+  document.getElementById('pres-import-select').innerHTML = '<option value="">-- Cargar un movimiento ya agendado (Opcional) --</option>' + eventosGuardados.map(e => `<option value="${e.id}">${(e.fecha||'').split('-').reverse().join('/')} - ${e.cliente}</option>`).join(''); 
+  actualizarNumeroComprobante(); 
+  document.getElementById('pres-fecha').value = new Date().toISOString().split('T')[0]; 
+  document.getElementById('pres-tarifa-hora').value = ''; 
+  document.getElementById('pres-base-minima').value = ''; 
+  document.getElementById('pres-detalle-tarifa').value = '';
+  abrirModalNativo('modalPresupuesto'); 
+}
+
+function cargarDatosEnPresupuesto() { 
+  const v = eventosGuardados.find(e => String(e.id) === String(document.getElementById('pres-import-select').value)); 
+  if(!v) return; 
+  if(v.tipocliente === 'Empresa') { document.getElementById('pres-tipo-cliente-doc').value = 'Empresa'; } else { document.getElementById('pres-tipo-cliente-doc').value = 'Particular'; }
+  actualizarNumeroComprobante();
+  document.getElementById('pres-cliente').value = v.cliente; 
+  document.getElementById('pres-origen').value = v.origen || ''; 
+  document.getElementById('pres-destino').value = v.destino || ''; 
+  document.getElementById('pres-desc').value = v.inventario || v.detalles || ''; 
+  document.getElementById('pres-obs-ruta').value = v.obsruta || ''; 
+  document.getElementById('pres-total').value = v.presupuesto || 0; 
+  document.getElementById('pres-sena').value = v.sena || 0; 
+  document.getElementById('pres-tarifa-hora').value = v.tarifahora || ''; 
+  document.getElementById('pres-base-minima').value = v.baseminima || ''; 
+  document.getElementById('pres-detalle-tarifa').value = v.detalletarifa || '';
+}
+
+function generarHojaRutaDirecta() { mapearDatosFichaHaciaDocumento(); generarPDFBase('HojaRuta'); }
+function generarPresupuestoDirecto() { mapearDatosFichaHaciaDocumento(); generarPDFBase('Presupuesto'); }
+
+function mapearDatosFichaHaciaDocumento() {
+  document.getElementById('pres-fecha').value = document.getElementById('ev-fecha').value; 
+  if(document.getElementById('ev-tipocliente').value === 'Empresa') { document.getElementById('pres-tipo-cliente-doc').value = 'Empresa'; } else { document.getElementById('pres-tipo-cliente-doc').value = 'Particular'; }
+  actualizarNumeroComprobante(); 
+  document.getElementById('pres-cliente').value = document.getElementById('ev-cliente').value; 
+  document.getElementById('pres-origen').value = document.getElementById('ev-origen').value; 
+  document.getElementById('pres-destino').value = document.getElementById('ev-destino').value; 
+  document.getElementById('pres-desc').value = document.getElementById('ev-inventario').value; 
+  document.getElementById('pres-obs-ruta').value = document.getElementById('ev-obs-ruta').value; 
+  document.getElementById('pres-total').value = document.getElementById('ev-presupuesto').value; 
+  document.getElementById('pres-sena').value = document.getElementById('ev-sena').value; 
+  document.getElementById('pres-tarifa-hora').value = document.getElementById('ev-tarifa-hora').value; 
+  document.getElementById('pres-base-minima').value = document.getElementById('ev-base-minima').value; 
+  document.getElementById('pres-detalle-tarifa').value = document.getElementById('ev-detalle-tarifa').value;
+}
+
+function generarPDFBase(tipoDocumento) { 
+  document.getElementById('pdf-nro').innerText = document.getElementById('pres-nro').value; 
+  document.getElementById('pdf-lugar-fecha').innerText = `Córdoba, ${document.getElementById('pres-fecha').value.split('-').reverse().join('/')}`; 
+  document.getElementById('pdf-cliente').innerText = document.getElementById('pres-cliente').value; 
+  document.getElementById('pdf-cuit').innerText = document.getElementById('pres-cuit').value || 'Consumidor Final'; 
+  document.getElementById('pdf-origen').innerText = document.getElementById('pres-origen').value; 
+  document.getElementById('pdf-destino').innerText = document.getElementById('pres-destino').value; 
+  
+  let inventarioTexto = document.getElementById('pres-desc').value || '';
+  document.getElementById('pdf-desc').innerHTML = inventarioTexto.replace(/\n/g, '<br>'); 
+  
+  if (tipoDocumento === 'HojaRuta') {
+      document.getElementById('pdf-title-text').innerText = "HOJA DE RUTA OPERATIVA"; 
+      document.getElementById('pdf-finanzas-section').style.display = 'none'; 
+      document.getElementById('pdf-terminos-section').style.display = 'none'; 
+      document.getElementById('pdf-obs-ruta-section').style.display = 'block';
+      let obsValor = document.getElementById('pres-obs-ruta').value.trim(); 
+      document.getElementById('pdf-obs-ruta-text').innerText = obsValor !== "" ? obsValor : "No se registraron observaciones adicionales para este viaje.";
+  } else {
+      document.getElementById('pdf-title-text').innerText = "PRESUPUESTO DE SERVICIO"; 
+      document.getElementById('pdf-finanzas-section').style.display = 'block'; 
+      document.getElementById('pdf-terminos-section').style.display = 'block'; 
+      document.getElementById('pdf-obs-ruta-section').style.display = 'none';
+      document.getElementById('pdf-total').innerText = document.getElementById('pres-total').value; 
+      document.getElementById('pdf-sena').innerText = document.getElementById('pres-sena').value; 
+      
+      let tHora = document.getElementById('pres-tarifa-hora').value; 
+      let bMin = document.getElementById('pres-base-minima').value; 
+      let detTar = document.getElementById('pres-detalle-tarifa').value;
+      
+      if (tHora || bMin || detTar) { 
+        document.getElementById('pdf-desglose-tarifa').style.display = 'block'; 
+        document.getElementById('pdf-detalle-texto').innerText = detTar || "-"; 
+        if(tHora) { document.getElementById('pdf-th-container').style.display = 'inline-block'; document.getElementById('pdf-tarifa-hora').innerText = tHora; } else { document.getElementById('pdf-th-container').style.display = 'none'; } 
+        if(bMin) { document.getElementById('pdf-bm-container').style.display = 'inline-block'; document.getElementById('pdf-base-minima').innerText = bMin; } else { document.getElementById('pdf-bm-container').style.display = 'none'; }
+      } else { 
+        document.getElementById('pdf-desglose-tarifa').style.display = 'none'; 
+      }
+
+      let tipoCli = document.getElementById('pres-tipo-cliente-doc').value;
+      let firmasHTML = `<div style="margin-top: 25px; display: flex; justify-content: flex-start; align-items: center; gap: 30px; padding-top: 15px;"><div style="text-align: left; font-size: 12px; font-weight: bold; color: #111; line-height: 1.6;">CEO / Administrador<br>Rodrigo J. Castro<br>Nivel 9 Logística de Excelencia</div><div><svg width="160" height="60" viewBox="0 0 180 70" xmlns="http://www.w3.org/2000/svg"><path d="M30,50 C10,50 15,35 30,30 C50,25 60,35 45,55 C35,70 10,65 35,50 L170,10" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M75,55 Q85,45 90,60 Q95,65 105,60" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div></div>`;
+      
+      if (tipoCli === 'Empresa') { 
+        document.getElementById('pdf-terms-text').innerHTML = `<strong style="font-size:11px; color:#ea580c; text-transform:uppercase;">Términos y Condiciones Legales (Servicio Corporativo):</strong><br><div style="font-size:8.5px; text-align:justify; margin-top:4px; color:#333; line-height:1.35;">El presente presupuesto tiene una validez de 10 (diez) días corridos desde su fecha de emisión. La tarifa cotizada contempla la operación de transporte punto a punto; no incluye tiempos de espera, demoras o estadías prolongadas superiores a 2 (dos) horas en los puntos de carga y/o descarga. De superarse dicha franja horaria, se facturará un recargo en concepto de 'Estadía' por cada hora adicional y por unidad asignada. El servicio se ejecuta con unidades de flota certificadas, choferes habilitados (LiNTI) y pólizas de seguro de carga vigentes. La facturación correspondiente se emite bajo condición fiscal Monotributo (Factura C - CUIT: 20-24691221-2). El pago del servicio deberá efectuarse bajo las condiciones acordadas contra entrega del Remito y/o Hoja de Ruta debidamente conformada.</div>${firmasHTML}`;
+      } else { 
+        document.getElementById('pdf-terms-text').innerHTML = `<strong style="font-size:11px; color:#ea580c; text-transform:uppercase;">Términos y Condiciones Generales del Servicio</strong><br><div style="font-size:8px; text-align:justify; margin-top:4px; color:#333; line-height:1.35;"><strong>1. Aceptación del Servicio y Reserva:</strong> La confirmación del servicio y la fijación de la fecha y horario estipulados en el presupuesto se harán efectivas únicamente mediante el abono de la seña acordada. El pago de dicha seña implica la lectura, comprensión y aceptación total de los presentes términos.<br><strong>2. Declaración de Carga y Modificaciones:</strong> El presupuesto emitido se basa exclusivamente en la información proporcionada por el cliente. Si el día del servicio el volumen o la complejidad excede lo declarado (ej: desarmes no previstos, izajes), Nivel 9 se reserva el derecho de ajustar el valor final o negarse a trasladar el excedente.<br><strong>3. Accesos, Permisos y Consorcios:</strong> Es responsabilidad exclusiva del cliente gestionar permisos de estacionamiento y coordinar con consorcios (horarios, uso de ascensores). Cualquier demora derivada de la falta de permisos será facturada como tiempo de espera.<br><strong>4. Embalaje y Daños:</strong> Nivel 9 no se hace responsable por roturas de objetos en cajas embaladas por el cliente. Solo responderemos por bienes acondicionados por nuestro personal. Reclamos por daños deben realizarse al finalizar la descarga, antes de que el personal se retire.<br><strong>5. Exclusión de Objetos de Valor:</strong> El cliente asume total responsabilidad por el traslado de dinero, joyas, obras de arte o tecnología. Nivel 9 queda exenta de responsabilidad ante la pérdida de estos bienes.<br><strong>6. Cancelación y Fuerza Mayor:</strong> Cancelaciones con menos de 48 horas de anticipación implicarán la pérdida total de la seña. Nivel 9 se reserva el derecho de reprogramar sin penalidad ante situaciones de fuerza mayor.<br><strong>7. Jurisdicción:</strong> Para cualquier controversia, las partes se someten a los Tribunales Ordinarios de la Ciudad de Córdoba.</div>${firmasHTML}`; 
+      }
+  }
+  
+  const prev = document.getElementById('pdf-render-container'); 
+  prev.style.display = 'block'; 
+  let nombreFinal = tipoDocumento === 'HojaRuta' ? `HojaDeRuta_${document.getElementById('pres-cliente').value}.pdf` : `Presupuesto_${document.getElementById('pres-cliente').value}.pdf`;
+  if (tipoDocumento === 'Presupuesto') { incrementarNumeroDoc(document.getElementById('pres-tipo-cliente-doc').value); }
+  if (document.getElementById('modalEventForm').style.display === 'flex') { document.getElementById('ev-nrodoc').value = document.getElementById('pres-nro').value; }
+
+  setTimeout(() => {
+    html2pdf().set({ margin: 0, filename: nombreFinal, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdf-template-content')).save().then(() => { prev.style.display = 'none'; }); 
+  }, 300);
 }
 
 // ==========================================
-// 7. MARINA IA
+// 7. PUENTE GLOBAL DE CONEXIÓN CON SERVIDOR
 // ==========================================
-async function procesarChatMarina() { 
-  const input = document.getElementById('marina-prompt-input'); const box = document.getElementById('marina-chat-response'); const text = input.value.trim(); 
-  if(!text) return; box.innerHTML = `<strong>Rodri:</strong> ${text}<br><br>⏳ <em>Marina analizando...</em>`; input.value = ""; 
-  try { 
-    const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "consultaMarina", prompt: `Eres Marina, IA de Nivel 9 Logística. Jefe: Rodri. Responde esto: "${text}"` }) }); 
-    const inf = await res.json(); box.innerHTML = inf.success ? inf.result : `⚠️ Error IA: ${inf.error}`; 
-  } catch(e) { box.innerHTML = "⚠️ Error de red."; } 
-}
+window.MotorNivel9 = {
+  crearViajeEnBaseDeDatos: async function(payload) { 
+    const idx = eventosGuardados.findIndex(e => String(e.id) === String(payload.id)); 
+    if(idx >= 0) { eventosGuardados[idx] = payload; } else { eventosGuardados.push(payload); }
+    
+    if(payload.telefono && !contactosGuardados.find(c => c.telefono === payload.telefono)) { 
+      this.crearContactoEnBaseDeDatos({ id: 'CNT-' + Date.now(), categoria: payload.tipocliente || 'Particular', nombre: payload.cliente, telefono: payload.telefono, observaciones: '', provtipo: '', provflota: '' }); 
+    } 
+    cerrarModalesNativos(); 
+    dibujarCalendarioMes(); 
+    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify(payload) }); } catch(e) {} 
+  },
+  
+  eliminarViajeEnBaseDeDatos: async function(id) { 
+    eventosGuardados = eventosGuardados.filter(e => String(e.id) !== String(id)); 
+    cerrarModalesNativos(); 
+    dibujarCalendarioMes(); 
+    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'deleteEvent', id: id }) }); } catch(e) {} 
+  },
+  
+  crearContactoEnBaseDeDatos: async function(payload) { 
+    const idx = contactosGuardados.findIndex(c => String(c.id) === String(payload.id)); 
+    if(idx >= 0) { contactosGuardados[idx] = payload; } else { contactosGuardados.push(payload); } 
+    cerrarModalesNativos(); 
+    renderContactos(); 
+    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveContact', ...payload }) }); } catch(e) {} 
+  },
+  
+  guardarCargaEnBase: async function(payload) {
+    const idx = bolsaCargasGuardadas.findIndex(c => String(c.id) === String(payload.id)); 
+    if(idx >= 0) { bolsaCargasGuardadas[idx] = payload; } else { bolsaCargasGuardadas.push(payload); }
+    cerrarModalesNativos(); 
+    renderBolsaCargas();
+    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveCarga', ...payload }) }); } catch(e) {}
+  },
+  
+  guardarTransportistaEnBase: async function(payload) {
+    const idx = transportistasGuardados.findIndex(t => String(t.id) === String(payload.id)); 
+    if(idx >= 0) { transportistasGuardados[idx] = payload; } else { transportistasGuardados.push(payload); }
+    cerrarModalesNativos(); 
+    renderTransportistas();
+    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveTransportista', ...payload }) }); } catch(e) {}
+  },
+  
+  guardarIntermediacionEnBase: async function(payload) {
+    const idx = intermediacionesGuardadas.findIndex(i => String(i.id) === String(payload.id)); 
+    if(idx >= 0) { intermediacionesGuardadas[idx] = payload; } else { intermediacionesGuardadas.push(payload); }
+    cerrarModalesNativos(); 
+    renderIntermediaciones();
+    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveIntermediacion', ...payload }) }); } catch(e) {}
+  },
+
+  /* MARINA IA PARSER, CHAT Y ESCÁNER VISUAL */
+  parsearMensajeWhatsappCarga: async function() {
+    const txt = document.getElementById('bc-raw-text').value.trim();
+    if(!txt) return alert("Pegá un texto de WhatsApp para analizar.");
+    alert("Marina IA procesando solicitud...");
+    
+    const promptParser = `Extrae datos de esta solicitud de flete de WhatsApp: "${txt}". Responde en JSON estricto con campos: origen, destino, vehiculo, peso, contacto, telefono.`;
+    try {
+      const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "consultaMarina", prompt: promptParser }) });
+      const data = await res.json();
+      if(data.success) {
+        abrirModalNuevaCarga();
+        document.getElementById('bc-desc').value = "Extraído por Marina IA:\n" + txt;
+      }
+    } catch(e) {
+      abrirModalNuevaCarga();
+      document.getElementById('bc-desc').value = txt;
+    }
+  },
+
+  hablarMarina: function(texto) {
+      if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          let textoLimpio = texto.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ');
+          let utterance = new SpeechSynthesisUtterance(textoLimpio);
+          utterance.lang = 'es-AR';
+          utterance.rate = 1.05;
+          let voices = window.speechSynthesis.getVoices();
+          let vozFemenina = voices.find(v => v.lang.includes('es') && (v.name.includes('Female') || v.name.includes('Mujer') || v.name.includes('Google español'))) || voices.find(v => v.lang.startsWith('es'));
+          if (vozFemenina) utterance.voice = vozFemenina;
+          window.speechSynthesis.speak(utterance);
+      }
+  },
+
+  procesarChatMarina: async function() { 
+    const i = document.getElementById('marina-prompt-input'); 
+    const b = document.getElementById('marina-chat-response'); 
+    const t = i.value.trim(); 
+    if(!t) return; 
+    
+    b.innerHTML = `<strong>Rodri:</strong> ${t}<br><br>⏳ <em>Marina evaluando solicitud...</em>`; 
+    i.value = ""; 
+    
+    const contextoFlota = configuracionNivel9.flota.join(', ');
+    const costoDiesel = configuracionNivel9.diesel;
+    const resumenAgenda = eventosGuardados.map(e => `[${e.fecha}] ${e.cliente} (${e.tipomov||'Flete'}) - $${e.presupuesto||0}`).join(' | ');
+
+    const promptDirectivo = `Eres Marina, secretaria ejecutiva y asesora experta en logística/brokerage de Nivel 9 en Córdoba, Argentina. Tu jefe es el Lic. Rodrigo Castro. Sé amable, directa y resolutiva.\nFlota: ${contextoFlota}. Diésel: $${costoDiesel}/L. Agenda: ${resumenAgenda}.\nSolicitud de Rodri: "${t}"`;
+
+    try { 
+        const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "consultaMarina", prompt: promptDirectivo }) }); 
+        const inf = await res.json(); 
+        if (inf.success) {
+            b.innerHTML = inf.result;
+            this.hablarMarina(inf.result);
+        } else {
+            b.innerHTML = `⚠️ <strong>Error Servidor:</strong><br><br>${inf.error}`; 
+        }
+    } catch(e) { 
+        b.innerHTML = "⚠️ Error de conexión con el servidor."; 
+    } 
+  },
+
+  reconocimientoVoz: function() { 
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return alert("Reconocimiento de voz no soportado en este navegador."); 
+    window.speechSynthesis.cancel();
+    const r = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); 
+    r.lang = 'es-AR'; 
+    r.start(); 
+    document.getElementById('marina-chat-response').innerHTML = "🎙️ <em>Escuchando orden...</em>"; 
+    r.onresult = (e) => { 
+      document.getElementById('marina-prompt-input').value = e.results[0][0].transcript; 
+      this.procesarChatMarina(); 
+    }; 
+  },
+
+  escanearCarga: async function() { 
+    const i = document.getElementById('ev-marina-fotos'); 
+    const b = document.getElementById('btn-ev-marina'); 
+    if (!i.files || i.files.length === 0) return alert("Elegí una imagen primero."); 
+    b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Evaluando...'; 
+    b.disabled = true; 
+    try { 
+      const p = []; 
+      for (let f of i.files) { 
+        const c = await new Promise((rs, rj) => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => rs(rd.result.split(',')[1]); rd.onerror = err => rj(err); }); 
+        p.push({ mimeType: f.type, base64Data: c }); 
+      } 
+      const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "escaneoMarina", archivos: p }) }); 
+      const d = await res.json(); 
+      if(d.success && d.result) { 
+        const inv = document.getElementById('ev-inventario'); 
+        inv.value = inv.value ? inv.value + "\n\n--- MARINA IA ---\n" + d.result : d.result; 
+      } else { alert("❌ Escáner falló: " + (d.error || "")); }
+    } catch(e) { alert("Fallo de conexión con IA."); } finally { b.innerHTML = '<i class="fas fa-camera"></i> Extraer'; b.disabled = false; } 
+  }
+};
+
+function abrirModalAsistenteIA() { cerrarModalesNativos(); document.getElementById('modalMarinaAsistente').style.display = 'flex'; }
+if ('speechSynthesis' in window) { window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); }; }
