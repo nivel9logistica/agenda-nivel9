@@ -7,7 +7,7 @@
   
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="estilos.css"> <!-- CONEXIÓN AL CSS -->
+  <link rel="stylesheet" href="estilos.css"> 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -16,9 +16,12 @@
 </head>
 <body>
 
-  <!-- SIDEBAR LATERAL -->
-  <aside class="sidebar">
-    <div class="brand"><span>NIVEL</span>9</div>
+  <!-- SIDEBAR LATERAL (Desplegable en móvil) -->
+  <aside class="sidebar" id="sidebarMenu">
+    <div class="brand">
+      <span>NIVEL</span>9 
+      <button class="close-sidebar-btn" onclick="toggleMenu()">&times;</button>
+    </div>
     <nav class="nav-menu">
       <a class="nav-item active" onclick="showView('Portal')"><i class="fas fa-home"></i> Inicio / Portal</a>
       <a class="nav-item" onclick="showView('Agenda')"><i class="fas fa-calendar-alt"></i> Agenda Flota</a>
@@ -40,17 +43,23 @@
   <main class="main-content">
     
     <header class="app-header" id="appHeader" style="display:none;">
-      <h2 id="viewTitleText" style="color: var(--dark); font-weight: 800;">Panel</h2>
-      <div style="display: flex; gap: 15px;" id="header-actions">
-        <!-- Los botones del header cambian dinámicamente según la vista -->
+      <div style="display:flex; align-items:center; gap:15px;">
+        <button class="btn-hamburger" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+        <h2 id="viewTitleText" style="color: var(--dark); font-weight: 800; margin:0;">Panel</h2>
       </div>
+      <div style="display: flex; gap: 15px;" id="header-actions"></div>
     </header>
 
     <!-- VISTA 0: PORTAL HOME -->
     <div id="viewPortal" class="view-container" style="display: block; padding: 40px;">
-      <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--dark); margin-bottom: 10px;">Hola, Rodri 👋</h1>
-      <p style="color: #52525b; font-size: 1.1rem; margin-bottom: 30px;">Hoy es <span id="marina-fecha-hoy" style="font-weight:700; color:var(--brand);"></span>. J.A.R.V.I.S en línea.</p>
-      
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--dark); margin-bottom: 10px;">Hola, Rodri 👋</h1>
+          <p style="color: #52525b; font-size: 1.1rem; margin-bottom: 30px;">Hoy es <span id="marina-fecha-hoy" style="font-weight:700; color:var(--brand);"></span>. J.A.R.V.I.S en línea.</p>
+        </div>
+        <button class="btn-hamburger" onclick="toggleMenu()" style="display:block; padding:10px 15px; border-radius:8px;"><i class="fas fa-bars"></i> Menú</button>
+      </div>
+
       <div id="sync-status-portal" class="sync-status">
         <i class="fas fa-sync fa-spin"></i> Sincronizando con Servidor...
       </div>
@@ -83,7 +92,7 @@
 
     <!-- VISTA 2: COTIZADOR -->
     <div id="viewCotizador" class="view-container">
-      <div style="display: grid; grid-template-columns: 350px 1fr; gap: 25px; height: 100%;">
+      <div class="cotizador-layout">
         <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--gray); overflow-y: auto;">
           <h3 style="margin-bottom: 15px; color: var(--brand);"><i class="fas fa-route"></i> Trazado de Ruta</h3>
           <div class="form-group"><label>Origen</label><input type="text" id="cot-origen" placeholder="Ej: Córdoba Capital"></div>
@@ -107,27 +116,27 @@
 
     <!-- VISTA 3: INFORMES Y FINANZAS -->
     <div id="viewInformes" class="view-container">
-      <div style="background:white; padding:20px; border-radius:12px; border:1px solid var(--gray); margin-bottom:20px; display:flex; gap:15px; align-items:flex-end;">
-        <div class="form-group" style="margin-bottom:0;"><label>Desde</label><input type="date" id="rep-start"></div>
-        <div class="form-group" style="margin-bottom:0;"><label>Hasta</label><input type="date" id="rep-end"></div>
-        <div class="form-group" style="margin-bottom:0;"><label>Módulo</label>
+      <div style="background:white; padding:20px; border-radius:12px; border:1px solid var(--gray); margin-bottom:20px; display:flex; flex-wrap:wrap; gap:15px; align-items:flex-end;">
+        <div class="form-group" style="margin-bottom:0; flex:1; min-width:150px;"><label>Desde</label><input type="date" id="rep-start"></div>
+        <div class="form-group" style="margin-bottom:0; flex:1; min-width:150px;"><label>Hasta</label><input type="date" id="rep-end"></div>
+        <div class="form-group" style="margin-bottom:0; flex:1; min-width:150px;"><label>Módulo</label>
           <select id="rep-modulo"><option value="flota">Flota Propia</option><option value="3pl">Broker 3PL</option></select>
         </div>
-        <button class="btn btn-brand" onclick="generarReporteDatos()"><i class="fas fa-search"></i> Generar KPI</button>
+        <button class="btn btn-brand" onclick="generarReporteDatos()" style="height:42px;"><i class="fas fa-search"></i> Generar KPI</button>
       </div>
       
-      <div id="kpiDashboardContainer" style="display:none; grid-template-columns:repeat(4, 1fr); gap:15px; margin-bottom:20px;">
+      <div id="kpiDashboardContainer" style="display:none; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:20px;">
         <div class="kpi-box" style="border-color:var(--gray);"><h4 style="color:#71717a;">Operaciones</h4><div id="kpi-tot-viajes">0</div></div>
         <div class="kpi-box" style="border-color:#bae6fd;"><h4 style="color:#0284c7;">Total Facturado</h4><div id="kpi-tot-ingresos" style="color:#0284c7;">$0</div></div>
         <div class="kpi-box" style="border-color:#fecaca;"><h4 style="color:#dc2626;">Total Costos / Pagos</h4><div id="kpi-tot-costos" style="color:#dc2626;">$0</div></div>
-        <div class="kpi-box" style="border-color:#bbf7d0;"><h4 style="color:#16a34a;">Utilidad Neta (Ganancia)</h4><div id="kpi-tot-utilidad" style="color:#16a34a;">$0</div></div>
+        <div class="kpi-box" style="border-color:#bbf7d0;"><h4 style="color:#16a34a;">Utilidad Neta</h4><div id="kpi-tot-utilidad" style="color:#16a34a;">$0</div></div>
       </div>
     </div>
 
     <!-- VISTA 4: CONTACTOS -->
     <div id="viewContactos" class="view-container">
-      <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-        <input type="text" id="cnt-filter-search" placeholder="Buscar contacto..." style="width:300px;" onkeyup="renderContactos()">
+      <div style="display:flex; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+        <input type="text" id="cnt-filter-search" placeholder="Buscar contacto..." style="width:100%; max-width:300px;" onkeyup="renderContactos()">
         <button class="btn btn-brand" onclick="abrirModalNativo('modalContactForm')"><i class="fas fa-user-plus"></i> Nuevo Contacto</button>
       </div>
       <div class="grid-cards" id="contactListContainer"></div>
@@ -135,12 +144,12 @@
 
     <!-- VISTA 5: BOLSA DE CARGAS 3PL -->
     <div id="viewBolsaCargas" class="view-container">
-      <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
-        <div style="display:flex; gap:10px; flex:1;">
-          <input type="text" id="cga-filtro-origen" placeholder="Origen..." style="width:200px;" onkeyup="renderBolsaCargas()">
-          <input type="text" id="cga-filtro-destino" placeholder="Destino..." style="width:200px;" onkeyup="renderBolsaCargas()">
-          <select id="cga-filtro-vehiculo" style="width:200px;" onchange="renderBolsaCargas()">
-            <option value="todos">Cualquier Vehículo</option><option value="Furgón">Furgón</option><option value="Chasis">Chasis</option><option value="Camión Semi">Semi-remolque</option><option value="Camión Sider">Sider</option>
+      <div style="display:flex; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; gap:10px; flex:1; flex-wrap:wrap;">
+          <input type="text" id="cga-filtro-origen" placeholder="Origen..." style="width:100%; max-width:150px;" onkeyup="renderBolsaCargas()">
+          <input type="text" id="cga-filtro-destino" placeholder="Destino..." style="width:100%; max-width:150px;" onkeyup="renderBolsaCargas()">
+          <select id="cga-filtro-vehiculo" style="width:100%; max-width:150px;" onchange="renderBolsaCargas()">
+            <option value="todos">Todos los Vehículos</option><option value="Furgón">Furgón</option><option value="Chasis">Chasis</option><option value="Camión Semi">Semi-remolque</option><option value="Camión Sider">Sider</option>
           </select>
         </div>
         <button class="btn btn-brand" onclick="abrirModalNativo('modalCargaForm')"><i class="fas fa-plus"></i> Carga Manual</button>
@@ -150,11 +159,11 @@
 
     <!-- VISTA 6: TRANSPORTISTAS 3PL -->
     <div id="viewTransportistas" class="view-container">
-      <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
-        <div style="display:flex; gap:10px; flex:1;">
-          <input type="text" id="trp-filtro-search" placeholder="Buscar chofer o patente..." style="width:300px;" onkeyup="renderTransportistas()">
-          <select id="trp-filtro-vehiculo" style="width:200px;" onchange="renderTransportistas()">
-            <option value="todos">Cualquier Vehículo</option><option value="Furgón">Furgón</option><option value="Chasis">Chasis</option><option value="Camión Semi">Semi-remolque</option>
+      <div style="display:flex; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; gap:10px; flex:1; flex-wrap:wrap;">
+          <input type="text" id="trp-filtro-search" placeholder="Buscar chofer o patente..." style="width:100%; max-width:300px;" onkeyup="renderTransportistas()">
+          <select id="trp-filtro-vehiculo" style="width:100%; max-width:180px;" onchange="renderTransportistas()">
+            <option value="todos">Todos los Vehículos</option><option value="Furgón">Furgón</option><option value="Chasis">Chasis</option><option value="Camión Semi">Semi-remolque</option>
           </select>
         </div>
         <button class="btn btn-brand" onclick="abrirModalNativo('modalTransportistaForm')"><i class="fas fa-plus"></i> Nuevo Chofer</button>
@@ -164,11 +173,13 @@
 
     <!-- VISTA 7: INTERMEDIACIONES -->
     <div id="viewIntermediaciones" class="view-container">
-      <h3 style="margin-bottom: 20px; color: var(--dark);"><i class="fas fa-handshake" style="color:var(--brand);"></i> Bóveda de Intermediaciones Cerradas</h3>
-      <table class="data-table">
-        <thead><tr><th>Fecha</th><th>Dador</th><th>Transportista</th><th>Tramo</th><th>Cobrado</th><th>Pagado</th><th>Comisión Nivel 9</th></tr></thead>
-        <tbody id="intermediacionesTableBody"></tbody>
-      </table>
+      <h3 style="margin-bottom: 20px; color: var(--dark);"><i class="fas fa-handshake" style="color:var(--brand);"></i> Bóveda de Intermediaciones</h3>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead><tr><th>Fecha</th><th>Dador</th><th>Transportista</th><th>Tramo</th><th>Cobrado</th><th>Pagado</th><th>Comisión Nivel 9</th></tr></thead>
+          <tbody id="intermediacionesTableBody"></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- MARINA IA WIDGET -->
@@ -178,10 +189,10 @@
   </main>
 
   <!-- ====================================================================================
-       MODALES DEL SISTEMA (Ventanas emergentes)
+       MODALES DEL SISTEMA (Formularios y Fichas)
        ==================================================================================== -->
 
-  <!-- MODAL: AGENDA FLOTA (NUEVO VIAJE) -->
+  <!-- MODAL: AGENDA FLOTA (NUEVO VIAJE) Restaurado Completo -->
   <div id="modalEventForm" class="modal-overlay">
     <div class="modal-content" style="max-width: 800px;">
       <div class="modal-header"><h2>Gestión de Viaje (Flota Propia)</h2><button class="close-btn" onclick="cerrarModalesNativos()">&times;</button></div>
@@ -189,14 +200,17 @@
         <input type="hidden" id="ev-id">
         <div class="form-group"><label>Fecha</label><input type="date" id="ev-fecha"></div>
         <div class="form-group"><label>Estado</label><select id="ev-estado"><option value="Posible">Posible / Presupuesto</option><option value="Confirmado">Confirmado / Señado</option><option value="Realizado">Realizado / Terminado</option><option value="Cancelado">Cancelado</option></select></div>
-        <div class="form-group"><label>Cliente</label><input type="text" id="ev-cliente"></div>
+        <div class="form-group"><label>Cliente / Empresa</label><input type="text" id="ev-cliente"></div>
         <div class="form-group"><label>Teléfono</label><input type="text" id="ev-telefono"></div>
-        <div class="form-group full"><label>Detalle / Origen y Destino</label><textarea id="ev-inventario" rows="3"></textarea></div>
+        <div class="form-group"><label>Origen</label><input type="text" id="ev-origen"></div>
+        <div class="form-group"><label>Destino</label><input type="text" id="ev-destino"></div>
+        <div class="form-group full"><label>Detalle de Carga / Inventario</label><textarea id="ev-inventario" rows="3"></textarea></div>
         
         <div class="form-group full" style="border-top: 1px solid var(--gray); padding-top: 15px; margin-top: 10px;"><label>Tarifa Total Cobrada ($)</label><input type="number" id="ev-presupuesto" onchange="calculateAgendaTotal()"></div>
         <div class="form-group"><label>Combustible ($)</label><input type="number" id="ev-combustible" onchange="calculateAgendaTotal()"></div>
-        <div class="form-group"><label>Peajes/Viáticos ($)</label><input type="number" id="ev-extra" onchange="calculateAgendaTotal()"></div>
-        <div class="form-group full"><label>Utilidad Neta ($)</label><input type="number" id="ev-total" readonly style="background:#dcfce7; color:#16a34a; font-weight:bold;"></div>
+        <div class="form-group"><label>Peajes y Extras ($)</label><input type="number" id="ev-extra" onchange="calculateAgendaTotal()"></div>
+        <div class="form-group"><label>Ayudante ($)</label><input type="number" id="ev-ayudante" onchange="calculateAgendaTotal()"></div>
+        <div class="form-group"><label>Utilidad Neta ($)</label><input type="number" id="ev-total" readonly style="background:#dcfce7; color:#16a34a; font-weight:bold;"></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-danger" id="btn-eliminar-evento" onclick="eliminarEventoViaje()" style="display:none; margin-right:auto;"><i class="fas fa-trash"></i> Eliminar</button>
@@ -205,14 +219,61 @@
     </div>
   </div>
 
+  <!-- MODAL: CONTACTOS -->
+  <div id="modalContactForm" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header"><h2>Ficha de Contacto</h2><button class="close-btn" onclick="cerrarModalesNativos()">&times;</button></div>
+      <div class="modal-body form-grid">
+        <input type="hidden" id="cnt-id">
+        <div class="form-group full"><label>Nombre Completo</label><input type="text" id="cnt-nombre"></div>
+        <div class="form-group"><label>Teléfono (WhatsApp)</label><input type="text" id="cnt-telefono"></div>
+        <div class="form-group"><label>Empresa</label><input type="text" id="cnt-empresa"></div>
+        <div class="form-group full"><label>Tipo de Contacto</label><select id="cnt-tipo"><option value="Cliente">Cliente Particular</option><option value="Dador">Dador de Carga (Empresa)</option><option value="Chofer">Chofer / Transportista</option><option value="Proveedor">Proveedor</option></select></div>
+        <div class="form-group full"><label>Notas Adicionales</label><textarea id="cnt-notas" rows="2"></textarea></div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-brand" onclick="saveContact()"><i class="fas fa-save"></i> Guardar Contacto</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: NUEVA CARGA MANUAL 3PL -->
+  <div id="modalCargaForm" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header"><h2>Publicar Carga Manual</h2><button class="close-btn" onclick="cerrarModalesNativos()">&times;</button></div>
+      <div class="modal-body form-grid">
+        <div class="form-group full"><label>Dador / Empresa</label><input type="text" id="mc-dador"></div>
+        <div class="form-group"><label>Origen</label><input type="text" id="mc-origen"></div>
+        <div class="form-group"><label>Destino</label><input type="text" id="mc-destino"></div>
+        <div class="form-group full"><label>Vehículo Requerido</label><select id="mc-vehiculo"><option value="Furgón">Furgón</option><option value="Chasis">Chasis</option><option value="Camión Semi">Semi-remolque</option><option value="Camión Sider">Sider</option></select></div>
+        <div class="form-group full"><label>Descripción de Mercadería</label><input type="text" id="mc-desc"></div>
+        <div class="form-group full"><label>Tarifa a Cobrar ($)</label><input type="number" id="mc-tarifa"></div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-brand" onclick="guardarCargaManual()"><i class="fas fa-save"></i> Publicar</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL: NUEVO TRANSPORTISTA MANUAL 3PL -->
+  <div id="modalTransportistaForm" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header"><h2>Registrar Chofer / Unidad</h2><button class="close-btn" onclick="cerrarModalesNativos()">&times;</button></div>
+      <div class="modal-body form-grid">
+        <div class="form-group full"><label>Nombre del Chofer</label><input type="text" id="mt-chofer"></div>
+        <div class="form-group"><label>Teléfono (WhatsApp)</label><input type="text" id="mt-telefono"></div>
+        <div class="form-group"><label>Vehículo</label><select id="mt-vehiculo"><option value="Furgón">Furgón</option><option value="Chasis">Chasis</option><option value="Camión Semi">Semi-remolque</option></select></div>
+        <div class="form-group"><label>Patente</label><input type="text" id="mt-patente"></div>
+        <div class="form-group"><label>Ubicación Actual</label><input type="text" id="mt-ubicacion" placeholder="Ej: Rosario"></div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-brand" onclick="guardarTransportistaManual()"><i class="fas fa-save"></i> Registrar</button></div>
+    </div>
+  </div>
+
   <!-- MODAL: FICHA ÚNICA OPERACIÓN 3PL (EL DOSSIER MAESTRO) -->
   <div id="modalFichaOperacion" class="modal-overlay">
     <div class="modal-content" style="max-width: 950px; background: #fafafa;">
       <div class="modal-header" style="background: #111; color: white; padding: 20px; border-radius: 12px 12px 0 0;">
-        <h2 style="margin: 0;"><i class="fas fa-file-contract" style="color: #ea580c;"></i> DOSSIER OPERATIVO: <span id="fo-id-carga" style="color:#a1a1aa; font-size:14px;"></span></h2>
+        <h2 style="margin: 0; font-size:1.5rem;"><i class="fas fa-file-contract" style="color: #ea580c;"></i> DOSSIER OPERATIVO: <span id="fo-id-carga" style="color:#a1a1aa; font-size:14px;"></span></h2>
         <button class="close-btn" style="color: white;" onclick="cerrarModalesNativos()">&times;</button>
       </div>
-      <div class="modal-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; padding: 20px;">
+      <div class="modal-body dossier-grid">
         
         <!-- DOSSIER - COLUMNA IZQUIERDA -->
         <div>
@@ -238,31 +299,31 @@
         <!-- DOSSIER - COLUMNA DERECHA -->
         <div>
           <h3 style="border-bottom: 2px solid #ea580c; padding-bottom: 5px; margin-bottom: 15px;"><i class="fas fa-money-bill-wave"></i> 2. Finanzas y Acuerdos</h3>
-          <div style="display:flex; gap:10px; margin-bottom: 10px;">
-            <div style="flex:1;"><label style="font-size:12px; font-weight:bold;">Cobro Dador ($):</label><input type="number" id="fo-cobro" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;" onchange="calcularComisionDossier()"></div>
-            <div style="flex:1;"><label style="font-size:12px; font-weight:bold;">Pago Chofer ($):</label><input type="number" id="fo-pago" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;" onchange="calcularComisionDossier()"></div>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom: 10px;">
+            <div style="flex:1; min-width:120px;"><label style="font-size:12px; font-weight:bold;">Cobro Dador ($):</label><input type="number" id="fo-cobro" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;" onchange="calcularComisionDossier()"></div>
+            <div style="flex:1; min-width:120px;"><label style="font-size:12px; font-weight:bold;">Pago Chofer ($):</label><input type="number" id="fo-pago" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;" onchange="calcularComisionDossier()"></div>
           </div>
           <p style="font-size:16px; text-align:right;"><strong>Comisión Nivel 9: <span id="fo-comision" style="color:#16a34a;">$0</span></strong></p>
 
           <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; margin-top: 15px;">
             <strong style="font-size:12px; color:#0f172a;"><i class="fas fa-truck"></i> Acuerdos Fijos (Chofer):</strong>
             <div style="font-size:9.5px; color:#334155; margin-top:5px; line-height:1.4;">1. Liberación por Remito Digital.<br>2. Deslinde de Responsabilidad.</div>
-            <textarea id="fo-cond-chofer-libre" style="width:100%; height:45px; margin-top:8px; padding:6px; border-radius:4px; border:1px solid #ccc; font-size:11px;" placeholder="Condiciones libres para el chofer (ej: Contra entrega)..."></textarea>
+            <textarea id="fo-cond-chofer-libre" style="width:100%; height:45px; margin-top:8px; padding:6px; border-radius:4px; border:1px solid #ccc; font-size:11px;" placeholder="Condiciones libres para el chofer..."></textarea>
           </div>
           
           <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 10px; margin-top: 10px;">
             <strong style="font-size:12px; color:#991b1b;"><i class="fas fa-user-tie"></i> Acuerdos Fijos (Dador):</strong>
             <div style="font-size:9.5px; color:#7f1d1d; margin-top:5px; line-height:1.4;">1. Deslinde Tránsito. 2. Control Estadías. 3. Falsas Escuadras.</div>
-            <textarea id="fo-cond-dador-libre" style="width:100%; height:45px; margin-top:8px; padding:6px; border-radius:4px; border:1px solid #ccc; font-size:11px;" placeholder="Condiciones libres para el dador (ej: eCheq a 30 días)..."></textarea>
+            <textarea id="fo-cond-dador-libre" style="width:100%; height:45px; margin-top:8px; padding:6px; border-radius:4px; border:1px solid #ccc; font-size:11px;" placeholder="Condiciones libres para el dador..."></textarea>
           </div>
 
           <!-- DOSSIER - BÓVEDA DRIVE -->
           <h3 style="border-bottom: 2px solid #ea580c; padding-bottom: 5px; margin-bottom: 15px; margin-top: 25px;"><i class="fas fa-cloud-upload-alt"></i> 3. Bóveda Documental</h3>
           <div style="background: white; padding: 10px; border: 1px solid #d4d4d8; border-radius: 6px; margin-bottom: 10px;">
-            <strong style="font-size:12px;">Subir Remito Conformado o Fotos:</strong>
-            <div style="display:flex; gap:10px; margin-top:5px;">
-              <input type="file" id="file-carga" style="font-size:12px; max-width:180px;">
-              <button class="btn btn-dark" id="btn-subir-carga" style="padding:4px 8px; font-size:11px;" onclick="subirArchivoBoveda('file-carga', 'btn-subir-carga')">Subir a Drive</button>
+            <strong style="font-size:12px;">Subir Remito o Fotos (Drive):</strong>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:5px;">
+              <input type="file" id="file-carga" style="font-size:12px; flex:1;">
+              <button class="btn btn-dark" id="btn-subir-carga" style="padding:4px 8px; font-size:11px;" onclick="subirArchivoBoveda('file-carga', 'btn-subir-carga')">Subir</button>
             </div>
           </div>
           <div id="fo-boveda-links" style="margin-top: 15px; font-size:12px; display:flex; flex-direction:column; gap:5px;"></div>
@@ -275,12 +336,12 @@
   <div id="modalMarinaAsistente" class="modal-overlay">
     <div class="modal-content" style="max-width: 500px;">
       <div class="modal-header" style="background: var(--ia-light); border-bottom: 2px solid var(--ia-color);">
-        <h2 style="color: var(--ia-color); margin: 0; display:flex; align-items:center; gap:10px;"><i class="fas fa-robot"></i> Marina IA</h2>
+        <h2 style="color: var(--ia-color); margin: 0; display:flex; align-items:center; gap:10px; font-size:1.3rem;"><i class="fas fa-robot"></i> Marina IA</h2>
         <button class="close-btn" onclick="cerrarModalesNativos()">&times;</button>
       </div>
       <div class="modal-body" style="background: #fafafa;">
         <div id="marina-chat-response" style="background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--gray); min-height: 150px; margin-bottom: 20px; font-size: 0.95rem; line-height: 1.5; color: var(--dark);">
-          Hola Rodri. Soy Marina. ¿Necesitás auditar cargas, presupuestar viajes o extraer textos de WhatsApp?
+          Hola Rodri. Soy Marina. ¿Necesitás auditar cargas, presupuestar viajes o buscar información?
         </div>
         <div class="form-group"><textarea id="marina-prompt-input" placeholder="Escribí o pegá tu consulta aquí..." style="height: 80px;"></textarea></div>
         <div style="display:flex; gap:10px;">
@@ -290,6 +351,6 @@
     </div>
   </div>
 
-  <script src="motor.js"></script> <!-- CONEXIÓN AL MOTOR JAVASCRIPT -->
+  <script src="motor.js"></script>
 </body>
 </html>
