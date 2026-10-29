@@ -38,21 +38,47 @@ async function sincronizarConServidor() {
   try {
     const res = await fetch(webAppUrl + '?action=getAppData');
     const data = await res.json();
-    if(data.eventos) eventosGuardados = data.eventos;
+    
+    // Normalizar eventos de Agenda (convierte mayúsculas a minúsculas y estandariza fechas)
+    if(data.eventos && Array.isArray(data.eventos)) {
+      eventosGuardados = data.eventos.map(item => {
+        let obj = {};
+        // Pasa todas las claves a minúsculas (ej: "Fecha" -> "fecha")
+        Object.keys(item).forEach(k => { obj[k.toLowerCase()] = item[k]; });
+        
+        // Estandariza la fecha a YYYY-MM-DD
+        if(obj.fecha) {
+          let strF = String(obj.fecha).trim();
+          if(strF.includes('T')) strF = strF.split('T')[0];
+          if(strF.includes('/')) {
+            const p = strF.split('/');
+            if(p.length === 3) {
+              // Si está en formato DD/MM/YYYY
+              if(p[0].length === 2 && p[2].length === 4) {
+                strF = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+              }
+            }
+          }
+          obj.fecha = strF;
+        }
+        return obj;
+      });
+    }
+
     if(data.cargas) cargasGuardadas = data.cargas;
     if(data.transportistas) transportistasGuardados = data.transportistas;
     if(data.intermediaciones) intermediacionesGuardadas = data.intermediaciones;
     if(data.contactos) contactosGuardados = data.contactos;
     
-    document.getElementById('sync-status-portal').innerHTML = '<i class="fas fa-check-circle"></i> Sistema Conectado a Servidor';
+    document.getElementById('sync-status-portal').innerHTML = '<i class="fas fa-check-circle"></i> Base Conectada (' + eventosGuardados.length + ' viajes)';
     document.getElementById('sync-status-portal').style.color = 'var(--finalizada)';
+    
     dibujarCalendarioMes();
   } catch(error) {
-    document.getElementById('sync-status-portal').innerHTML = '<i class="fas fa-wifi"></i> Modo Offline - Sin conexión';
+    document.getElementById('sync-status-portal').innerHTML = '<i class="fas fa-wifi"></i> Modo Offline - Error de Conexión';
     document.getElementById('sync-status-portal').style.color = 'var(--cancelada)';
   }
 }
-
 function showView(viewId) {
   document.getElementById('viewPortal').style.display = 'none'; 
   document.getElementById('appHeader').style.display = 'flex';
