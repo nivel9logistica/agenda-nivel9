@@ -1,5 +1,5 @@
 // =========================================================================
-// MOTOR JAVASCRIPT MAESTRO: NIVEL 9 ERP & BROKERAGE 3PL - MARK 85
+// MOTOR JAVASCRIPT MAESTRO: NIVEL 9 ERP & BROKERAGE 3PL - MARK 85 PRO
 // =========================================================================
 
 // ⚠️ ACÁ VA TU URL DE GOOGLE APPS SCRIPT (EL WEBHOOK):
@@ -72,16 +72,16 @@ async function sincronizarConServidor() {
       });
     }
 
-    if(data.contactos) contactosGuardados = data.contactos;
-    if(data.cargas) bolsaCargasGuardadas = data.cargas;
-    if(data.transportistas) transportistasGuardados = data.transportistas;
-    if(data.intermediaciones) intermediacionesGuardadas = data.intermediaciones;
+    if(data.contactos) contactosGuardados = data.contactos.map(c => { let o = {}; Object.keys(c).forEach(k => o[k.toLowerCase()] = c[k]); return o; });
+    if(data.cargas) bolsaCargasGuardadas = data.cargas.map(c => { let o = {}; Object.keys(c).forEach(k => o[k.toLowerCase()] = c[k]); return o; });
+    if(data.transportistas) transportistasGuardados = data.transportistas.map(c => { let o = {}; Object.keys(c).forEach(k => o[k.toLowerCase()] = c[k]); return o; });
+    if(data.intermediaciones) intermediacionesGuardadas = data.intermediaciones.map(c => { let o = {}; Object.keys(c).forEach(k => o[k.toLowerCase()] = c[k]); return o; });
     
     document.getElementById('sync-status-portal').innerHTML = '<i class="fas fa-check-circle"></i> Base Conectada (' + eventosGuardados.length + ' viajes)';
-    document.getElementById('sync-status-portal').style.color = 'var(--finalizada)';
+    document.getElementById('sync-status-portal').style.color = 'var(--estado-entregado)';
   } catch(error) {
-    document.getElementById('sync-status-portal').innerHTML = '<i class="fas fa-wifi"></i> Modo Offline'; 
-    document.getElementById('sync-status-portal').style.color = '#dc2626';
+    document.getElementById('sync-status-portal').innerHTML = '<i class="fas fa-wifi"></i> Modo Offline (Sólo Lectura Local)'; 
+    document.getElementById('sync-status-portal').style.color = 'var(--estado-cancelado)';
   }
   dibujarCalendarioMes(); 
   renderContactos(); 
@@ -115,6 +115,8 @@ function showView(viewId) {
   if(viewId === 'BolsaCargas') renderBolsaCargas();
   if(viewId === 'RedTransportistas') renderTransportistas();
   if(viewId === 'Intermediacion') renderIntermediaciones();
+  
+  // FIX OSRM: Inicialización forzada al abrir pestaña
   if(viewId === 'Cotizador') { 
     setTimeout(() => { 
       if(!mapaCotizador) { 
@@ -122,7 +124,7 @@ function showView(viewId) {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapaCotizador); 
       } 
       mapaCotizador.invalidateSize(); 
-    }, 400); 
+    }, 100); 
   }
 }
 
@@ -151,7 +153,7 @@ function dibujarCalendarioMes() {
     const viajesDelDia = eventosGuardados.filter(e => e.fecha === strFechaLoop);
     
     const pastillasHTML = viajesDelDia.map(viaje => {
-      const estadoLimpio = (viaje.estado || 'Posible').replace(/\s+/g, '');
+      const estadoLimpio = String(viaje.estado || 'Posible').replace(/\s+/g, '');
       return `<div class="event-chip status-${estadoLimpio}"><span>${viaje.cliente}</span></div>`;
     }).join('');
     
@@ -172,7 +174,7 @@ function abrirVistaDelDia(fechaString) {
     document.getElementById('dayViewBody').innerHTML = '<p style="color:#71717a; text-align:center; margin-top:15px;">Sin agenda para este día.</p>'; 
   } else { 
     document.getElementById('dayViewBody').innerHTML = viajes.map(v => {
-      const estadoLimpio = (v.estado || 'Posible').replace(/\s+/g, '');
+      const estadoLimpio = String(v.estado || 'Posible').replace(/\s+/g, '');
       return `
       <div class="event-card ${estadoLimpio}">
         <div class="event-card-header"><div class="event-card-title">${v.cliente}</div><span class="contact-badge status-${estadoLimpio}" style="color:white; margin:0;">${v.estado}</span></div>
@@ -210,14 +212,20 @@ function editEvent(idViaje) {
   document.getElementById('ev-fecha').value = viaje.fecha; 
   document.getElementById('ev-estado').value = viaje.estado || 'Posible'; 
   document.getElementById('ev-tipocliente').value = viaje.tipocliente || 'Particular'; 
-  document.getElementById('ev-cliente').value = viaje.cliente; 
+  document.getElementById('ev-cliente').value = viaje.cliente || ''; 
   document.getElementById('ev-telefono').value = viaje.telefono || ''; 
   document.getElementById('ev-tipomov').value = viaje.tipomov || ''; 
   document.getElementById('ev-asignacion').value = viaje.asignacion || ''; 
   document.getElementById('ev-origen').value = viaje.origen || ''; 
   document.getElementById('ev-destino').value = viaje.destino || ''; 
   document.getElementById('ev-distancia').value = viaje.distancia || 0; 
-  document.getElementById('ev-inventario').value = viaje.inventario || viaje.detalles || ''; 
+  
+  // FIX INVENTARIO: Mapeador amplio para evitar perder datos si se cambia el nombre de la columna.
+  let textoInv = viaje.inventario || viaje.detalles || viaje.descripcion || viaje.detallecarga || '';
+  // Normalizar saltos de línea de HTML a Formato Móvil
+  textoInv = textoInv.replace(/<br\s*[\/]?>/gi, "\n");
+  document.getElementById('ev-inventario').value = textoInv; 
+  
   document.getElementById('ev-obs-ruta').value = viaje.obsruta || ''; 
   document.getElementById('ev-nrodoc').value = viaje.nrodoc || ''; 
   document.getElementById('ev-tarifa-hora').value = viaje.tarifahora || ''; 
@@ -374,7 +382,8 @@ function guardarCargasEnBase() {
     tarifa: parseFloat(document.getElementById('bc-tarifa').value)||0, 
     contacto: document.getElementById('bc-contacto').value, 
     telefono: document.getElementById('bc-tel').value, 
-    descripcion: document.getElementById('bc-desc').value 
+    descripcion: document.getElementById('bc-desc').value,
+    drive_links: (cargaAbiertaActual && cargaAbiertaActual.id === document.getElementById('bc-id').value) ? cargaAbiertaActual.drive_links : ''
   };
   if(!payload.origen || !payload.destino || !payload.contacto) { alert("Faltan datos obligatorios de la carga."); return; }
   window.MotorNivel9.guardarCargaEnBase(payload);
@@ -404,13 +413,13 @@ function renderBolsaCargas() {
 
   let arr = bolsaCargasGuardadas.filter(c => 
     (v === 'Todos' || c.vehiculo === v) && 
-    (est === 'Todos' || (c.estado || 'Disponible') === est) &&
-    c.origen.toLowerCase().includes(o) && 
-    c.destino.toLowerCase().includes(d)
+    (est === 'Todos' || (String(c.estado || 'Disponible').replace(/\s+/g,'').toUpperCase() === String(est).replace(/\s+/g,'').toUpperCase())) &&
+    (c.origen||'').toLowerCase().includes(o) && 
+    (c.destino||'').toLowerCase().includes(d)
   );
 
   container.innerHTML = arr.length === 0 ? '<p style="color:#71717a; grid-column:span 2;">No hay cargas registradas con estos filtros.</p>' : arr.map(c => `
-    <div class="broker-card card-status-${(c.estado || 'Disponible').replace(/\s+/g,'')}">
+    <div class="broker-card card-status-${String(c.estado || 'Disponible').replace(/\s+/g,'')}">
       <div class="broker-card-header">
         <div class="broker-route"><i class="fas fa-map-marker-alt" style="color:var(--brand);"></i> ${c.origen} <i class="fas fa-arrow-right" style="color:#a1a1aa; font-size:0.8rem;"></i> ${c.destino}</div>
         <span class="contact-badge">${c.vehiculo}</span>
@@ -418,11 +427,11 @@ function renderBolsaCargas() {
       <div style="font-size:0.88rem; color:#52525b;"><i class="fas fa-box"></i> <b>Carga:</b> ${c.descripcion || c.peso || 'Carga General'}</div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
         <div><span style="font-size:0.8rem; color:#71717a;">Tarifa Ofertada:</span><div class="broker-price">$${Number(c.tarifa||0).toLocaleString('es-AR')}</div></div>
-        <span class="status-badge status-${(c.estado || 'Disponible').replace(/\s+/g,'')}" style="padding:4px 8px; border-radius:6px; font-weight:800;">${c.estado || 'Disponible'}</span>
+        <span class="status-badge status-${String(c.estado || 'Disponible').replace(/\s+/g,'')}" style="padding:4px 8px; border-radius:6px; font-weight:800; color:white;">${c.estado || 'Disponible'}</span>
       </div>
       <div style="display:flex; gap:8px; margin-top:10px;">
         <button class="btn btn-dark" style="flex:1;" onclick="abrirFichaOperacion('${c.id}')"><i class="fas fa-folder-open"></i> Ficha Dossier</button>
-        <button class="btn btn-success" style="flex:1;" onclick="window.open('https://wa.me/549${(c.telefono||'').replace(/\D/g,'')}?text=Hola%20${encodeURIComponent(c.contacto)},%20te%20contacto%20desde%20Nivel%209%20por%20la%20carga%20de%20${encodeURIComponent(c.origen)}%20a%20${encodeURIComponent(c.destino)}')"><i class="fab fa-whatsapp"></i> Chat</button>
+        <button class="btn btn-success" style="flex:1;" onclick="window.open('https://wa.me/549${(c.telefono||'').replace(/\D/g,'')}?text=Hola%20${encodeURIComponent(c.contacto || 'Empresa')},%20te%20contacto%20desde%20Nivel%209%20por%20la%20carga%20de%20${encodeURIComponent(c.origen)}%20a%20${encodeURIComponent(c.destino)}')"><i class="fab fa-whatsapp"></i> Chat</button>
       </div>
     </div>`).join('');
 }
@@ -431,26 +440,29 @@ function abrirFichaOperacion(cargaId) {
   cargaAbiertaActual = bolsaCargasGuardadas.find(c => String(c.id) === String(cargaId));
   if(!cargaAbiertaActual) return;
   
+  // FIX Drive: Cargar links guardados en la BD de Google Sheets
+  cargaAbiertaActual.drive_links = cargaAbiertaActual.drive_links || '';
+  
   document.getElementById('fo-id-carga').innerText = cargaAbiertaActual.id;
-  document.getElementById('fo-dador').innerText = cargaAbiertaActual.contacto || cargaAbiertaActual.dador;
-  document.getElementById('fo-origen').innerText = cargaAbiertaActual.origen;
-  document.getElementById('fo-destino').innerText = cargaAbiertaActual.destino;
-  document.getElementById('fo-desc').innerText = cargaAbiertaActual.descripcion || cargaAbiertaActual.peso;
+  document.getElementById('fo-dador').innerText = cargaAbiertaActual.contacto || cargaAbiertaActual.dador || '';
+  document.getElementById('fo-origen').innerText = cargaAbiertaActual.origen || '';
+  document.getElementById('fo-destino').innerText = cargaAbiertaActual.destino || '';
+  document.getElementById('fo-desc').innerText = cargaAbiertaActual.descripcion || cargaAbiertaActual.peso || '';
   document.getElementById('fo-cobro').value = cargaAbiertaActual.tarifa || 0;
   
   document.getElementById('fo-select-chofer').innerHTML = '<option value="">-- Buscar Camión en Red --</option>' + transportistasGuardados.map(t => `<option value="${t.id}">${t.nombre} - ${t.tipo} (${t.patente||'Sin Patente'})</option>`).join('');
 
-  if(cargaAbiertaActual.estado === 'ASIGNADA' || cargaAbiertaActual.estado === 'En Tránsito') {
+  if(String(cargaAbiertaActual.estado).toUpperCase() === 'ASIGNADA' || String(cargaAbiertaActual.estado).toUpperCase() === 'EN TRÁNSITO') {
     document.getElementById('fo-seccion-asignar').style.display = 'none';
     document.getElementById('fo-seccion-chofer').style.display = 'block';
     const intm = intermediacionesGuardadas.find(i => String(i.id) === 'ITM-' + cargaAbiertaActual.id);
     
     if(intm) {
-       document.getElementById('fo-chofer-nombre').innerText = intm.transportista;
+       document.getElementById('fo-chofer-nombre').innerText = intm.transportista || '';
        document.getElementById('fo-pago').value = intm.tarifatransp || 0;
        document.getElementById('fo-cond-chofer-libre').value = intm.condChoferLibre || '';
        document.getElementById('fo-cond-dador-libre').value = intm.condDadorLibre || '';
-       const transp = transportistasGuardados.find(t => t.nombre === intm.transportista);
+       const transp = transportistasGuardados.find(t => String(t.nombre) === String(intm.transportista));
        if(transp) telChoferAsignado = transp.telefono;
        calcularComisionDossier();
     }
@@ -462,7 +474,9 @@ function abrirFichaOperacion(cargaId) {
     document.getElementById('fo-cond-dador-libre').value = ''; 
     calcularComisionDossier();
   }
-  document.getElementById('fo-boveda-links').innerHTML = ''; 
+  
+  // Renderizar enlaces de Drive guardados
+  document.getElementById('fo-boveda-links').innerHTML = cargaAbiertaActual.drive_links; 
   abrirModalNativo('modalFichaOperacion');
 }
 
@@ -486,7 +500,7 @@ function asignarTransportistaDossier() {
   const payloadIntm = {
     id: 'ITM-' + cargaAbiertaActual.id, 
     fecha: new Date().toISOString().split('T')[0], 
-    dador: cargaAbiertaActual.contacto || cargaAbiertaActual.dador, 
+    dador: cargaAbiertaActual.contacto || cargaAbiertaActual.dador || '', 
     transportista: transp.nombre, 
     tramo: `${cargaAbiertaActual.origen} -> ${cargaAbiertaActual.destino}`, 
     tarifadador: cobro, 
@@ -505,8 +519,8 @@ function asignarTransportistaDossier() {
 
 function enviarWhatsAppGPS() {
   if(!telChoferAsignado) return alert("El transportista no tiene teléfono configurado.");
-  const orig = cargaAbiertaActual.origen; 
-  const dest = cargaAbiertaActual.destino;
+  const orig = cargaAbiertaActual.origen || ''; 
+  const dest = cargaAbiertaActual.destino || '';
   const linkO = `https://maps.google.com/?q=${encodeURIComponent(orig)}`; 
   const linkD = `https://maps.google.com/?q=${encodeURIComponent(dest)}`;
   
@@ -529,8 +543,12 @@ async function subirArchivoBoveda(inputId, btnId) {
     const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "uploadFileDrive", fileName: `${cargaAbiertaActual.id}_${file.name}`, mimeType: file.type, base64Data: base64 }) }); 
     const d = await res.json(); 
     if(d.success) { 
-      document.getElementById('fo-boveda-links').innerHTML += `<div style="background:#e0f2fe; padding:8px; border-radius:6px; border:1px solid #7dd3fc;"><a href="${d.fileUrl}" target="_blank" style="color:#0284c7; font-weight:bold; text-decoration:none;"><i class="fas fa-external-link-alt"></i> Ver Documento / Foto Book: ${file.name}</a></div>`; 
+      // FIX Fuga de Memoria Drive: Guarda el link en la variable actual y manda la actualización a la BD
+      const linkHtml = `<div style="background:#e0f2fe; padding:8px; border-radius:6px; border:1px solid #7dd3fc;"><a href="${d.fileUrl}" target="_blank" style="color:#0284c7; font-weight:bold; text-decoration:none;"><i class="fas fa-external-link-alt"></i> Ver Documento / Foto Book: ${file.name}</a></div>`;
+      cargaAbiertaActual.drive_links = (cargaAbiertaActual.drive_links || '') + linkHtml;
+      document.getElementById('fo-boveda-links').innerHTML = cargaAbiertaActual.drive_links; 
       input.value = ""; 
+      window.MotorNivel9.guardarCargaEnBase(cargaAbiertaActual); // Actualiza Excel silenciosamente
     } else alert("Error de Drive: " + d.error);
   } catch(e) { alert("Error de conexión al subir imagen."); } finally { btn.innerHTML = 'Subir a Drive'; btn.disabled = false; }
 }
@@ -541,7 +559,7 @@ function renderTransportistas() {
   const u = (document.getElementById('rt-filter-ubicacion')?.value || '').toLowerCase();
   const t = document.getElementById('rt-filter-tipo')?.value || 'Todos';
 
-  let arr = transportistasGuardados.filter(tr => (t === 'Todos' || tr.tipo === t) && tr.ubicacion.toLowerCase().includes(u));
+  let arr = transportistasGuardados.filter(tr => (t === 'Todos' || tr.tipo === t) && (tr.ubicacion||'').toLowerCase().includes(u));
   container.innerHTML = arr.length === 0 ? '<p style="color:#71717a; grid-column:span 2;">No hay transportistas registrados.</p>' : arr.map(tr => `
     <div class="broker-card">
       <div class="broker-card-header">
@@ -570,7 +588,7 @@ function renderIntermediaciones() {
       <td>${(im.fecha||'').split('-').reverse().join('/')}</td>
       <td><strong>${im.dador}</strong></td>
       <td>${im.transportista}</td>
-      <td><span class="status-badge status-${est.replace(/\s+/g,'')}" style="padding:4px 8px; border-radius:6px; font-weight:800;">${est}</span></td>
+      <td><span class="status-badge status-${String(est).replace(/\s+/g,'')}" style="padding:4px 8px; border-radius:6px; font-weight:800; color:white;">${est}</span></td>
       <td style="color:#0284c7; font-weight:700;">$${Number(im.tarifadador||0).toLocaleString('es-AR')}</td>
       <td style="color:#dc2626;">$${Number(im.tarifatransp||0).toLocaleString('es-AR')}</td>
       <td style="color:#8b5cf6; font-weight:900;">$${Number(im.comision||0).toLocaleString('es-AR')}</td>
@@ -641,7 +659,7 @@ function guardarContactoManual() {
 function renderContactos() {
   const q = (document.getElementById('cnt-filter-search')?.value || '').toLowerCase(); 
   const cat = document.getElementById('cnt-filter-categoria')?.value || 'Todas';
-  const arr = contactosGuardados.filter(c => (cat === 'Todas' || c.categoria === cat) && (c.nombre.toLowerCase().includes(q) || (c.telefono||'').includes(q)));
+  const arr = contactosGuardados.filter(c => (cat === 'Todas' || c.categoria === cat) && ((c.nombre||'').toLowerCase().includes(q) || String(c.telefono||'').includes(q)));
   
   document.getElementById('contactListContainer').innerHTML = arr.length === 0 ? '<p style="color:#71717a;">Sin contactos en el directorio.</p>' : arr.map(c => `
     <div class="contact-card" style="background:white; padding:15px; border-radius:12px; border:1px solid #d4d4d8;">
@@ -649,7 +667,7 @@ function renderContactos() {
       <div style="color:#52525b; margin-top:5px; font-size:0.9rem;"><i class="fas fa-phone"></i> ${c.telefono}</div>
       ${c.observaciones ? `<div style="font-size:0.82rem; color:#71717a; margin-top:6px;"><em>"${c.observaciones}"</em></div>` : ''}
       ${(c.categoria === 'Proveedor' || c.categoria === 'Chofer') ? `<div style="font-size:0.78rem; margin-top:6px; background:var(--brand-light); padding:5px; border-radius:6px; color:var(--brand);"><b>Rol:</b> ${c.provtipo || '-'} | <b>Vehículo:</b> ${c.provflota || '-'}</div>` : ''}
-      <button class="btn btn-success" style="width:100%; margin-top:8px; padding:6px;" onclick="window.open('https://wa.me/549${(c.telefono||'').replace(/\D/g,'')}')"><i class="fab fa-whatsapp"></i> Chat</button>
+      <button class="btn btn-success" style="width:100%; margin-top:8px; padding:6px;" onclick="window.open('https://wa.me/549${String(c.telefono||'').replace(/\D/g,'')}')"><i class="fab fa-whatsapp"></i> Chat</button>
     </div>`).join('');
 }
 
@@ -668,7 +686,7 @@ function generarReporteDatos() {
   let f = eventosGuardados.filter(ev => t.includes(ev.tipomov));
   if(start) f = f.filter(ev => ev.fecha >= start); 
   if(end) f = f.filter(ev => ev.fecha <= end); 
-  if(est !== 'Todos') f = f.filter(ev => ev.estado === est);
+  if(est !== 'Todos') f = f.filter(ev => String(ev.estado).toUpperCase() === est.toUpperCase());
   f.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
   
   document.getElementById('reportTableBody').innerHTML = f.map(ev => {
@@ -759,15 +777,12 @@ function imprimirReporte() {
     });
     
     document.getElementById('pdf-report-tbody').innerHTML = filasHtml;
-    const container = document.getElementById('pdf-report-container');
-    container.style.display = 'block';
 
+    // FIX PDF ENGINE: Usa la boveda oculta
     html2pdf().set({
       margin: 12, filename: `Reporte_Nivel9_Finanzas_${Date.now()}.pdf`, image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, pagebreak: { mode: 'avoid-all' }
-    }).from(document.getElementById('pdf-report-content')).save().then(() => {
-        container.style.display = 'none';
-    });
+      html2canvas: { scale: 2, useCORS: true, windowWidth: 1122 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, pagebreak: { mode: 'avoid-all' }
+    }).from(document.getElementById('pdf-report-content')).save();
 }
 
 function openConfigModal() { dibujarListasConfig(); abrirModalNativo('modalConfig'); }
@@ -809,7 +824,10 @@ function cargarDatosEnPresupuesto() {
   document.getElementById('pres-cliente').value = v.cliente; 
   document.getElementById('pres-origen').value = v.origen || ''; 
   document.getElementById('pres-destino').value = v.destino || ''; 
-  document.getElementById('pres-desc').value = v.inventario || v.detalles || ''; 
+  
+  let invTxt = v.inventario || v.detalles || v.descripcion || '';
+  document.getElementById('pres-desc').value = invTxt.replace(/<br\s*[\/]?>/gi, "\n"); 
+  
   document.getElementById('pres-obs-ruta').value = v.obsruta || ''; 
   document.getElementById('pres-total').value = v.presupuesto || 0; 
   document.getElementById('pres-sena').value = v.sena || 0; 
@@ -845,6 +863,7 @@ function generarPDFBase(tipoDocumento) {
   document.getElementById('pdf-origen').innerText = document.getElementById('pres-origen').value; 
   document.getElementById('pdf-destino').innerText = document.getElementById('pres-destino').value; 
   
+  // FIX SALTO DE LÍNEA MOBILE: Convierte \n a <br>
   let inventarioTexto = document.getElementById('pres-desc').value || '';
   document.getElementById('pdf-desc').innerHTML = inventarioTexto.replace(/\n/g, '<br>'); 
   
@@ -877,7 +896,7 @@ function generarPDFBase(tipoDocumento) {
       }
 
       let tipoCli = document.getElementById('pres-tipo-cliente-doc').value;
-      let firmasHTML = `<div style="margin-top: 25px; display: flex; justify-content: flex-start; align-items: center; gap: 30px; padding-top: 15px;"><div style="text-align: left; font-size: 12px; font-weight: bold; color: #111; line-height: 1.6;">CEO / Administrador<br>Rodrigo J. Castro<br>Nivel 9 Logística de Excelencia</div><div><svg width="160" height="60" viewBox="0 0 180 70" xmlns="http://www.w3.org/2000/svg"><path d="M30,50 C10,50 15,35 30,30 C50,25 60,35 45,55 C35,70 10,65 35,50 L170,10" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M75,55 Q85,45 90,60 Q95,65 105,60" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div></div>`;
+      let firmasHTML = `<div style="margin-top: 25px; display: flex; justify-content: flex-start; align-items: center; gap: 30px; padding-top: 15px; page-break-inside: avoid;"><div style="text-align: left; font-size: 12px; font-weight: bold; color: #111; line-height: 1.6;">CEO / Administrador<br>Rodrigo J. Castro<br>Nivel 9 Logística de Excelencia</div><div><svg width="160" height="60" viewBox="0 0 180 70" xmlns="http://www.w3.org/2000/svg"><path d="M30,50 C10,50 15,35 30,30 C50,25 60,35 45,55 C35,70 10,65 35,50 L170,10" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M75,55 Q85,45 90,60 Q95,65 105,60" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></div></div>`;
       
       if (tipoCli === 'Empresa') { 
         document.getElementById('pdf-terms-text').innerHTML = `<strong style="font-size:11px; color:#ea580c; text-transform:uppercase;">Términos y Condiciones Legales (Servicio Corporativo):</strong><br><div style="font-size:8.5px; text-align:justify; margin-top:4px; color:#333; line-height:1.35;">El presente presupuesto tiene una validez de 10 (diez) días corridos desde su fecha de emisión. La tarifa cotizada contempla la operación de transporte punto a punto; no incluye tiempos de espera, demoras o estadías prolongadas superiores a 2 (dos) horas en los puntos de carga y/o descarga. De superarse dicha franja horaria, se facturará un recargo en concepto de 'Estadía' por cada hora adicional y por unidad asignada. El servicio se ejecuta con unidades de flota certificadas, choferes habilitados (LiNTI) y pólizas de seguro de carga vigentes. La facturación correspondiente se emite bajo condición fiscal Monotributo (Factura C - CUIT: 20-24691221-2). El pago del servicio deberá efectuarse bajo las condiciones acordadas contra entrega del Remito y/o Hoja de Ruta debidamente conformada.</div>${firmasHTML}`;
@@ -886,14 +905,13 @@ function generarPDFBase(tipoDocumento) {
       }
   }
   
-  const prev = document.getElementById('pdf-render-container'); 
-  prev.style.display = 'block'; 
   let nombreFinal = tipoDocumento === 'HojaRuta' ? `HojaDeRuta_${document.getElementById('pres-cliente').value}.pdf` : `Presupuesto_${document.getElementById('pres-cliente').value}.pdf`;
   if (tipoDocumento === 'Presupuesto') { incrementarNumeroDoc(document.getElementById('pres-tipo-cliente-doc').value); }
   if (document.getElementById('modalEventForm').style.display === 'flex') { document.getElementById('ev-nrodoc').value = document.getElementById('pres-nro').value; }
 
   setTimeout(() => {
-    html2pdf().set({ margin: 0, filename: nombreFinal, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdf-template-content')).save().then(() => { prev.style.display = 'none'; }); 
+    // FIX PDF ENGINE: Renderiza desde la boveda oculta obligando a celular a leer 793px de ancho
+    html2pdf().set({ margin: 0, filename: nombreFinal, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, windowWidth: 793 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdf-template-content')).save(); 
   }, 300);
 }
 
@@ -972,20 +990,6 @@ window.MotorNivel9 = {
     }
   },
 
-  hablarMarina: function(texto) {
-      if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-          let textoLimpio = texto.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ');
-          let utterance = new SpeechSynthesisUtterance(textoLimpio);
-          utterance.lang = 'es-AR';
-          utterance.rate = 1.05;
-          let voices = window.speechSynthesis.getVoices();
-          let vozFemenina = voices.find(v => v.lang.includes('es') && (v.name.includes('Female') || v.name.includes('Mujer') || v.name.includes('Google español'))) || voices.find(v => v.lang.startsWith('es'));
-          if (vozFemenina) utterance.voice = vozFemenina;
-          window.speechSynthesis.speak(utterance);
-      }
-  },
-
   procesarChatMarina: async function() { 
     const i = document.getElementById('marina-prompt-input'); 
     const b = document.getElementById('marina-chat-response'); 
@@ -1006,7 +1010,6 @@ window.MotorNivel9 = {
         const inf = await res.json(); 
         if (inf.success) {
             b.innerHTML = inf.result;
-            this.hablarMarina(inf.result);
         } else {
             b.innerHTML = `⚠️ <strong>Error Servidor:</strong><br><br>${inf.error}`; 
         }
@@ -1017,7 +1020,6 @@ window.MotorNivel9 = {
 
   reconocimientoVoz: function() { 
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return alert("Reconocimiento de voz no soportado en este navegador."); 
-    window.speechSynthesis.cancel();
     const r = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); 
     r.lang = 'es-AR'; 
     r.start(); 
@@ -1051,4 +1053,3 @@ window.MotorNivel9 = {
 };
 
 function abrirModalAsistenteIA() { cerrarModalesNativos(); document.getElementById('modalMarinaAsistente').style.display = 'flex'; }
-if ('speechSynthesis' in window) { window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); }; }
