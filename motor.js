@@ -382,9 +382,51 @@ function trasladarCotizacion() {
 // ==========================================
 // 4. MÓDULO BROKERAGE 3PL, DOSSIER Y BÓVEDA
 // ==========================================
-function abrirModalNuevaCarga() { document.getElementById('formCarga').reset(); document.getElementById('bc-id').value = 'CARGA-' + Date.now(); abrirModalNativo('modalPublicarCarga'); }
-function abrirModalNuevoTransportista() { document.getElementById('formTransportista').reset(); document.getElementById('rt-id').value = 'TRANSP-' + Date.now(); abrirModalNativo('modalPublicarTransportista'); }
-function abrirModalNuevaIntermediacion() { document.getElementById('im-id').value = 'INT-' + Date.now(); document.getElementById('im-fecha').value = new Date().toISOString().split('T')[0]; document.getElementById('im-tarifa-dador').value = 0; document.getElementById('im-tarifa-transp').value = 0; document.getElementById('im-comision').value = 0; abrirModalNativo('modalIntermediacion'); }
+function abrirModalNuevaCarga() { 
+  document.getElementById('formCarga').reset(); 
+  document.getElementById('bc-id').value = 'CARGA-' + Date.now(); 
+  abrirModalNativo('modalPublicarCarga'); 
+}
+
+function abrirModalNuevoTransportista() { 
+  document.getElementById('formTransportista').reset(); 
+  document.getElementById('rt-id').value = 'TRANSP-' + Date.now(); 
+  abrirModalNativo('modalPublicarTransportista'); 
+}
+
+function abrirModalNuevaIntermediacion() { 
+  document.getElementById('im-id').value = 'INT-' + Date.now(); 
+  document.getElementById('im-fecha').value = new Date().toISOString().split('T')[0]; 
+  document.getElementById('im-tarifa-dador').value = 0; 
+  document.getElementById('im-tarifa-transp').value = 0; 
+  document.getElementById('im-comision').value = 0; 
+  abrirModalNativo('modalIntermediacion'); 
+}
+
+// EDICIÓN Y ELIMINACIÓN DE CARGAS
+function editarCarga(idCarga) {
+  const c = bolsaCargasGuardadas.find(item => String(item.id) === String(idCarga));
+  if(!c) return alert("Carga no encontrada.");
+  
+  document.getElementById('bc-id').value = c.id;
+  document.getElementById('bc-origen').value = c.origen || '';
+  document.getElementById('bc-destino').value = c.destino || '';
+  document.getElementById('bc-vehiculo').value = c.vehiculo || 'Furgón';
+  document.getElementById('bc-peso').value = c.peso || '';
+  document.getElementById('bc-estado').value = c.estado || 'Disponible';
+  document.getElementById('bc-tarifa').value = c.tarifa || 0;
+  document.getElementById('bc-contacto').value = c.contacto || '';
+  document.getElementById('bc-tel').value = c.telefono || '';
+  document.getElementById('bc-desc').value = c.descripcion || '';
+  
+  abrirModalNativo('modalPublicarCarga');
+}
+
+function eliminarCarga(idCarga) {
+  if(confirm("¿Estás seguro de eliminar esta carga de la base?")) {
+    window.MotorNivel9.eliminarCargaEnBase(idCarga);
+  }
+}
 
 function guardarCargasEnBase() {
   const payload = { 
@@ -404,7 +446,33 @@ function guardarCargasEnBase() {
   window.MotorNivel9.guardarCargaEnBase(payload);
 }
 
-// GUARDA TRANSPORTISTA INCLUYENDO MARCA/MODELO Y CARROCERÍA
+// EDICIÓN Y ELIMINACIÓN DE TRANSPORTISTAS
+function editarTransportista(idTransp) {
+  const tr = transportistasGuardados.find(t => String(t.id) === String(idTransp));
+  if(!tr) return alert("Transportista no encontrado.");
+
+  document.getElementById('rt-id').value = tr.id;
+  document.getElementById('rt-nombre').value = tr.nombre || '';
+  document.getElementById('rt-tel').value = tr.telefono || '';
+  document.getElementById('rt-tipo').value = tr.tipo || 'Furgón';
+  document.getElementById('rt-ubicacion').value = tr.ubicacion || '';
+  
+  if(document.getElementById('rt-marca-modelo')) document.getElementById('rt-marca-modelo').value = tr.marca_modelo || tr.marcamodelo || '';
+  if(document.getElementById('rt-carroceria')) document.getElementById('rt-carroceria').value = tr.carroceria || 'Furgón Cerrado / Paquetero';
+  
+  document.getElementById('rt-capacidad').value = tr.capacidad || '';
+  document.getElementById('rt-patente').value = tr.patente || '';
+  if(document.getElementById('rt-patente-acoplado')) document.getElementById('rt-patente-acoplado').value = tr.patente_acoplado || tr.patenteacoplado || '';
+
+  abrirModalNativo('modalPublicarTransportista');
+}
+
+function eliminarTransportista(idTransp) {
+  if(confirm("¿Estás seguro de eliminar este transportista de la red?")) {
+    window.MotorNivel9.eliminarTransportistaEnBase(idTransp);
+  }
+}
+
 function guardarTransportistaEnBase() {
   const payload = { 
     id: document.getElementById('rt-id').value, 
@@ -415,13 +483,14 @@ function guardarTransportistaEnBase() {
     marca_modelo: document.getElementById('rt-marca-modelo') ? document.getElementById('rt-marca-modelo').value : '',
     carroceria: document.getElementById('rt-carroceria') ? document.getElementById('rt-carroceria').value : '',
     capacidad: document.getElementById('rt-capacidad').value, 
-    patente: document.getElementById('rt-patente').value 
+    patente: document.getElementById('rt-patente').value,
+    patente_acoplado: document.getElementById('rt-patente-acoplado') ? document.getElementById('rt-patente-acoplado').value : ''
   };
   if(!payload.nombre || !payload.telefono || !payload.ubicacion) { alert("Faltan datos obligatorios del transportista."); return; }
   window.MotorNivel9.guardarTransportistaEnBase(payload);
 }
 
-// RENDERIZADO DE CARGAS CON BOTONES PDF & DIFUSIÓN WA
+// RENDERIZADO DE CARGAS CON EDICIÓN Y ELIMINACIÓN
 function renderBolsaCargas() {
   const container = document.getElementById('bolsaCargasCardsContainer');
   if(!container) return;
@@ -456,10 +525,12 @@ function renderBolsaCargas() {
         </select>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px; margin-top:10px;">
-        <button class="btn btn-dark" style="padding:6px 4px; font-size:0.75rem;" onclick="abrirFichaOperacion('${c.id}')"><i class="fas fa-folder-open"></i> Ficha</button>
-        <button class="btn btn-purple" style="padding:6px 4px; font-size:0.75rem;" onclick="generarPdfCarga('${c.id}')"><i class="fas fa-file-pdf"></i> PDF</button>
-        <button class="btn btn-success" style="padding:6px 4px; font-size:0.75rem;" onclick="difundirCargaWA('${c.id}')"><i class="fab fa-whatsapp"></i> Difundir</button>
+      <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:4px; margin-top:10px;">
+        <button class="btn btn-dark" style="padding:6px 2px; font-size:0.72rem;" title="Ficha" onclick="abrirFichaOperacion('${c.id}')"><i class="fas fa-folder-open"></i> Ficha</button>
+        <button class="btn btn-outline-dark" style="padding:6px 2px; font-size:0.72rem;" title="Editar" onclick="editarCarga('${c.id}')"><i class="fas fa-edit"></i> Editar</button>
+        <button class="btn btn-purple" style="padding:6px 2px; font-size:0.72rem;" title="PDF" onclick="generarPdfCarga('${c.id}')"><i class="fas fa-file-pdf"></i> PDF</button>
+        <button class="btn btn-success" style="padding:6px 2px; font-size:0.72rem;" title="Difundir" onclick="difundirCargaWA('${c.id}')"><i class="fab fa-whatsapp"></i> Difundir</button>
+        <button class="btn btn-danger" style="padding:6px 2px; font-size:0.72rem;" title="Eliminar" onclick="eliminarCarga('${c.id}')"><i class="fas fa-trash"></i></button>
       </div>
     </div>`).join('');
 }
@@ -476,7 +547,7 @@ function generarPdfCarga(idCarga) {
   if(!c) return alert("Carga no encontrada.");
 
   const html = `
-    <div style="padding: 30px; font-family: 'Outfit', sans-serif; color: #111; background: white; border: 2px solid #ea580c; border-radius: 12px;">
+    <div style="padding: 25px; font-family: 'Outfit', sans-serif; color: #111; background: white; border: 2px solid #ea580c; border-radius: 12px; box-sizing: border-box;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #ea580c; padding-bottom:15px; margin-bottom:20px;">
         <div>
           <h1 style="color:#ea580c; margin:0; font-size:24px; font-weight:900;">NIVEL 9 LOGÍSTICA</h1>
@@ -512,12 +583,14 @@ function generarPdfCarga(idCarga) {
   }).from(container).save().then(() => document.body.removeChild(container));
 }
 
+// DIFUSIÓN LIMPIA POR WHATSAPP (SIN LINK DE ENCABEZADO)
 function difundirCargaWA(idCarga) {
   const c = bolsaCargasGuardadas.find(item => String(item.id) === String(idCarga));
   if(!c) return alert("Carga no encontrada.");
 
-  const msg = `🚚 *OFERTA DE CARGA - NIVEL 9 BROKERAGE* 📦\n\n📍 *Origen:* ${c.origen}\n🏁 *Destino:* ${c.destino}\n🚛 *Requerimiento:* ${c.vehiculo}\n📦 *Carga:* ${c.descripcion || c.peso || 'Carga General'}\n💵 *Tarifa Ofertada:* $${Number(c.tarifa||0).toLocaleString('es-AR')}\n\n📲 *Postulate o Consultá al Despacho:* https://wa.me/5493517046541?text=Hola,%20me%20interesa%20la%20carga%20${c.id}%20de%20${encodeURIComponent(c.origen)}%20a%20${encodeURIComponent(c.destino)}`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+  const msg = `🚚 *OFERTA DE CARGA - NIVEL 9 BROKERAGE* 📦\n\n📍 *Origen:* ${c.origen}\n🏁 *Destino:* ${c.destino}\n🚛 *Requerimiento:* ${c.vehiculo}\n📦 *Carga:* ${c.descripcion || c.peso || 'Carga General'}\n💵 *Tarifa Ofertada:* $${Number(c.tarifa||0).toLocaleString('es-AR')}\n\n👉 *Postulate o Consultá al Despacho:* https://nivel9logistica.github.io/portal-publico.html/`;
+  
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg));
 }
 
 function abrirFichaOperacion(cargaId) {
@@ -535,7 +608,8 @@ function abrirFichaOperacion(cargaId) {
   
   document.getElementById('fo-select-chofer').innerHTML = '<option value="">-- Buscar Camión en Red --</option>' + transportistasGuardados.map(t => {
     const detalleAuto = (t.marca_modelo || t.marcamodelo || '') + (t.carroceria ? ' | ' + t.carroceria : '');
-    return `<option value="${t.id}">${t.nombre} - ${t.tipo} ${detalleAuto ? '('+detalleAuto+')' : ''} [${t.patente||'Sin Patente'}]</option>`;
+    const patSemi = (t.patente_acoplado || t.patenteacoplado) ? ' | Semi: ' + (t.patente_acoplado || t.patenteacoplado) : '';
+    return `<option value="${t.id}">${t.nombre} - ${t.tipo} ${detalleAuto ? '('+detalleAuto+')' : ''} [Pat: ${t.patente||'S/P'}${patSemi}]</option>`;
   }).join('');
 
   if(String(cargaAbiertaActual.estado).toUpperCase() === 'ASIGNADA' || String(cargaAbiertaActual.estado).toUpperCase() === 'EN TRÁNSITO') {
@@ -609,12 +683,12 @@ function enviarWhatsAppGPS() {
   const linkO = `https://maps.google.com/?q=${encodeURIComponent(orig)}`; 
   const linkD = `https://maps.google.com/?q=${encodeURIComponent(dest)}`;
   
-  let msg = `*ORDEN DE CARGA Y RUTA GPS - NIVEL 9* 🚚\n\n📍 *Retira en:* ${orig}\n🌐 *GPS Origen:* ${linkO}\n\n📍 *Entrega en:* ${dest}\n🌐 *GPS Destino:* ${linkD}\n\n📦 *Detalle:* ${cargaAbiertaActual.descripcion || 'Carga General'}\n💵 *Tarifa Acordada Chofer:* $${Number(document.getElementById('fo-pago').value).toLocaleString('es-AR')}\n\n📝 *ACUERDOS FIJOS DE OPERACIÓN:*\n${ACUERDO_FIJO_CHOFER}\n`;
+  let msg = `🚚 *ORDEN DE CARGA Y RUTA GPS - NIVEL 9*\n\n📍 *Retira en:* ${orig}\n🌐 *GPS Origen:* ${linkO}\n\n📍 *Entrega en:* ${dest}\n🌐 *GPS Destino:* ${linkD}\n\n📦 *Detalle:* ${cargaAbiertaActual.descripcion || 'Carga General'}\n💵 *Tarifa Acordada Chofer:* $${Number(document.getElementById('fo-pago').value).toLocaleString('es-AR')}\n\n📝 *ACUERDOS FIJOS DE OPERACIÓN:*\n${ACUERDO_FIJO_CHOFER}\n`;
   const condLibre = document.getElementById('fo-cond-chofer-libre').value;
   if(condLibre) msg += `\n*Condiciones Adicionales:* ${condLibre}\n`;
   msg += `\nPor favor, confirmame recepción de esta orden.`;
   
-  window.open(`https://wa.me/549${telChoferAsignado.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
+  window.open('https://wa.me/549' + telChoferAsignado.replace(/\D/g,'') + '?text=' + encodeURIComponent(msg));
 }
 
 function enviarWhatsAppDador3PL() {
@@ -627,15 +701,20 @@ function enviarWhatsAppDador3PL() {
   const transpObj = transportistasGuardados.find(t => String(t.nombre) === String(nombreChofer));
 
   let detalleVehiculo = cargaAbiertaActual.vehiculo;
+  let patTractora = 'Validada';
+  let patAcoplado = '';
+
   if (transpObj) {
     const mm = transpObj.marca_modelo || transpObj.marcamodelo || '';
     const carroc = transpObj.carroceria || '';
     if (mm || carroc) detalleVehiculo += ` (${mm} ${carroc ? '- ' + carroc : ''})`;
+    patTractora = transpObj.patente || 'Validada';
+    if(transpObj.patente_acoplado || transpObj.patenteacoplado) patAcoplado = transpObj.patente_acoplado || transpObj.patenteacoplado;
   }
 
-  let msg = `🛡️ *CONFIRMACIÓN DE UNIDAD ASIGNADA - NIVEL 9* 🚚\n\nEstimado/a *${cargaAbiertaActual.contacto || 'Cliente'}*:\nNos complacemos en informar que la unidad requerida para el tramo *${cargaAbiertaActual.origen} ➔ ${cargaAbiertaActual.destino}* ha sido asignada y validada.\n\n👤 *Chofer / Transporte:* ${nombreChofer}\n🚛 *Especificación Unidad:* ${detalleVehiculo}\n🆔 *Patente:* ${transpObj ? (transpObj.patente || 'Validada') : 'Validada'}\n📋 *Estatus:* Chofer y Unidad Habilitados (LiNTI / Póliza Vigente)\n\nCualquier novedad sobre el arribo a planta será notificada de inmediato por esta vía. Gracias por confiar en Nivel 9.`;
+  let msg = `🛡️ *CONFIRMACIÓN DE UNIDAD ASIGNADA - NIVEL 9* 🚚\n\nEstimado/a *${cargaAbiertaActual.contacto || 'Cliente'}*:\nNos complacemos en informar que la unidad requerida para el tramo *${cargaAbiertaActual.origen} ➔ ${cargaAbiertaActual.destino}* ha sido asignada y validada.\n\n👤 *Chofer / Transporte:* ${nombreChofer}\n🚛 *Especificación Unidad:* ${detalleVehiculo}\n🆔 *Patente Tractor:* ${patTractora}\n${patAcoplado ? '🆔 *Patente Semi/Acoplado:* ' + patAcoplado + '\n' : ''}📋 *Estatus:* Chofer y Unidad Habilitados (LiNTI / Póliza Vigente)\n\nCualquier novedad sobre el arribo a planta será notificada de inmediato por esta vía. Gracias por confiar en Nivel 9.`;
 
-  window.open(`https://wa.me/549${telDador.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
+  window.open('https://wa.me/549' + telDador.replace(/\D/g,'') + '?text=' + encodeURIComponent(msg));
 }
 
 async function subirArchivoBoveda(inputId, btnId) {
@@ -658,7 +737,7 @@ async function subirArchivoBoveda(inputId, btnId) {
   } catch(e) { alert("Error de conexión al subir imagen."); } finally { btn.innerHTML = 'Subir a Drive'; btn.disabled = false; }
 }
 
-// RENDERIZADO DE TRANSPORTISTAS CON MARCA/MODELO Y CARROCERÍA
+// RENDERIZADO DE TRANSPORTISTAS CON BOTONES DE EDICIÓN Y ELIMINACIÓN
 function renderTransportistas() {
   const container = document.getElementById('transportistasCardsContainer');
   if(!container) return;
@@ -669,6 +748,7 @@ function renderTransportistas() {
   container.innerHTML = arr.length === 0 ? '<p style="color:#71717a; grid-column:span 2;">No hay transportistas registrados.</p>' : arr.map(tr => {
     const marcaModelo = tr.marca_modelo || tr.marcamodelo || 'Sin especificar';
     const carroceria = tr.carroceria || 'General / Estándar';
+    const patAcoplado = tr.patente_acoplado || tr.patenteacoplado || '-';
 
     return `
     <div class="broker-card">
@@ -679,49 +759,55 @@ function renderTransportistas() {
       <div style="font-size:0.88rem; color:#52525b;"><i class="fas fa-map-pin"></i> <b>Ubicación/Retorno:</b> ${tr.ubicacion}</div>
       <div style="font-size:0.85rem; color:#111827; margin-top:4px;"><i class="fas fa-shuttle-van"></i> <b>Modelo:</b> ${marcaModelo}</div>
       <div style="font-size:0.85rem; color:#ea580c; font-weight:700; margin-top:2px;"><i class="fas fa-box-open"></i> <b>Carrocería:</b> ${carroceria}</div>
-      <div style="font-size:0.82rem; color:#71717a; margin-top:2px;"><i class="fas fa-weight-hanging"></i> Capacidad: ${tr.capacidad || 'No especificada'} | Patente: ${tr.patente || '-'}</div>
+      <div style="font-size:0.82rem; color:#71717a; margin-top:2px;"><i class="fas fa-id-card"></i> <b>Pat. Tractor:</b> ${tr.patente || '-'} | <b>Semi:</b> ${patAcoplado}</div>
+      <div style="font-size:0.82rem; color:#71717a; margin-top:2px;"><i class="fas fa-weight-hanging"></i> Capacidad: ${tr.capacidad || 'No especificada'}</div>
       
-      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px; margin-top:10px;">
-        <button class="btn btn-success" style="padding:6px 4px; font-size:0.75rem;" onclick="window.open('https://wa.me/549${(tr.telefono||'').replace(/\D/g,'')}?text=Hola%20${encodeURIComponent(tr.nombre)},%20te%20contacto%20desde%20Nivel%209%20por%20tu%20${encodeURIComponent(tr.tipo)}')"><i class="fab fa-whatsapp"></i> Chat</button>
-        <button class="btn btn-purple" style="padding:6px 4px; font-size:0.75rem;" onclick="generarPdfTransportista('${tr.id}')"><i class="fas fa-file-pdf"></i> PDF</button>
-        <button class="btn btn-broker" style="padding:6px 4px; font-size:0.75rem;" onclick="presentarChoferWA('${tr.id}')"><i class="fas fa-share-alt"></i> Presentar</button>
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; margin-top:10px;">
+        <button class="btn btn-success" style="padding:6px 2px; font-size:0.75rem;" title="Chat WA" onclick="window.open('https://wa.me/549' + '${(tr.telefono||'').replace(/\D/g,'')}' + '?text=' + encodeURIComponent('Hola ${tr.nombre}, te contacto desde Nivel 9'))"><i class="fab fa-whatsapp"></i> Chat</button>
+        <button class="btn btn-outline-dark" style="padding:6px 2px; font-size:0.75rem;" title="Editar" onclick="editarTransportista('${tr.id}')"><i class="fas fa-edit"></i> Editar</button>
+        <button class="btn btn-purple" style="padding:6px 2px; font-size:0.75rem;" title="PDF" onclick="generarPdfTransportista('${tr.id}')"><i class="fas fa-file-pdf"></i> PDF</button>
+        <button class="btn btn-danger" style="padding:6px 2px; font-size:0.75rem;" title="Eliminar" onclick="eliminarTransportista('${tr.id}')"><i class="fas fa-trash"></i> Borrar</button>
       </div>
     </div>`;
   }).join('');
 }
 
-// GENERADOR PDF DOSSIER TRANSPORTISTA DETALLADO
+// GENERADOR PDF DOSSIER TRANSPORTISTA EN 1 SOLA HOJA A4 PERFECTA
 function generarPdfTransportista(idTransp) {
   const tr = transportistasGuardados.find(t => String(t.id) === String(idTransp));
   if(!tr) return alert("Transportista no encontrado.");
 
   const marcaModelo = tr.marca_modelo || tr.marcamodelo || 'No declarada';
   const carroceria = tr.carroceria || 'General / Estándar';
+  const patAcoplado = tr.patente_acoplado || tr.patenteacoplado || 'No aplica / Sin declarar';
 
   const html = `
-    <div style="padding: 30px; font-family: 'Outfit', sans-serif; color: #111; background: white; border: 2px solid #10b981; border-radius: 12px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #10b981; padding-bottom:15px; margin-bottom:20px;">
-        <div>
-          <h1 style="color:#10b981; margin:0; font-size:24px; font-weight:900;">NIVEL 9 RED DE TRANSPORTISTAS</h1>
-          <p style="margin:2px 0; font-size:12px; color:#555;">DOSSIER TÉCNICO DE UNIDAD Y CHOFER VALIDADO</p>
+    <div style="width: 100%; max-width: 700px; height: 950px; margin: 0 auto; padding: 25px; font-family: 'Outfit', sans-serif; color: #111; background: white; border: 2px solid #10b981; border-radius: 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #10b981; padding-bottom:12px; margin-bottom:15px;">
+          <div>
+            <h1 style="color:#10b981; margin:0; font-size:22px; font-weight:900;">NIVEL 9 RED DE TRANSPORTISTAS</h1>
+            <p style="margin:2px 0; font-size:11px; color:#555;">DOSSIER TÉCNICO DE UNIDAD Y CHOFER VALIDADO</p>
+          </div>
+          <div style="text-align:right;">
+            <span style="background:#111; color:white; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:11px;">${tr.id}</span>
+          </div>
         </div>
-        <div style="text-align:right;">
-          <span style="background:#111; color:white; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:12px;">${tr.id}</span>
-        </div>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:15px; font-size:12px;">
+          <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold; width:38%;">Transportista / Titular:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${tr.nombre}</td></tr>
+          <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Teléfono de Contacto:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${tr.telefono}</td></tr>
+          <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Tipo de Unidad:</td><td style="padding:8px; border-bottom:1px solid #ddd; color:#0284c7; font-weight:bold;">${tr.tipo}</td></tr>
+          <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Marca / Modelo / Año:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">${marcaModelo}</td></tr>
+          <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Carrocería / Equipamiento:</td><td style="padding:8px; border-bottom:1px solid #ddd; color:#ea580c; font-weight:bold;">${carroceria}</td></tr>
+          <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Ubicación / Base:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${tr.ubicacion}</td></tr>
+          <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Capacidad / Especialidad:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${tr.capacidad || 'No declarada'}</td></tr>
+          <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Patente Tractora:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold; color:#111827;">${tr.patente || 'En trámite / S/P'}</td></tr>
+          <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Patente Acoplado / Semi:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold; color:#111827;">${patAcoplado}</td></tr>
+          <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Validación Nivel 9:</td><td style="padding:8px; border-bottom:1px solid #ddd; color:#16a34a; font-weight:bold;">Conductores Validados / Documentación en Regla</td></tr>
+        </table>
       </div>
-      <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
-        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold; width:35%;">Transportista / Titular:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${tr.nombre}</td></tr>
-        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Teléfono de Contacto:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${tr.telefono}</td></tr>
-        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Tipo de Unidad:</td><td style="padding:8px; border-bottom:1px solid #ddd; color:#0284c7; font-weight:bold;">${tr.tipo}</td></tr>
-        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Marca / Modelo / Año:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">${marcaModelo}</td></tr>
-        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Carrocería / Equipamiento:</td><td style="padding:8px; border-bottom:1px solid #ddd; color:#ea580c; font-weight:bold;">${carroceria}</td></tr>
-        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Ubicación / Base:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${tr.ubicacion}</td></tr>
-        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Capacidad / Especialidad:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${tr.capacidad || 'No declarada'}</td></tr>
-        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Patente Identificatoria:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold; color:#111827;">${tr.patente || 'En trámite / Sin declarar'}</td></tr>
-        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Validación Nivel 9:</td><td style="padding:8px; border-bottom:1px solid #ddd; color:#16a34a; font-weight:bold;">Conductores Validados / Documentación en Regla</td></tr>
-      </table>
-      <div style="margin-top:30px; font-size:10px; color:#777; text-align:center; border-top:1px solid #ddd; padding-top:10px;">
-        Nivel 9 Logística | Operador Verificado
+      <div style="font-size:10px; color:#777; text-align:center; border-top:1px solid #ddd; padding-top:8px;">
+        Nivel 9 Logística de Excelencia | Operador Verificado
       </div>
     </div>
   `;
@@ -731,21 +817,23 @@ function generarPdfTransportista(idTransp) {
   document.body.appendChild(container);
 
   html2pdf().set({
-    margin: 10, filename: `DossierTransportista_${tr.nombre.replace(/\s+/g,'_')}.pdf`, image: { type: 'jpeg', quality: 0.98 },
+    margin: 8, filename: `DossierTransportista_${tr.nombre.replace(/\s+/g,'_')}.pdf`, image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   }).from(container).save().then(() => document.body.removeChild(container));
 }
 
-// PRESENTAR CHOFER COMPLETO POR WHATSAPP
+// PRESENTAR CHOFER COMPLETO POR WHATSAPP CON UTF-8
 function presentarChoferWA(idTransp) {
   const tr = transportistasGuardados.find(t => String(t.id) === String(idTransp));
   if(!tr) return alert("Transportista no encontrado.");
 
   const marcaModelo = tr.marca_modelo || tr.marcamodelo || 'A confirmar';
   const carroceria = tr.carroceria || 'General';
+  const patAcoplado = tr.patente_acoplado || tr.patenteacoplado || 'No aplica';
 
-  const msg = `🚛 *PRESENTACIÓN DE UNIDAD Y CHOFER - NIVEL 9* 🛡️\n\n👤 *Transportista:* ${tr.nombre}\n🚚 *Tipo de Unidad:* ${tr.tipo}\n🏎️ *Modelo:* ${marcaModelo}\n📦 *Carrocería:* ${carroceria}\n🆔 *Patente:* ${tr.patente || 'A confirmar'}\n⚖️ *Capacidad:* ${tr.capacidad || 'General'}\n📍 *Ubicación Actual:* ${tr.ubicacion}\n\n📋 *Certificación:* Licencia Profesional LiNTI y Documentación al día.`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+  const msg = `🚛 *PRESENTACIÓN DE UNIDAD Y CHOFER - NIVEL 9* 🛡️\n\n👤 *Transportista:* ${tr.nombre}\n🚚 *Tipo de Unidad:* ${tr.tipo}\n🏎️ *Modelo:* ${marcaModelo}\n📦 *Carrocería:* ${carroceria}\n🆔 *Patente Tractor:* ${tr.patente || 'A confirmar'}\n🆔 *Patente Semi/Acoplado:* ${patAcoplado}\n⚖️ *Capacidad:* ${tr.capacidad || 'General'}\n📍 *Ubicación Actual:* ${tr.ubicacion}\n\n📋 *Certificación:* Licencia Profesional LiNTI y Documentación al día.`;
+  
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg));
 }
 
 function renderIntermediaciones() {
@@ -891,7 +979,7 @@ function renderContactos() {
       <div style="color:#52525b; margin-top:5px; font-size:0.9rem;"><i class="fas fa-phone"></i> ${c.telefono}</div>
       ${c.observaciones ? `<div style="font-size:0.82rem; color:#71717a; margin-top:6px;"><em>"${c.observaciones}"</em></div>` : ''}
       ${(c.categoria === 'Proveedor' || c.categoria === 'Chofer') ? `<div style="font-size:0.78rem; margin-top:6px; background:var(--brand-light); padding:5px; border-radius:6px; color:var(--brand);"><b>Rol:</b> ${c.provtipo || '-'} | <b>Vehículo:</b> ${c.provflota || '-'}</div>` : ''}
-      <button class="btn btn-success" style="width:100%; margin-top:8px; padding:6px;" onclick="window.open('https://wa.me/549${String(c.telefono||'').replace(/\D/g,'')}')"><i class="fab fa-whatsapp"></i> Chat</button>
+      <button class="btn btn-success" style="width:100%; margin-top:8px; padding:6px;" onclick="window.open('https://wa.me/549' + '${String(c.telefono||'').replace(/\D/g,'')}')"><i class="fab fa-whatsapp"></i> Chat</button>
     </div>`).join('');
 }
 
@@ -1175,6 +1263,13 @@ window.MotorNivel9 = {
     renderBolsaCargas();
     try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveCarga', ...payload }) }); } catch(e) {}
   },
+
+  eliminarCargaEnBase: async function(id) {
+    bolsaCargasGuardadas = bolsaCargasGuardadas.filter(c => String(c.id) !== String(id));
+    cerrarModalesNativos();
+    renderBolsaCargas();
+    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'deleteCarga', id: id }) }); } catch(e) {}
+  },
   
   guardarTransportistaEnBase: async function(payload) {
     const idx = transportistasGuardados.findIndex(t => String(t.id) === String(payload.id)); 
@@ -1182,6 +1277,13 @@ window.MotorNivel9 = {
     cerrarModalesNativos(); 
     renderTransportistas();
     try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveTransportista', ...payload }) }); } catch(e) {}
+  },
+
+  eliminarTransportistaEnBase: async function(id) {
+    transportistasGuardados = transportistasGuardados.filter(t => String(t.id) !== String(id));
+    cerrarModalesNativos();
+    renderTransportistas();
+    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'deleteTransportista', id: id }) }); } catch(e) {}
   },
   
   guardarIntermediacionEnBase: async function(payload) {
