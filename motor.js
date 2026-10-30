@@ -1,8 +1,8 @@
 // =========================================================================
-// MOTOR JAVASCRIPT MAESTRO: NIVEL 9 ERP & BROKERAGE 3PL - MARK 85 PRO
+// MOTOR JAVASCRIPT MAESTRO: NIVEL 9 ERP & BROKERAGE 3PL - MARK 90 PRO
 // =========================================================================
 
-// ⚠️ ACÁ VA TU URL DE GOOGLE APPS SCRIPT (EL WEBHOOK):
+// ⚠️ URL DEL WEBHOOK DE GOOGLE APPS SCRIPT
 const webAppUrl = 'https://script.google.com/macros/s/AKfycbzJgp7Q0-LnufrbdYtB1nww9VPWIT-GDOHTGAmhk4qrp44CjhXTErniQQUGgrJofRJt/exec';
 
 // --- BASES DE DATOS EN MEMORIA ---
@@ -20,10 +20,11 @@ let controlRutaMapa = null;
 let cargaAbiertaActual = null;
 let telChoferAsignado = null;
 
+// Sincronización estandarizada con Portal Público
 let configuracionNivel9 = { 
   diesel: 2450, 
-  flota: ["Sprinter Furgon", "Sprinter Chasis", "Iveco Daily", "Camión MB 712"], 
-  tipos: ["Mudanza Local", "Mudanza Larga", "Flete Comercial", "Trabajos Especiales", "Autocotización"] 
+  flota: ["Furgón", "Chasis", "Camión Semi", "Sider", "Balancín"], 
+  tipos: ["Cargas Generales", "Carga Paletizada", "Cadena de Frío", "Carga a Granel", "Maquinaria y Pesada", "Mudanzas y Muebles", "Carga Peligrosa IMO"] 
 };
 
 // ACUERDOS COMERCIALES FIJOS 3PL
@@ -36,8 +37,10 @@ const ACUERDO_FIJO_DADOR = "1. Deslinde Tránsito.\n2. Control Estadías (2hs li
 document.addEventListener('DOMContentLoaded', () => {
   const cacheParams = localStorage.getItem('nivel9_config');
   if(cacheParams) configuracionNivel9 = JSON.parse(cacheParams);
-  document.getElementById('cfg-diesel').value = configuracionNivel9.diesel;
-  document.getElementById('marina-fecha-hoy').textContent = new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const cfgDiesel = document.getElementById('cfg-diesel');
+  if(cfgDiesel) cfgDiesel.value = configuracionNivel9.diesel;
+  const fechaHoyEl = document.getElementById('marina-fecha-hoy');
+  if(fechaHoyEl) fechaHoyEl.textContent = new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   actualizarListasDesplegables(); 
   sincronizarConServidor();
 });
@@ -52,7 +55,6 @@ async function sincronizarConServidor() {
     const res = await fetch(webAppUrl + '?action=getAppData');
     const data = await res.json();
     
-    // Normalizador de eventos contra fallos de mayúsculas y formatos de fecha de Google Sheets
     if(data.eventos && Array.isArray(data.eventos)) {
       eventosGuardados = data.eventos.map(item => {
         let obj = {};
@@ -77,11 +79,17 @@ async function sincronizarConServidor() {
     if(data.transportistas) transportistasGuardados = data.transportistas.map(c => { let o = {}; Object.keys(c).forEach(k => o[k.toLowerCase()] = c[k]); return o; });
     if(data.intermediaciones) intermediacionesGuardadas = data.intermediaciones.map(c => { let o = {}; Object.keys(c).forEach(k => o[k.toLowerCase()] = c[k]); return o; });
     
-    document.getElementById('sync-status-portal').innerHTML = '<i class="fas fa-check-circle"></i> Base Conectada (' + eventosGuardados.length + ' viajes)';
-    document.getElementById('sync-status-portal').style.color = 'var(--estado-entregado)';
+    const syncStatus = document.getElementById('sync-status-portal');
+    if(syncStatus) {
+      syncStatus.innerHTML = '<i class="fas fa-check-circle"></i> Base Conectada (' + eventosGuardados.length + ' viajes)';
+      syncStatus.style.color = 'var(--estado-entregado)';
+    }
   } catch(error) {
-    document.getElementById('sync-status-portal').innerHTML = '<i class="fas fa-wifi"></i> Modo Offline (Sólo Lectura Local)'; 
-    document.getElementById('sync-status-portal').style.color = 'var(--estado-cancelado)';
+    const syncStatus = document.getElementById('sync-status-portal');
+    if(syncStatus) {
+      syncStatus.innerHTML = '<i class="fas fa-wifi"></i> Modo Offline (Lectura Local)'; 
+      syncStatus.style.color = 'var(--estado-cancelado)';
+    }
   }
   dibujarCalendarioMes(); 
   renderContactos(); 
@@ -91,8 +99,10 @@ async function sincronizarConServidor() {
 }
 
 function showView(viewId) {
-  document.getElementById('viewPortal').style.display = 'none'; 
-  document.getElementById('appHeader').style.display = 'flex';
+  const portal = document.getElementById('viewPortal');
+  const appHeader = document.getElementById('appHeader');
+  if(portal) portal.style.display = 'none'; 
+  if(appHeader) appHeader.style.display = 'flex';
   
   ['Agenda', 'Cotizador', 'BolsaCargas', 'RedTransportistas', 'Intermediacion', 'Contactos', 'Informes'].forEach(v => {
     const el = document.getElementById('view' + v);
@@ -100,13 +110,13 @@ function showView(viewId) {
   });
 
   if (viewId === 'Portal') { 
-    document.getElementById('viewPortal').style.display = 'flex'; 
-    document.getElementById('appHeader').style.display = 'none'; 
+    if(portal) portal.style.display = 'flex'; 
+    if(appHeader) appHeader.style.display = 'none'; 
   } else { 
-    document.getElementById('view' + viewId).style.display = 'block'; 
+    const target = document.getElementById('view' + viewId);
+    if(target) target.style.display = 'block'; 
   }
   
-  // Cierra el menú desplegable en celular al hacer clic
   const nav = document.getElementById('topNavMenu');
   if(nav && nav.classList.contains('active')) nav.classList.remove('active');
 
@@ -116,7 +126,6 @@ function showView(viewId) {
   if(viewId === 'RedTransportistas') renderTransportistas();
   if(viewId === 'Intermediacion') renderIntermediaciones();
   
-  // FIX OSRM: Inicialización forzada al abrir pestaña
   if(viewId === 'Cotizador') { 
     setTimeout(() => { 
       if(!mapaCotizador) { 
@@ -128,18 +137,21 @@ function showView(viewId) {
   }
 }
 
-function abrirModalNativo(id) { cerrarModalesNativos(); document.getElementById(id).style.display = 'flex'; }
+function abrirModalNativo(id) { cerrarModalesNativos(); const m = document.getElementById(id); if(m) m.style.display = 'flex'; }
 function cerrarModalesNativos() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
 // ==========================================
 // 2. CALENDARIO DE AGENDA Y MOVIMIENTOS
 // ==========================================
 function dibujarCalendarioMes() {
+  const grid = document.getElementById('calendarGrid'); 
+  if(!grid) return;
   const anio = fechaCalendarioActual.getFullYear(); 
   const mes = fechaCalendarioActual.getMonth();
-  document.getElementById('currentMonthYear').textContent = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fechaCalendarioActual);
   
-  const grid = document.getElementById('calendarGrid'); 
+  const titleEl = document.getElementById('currentMonthYear');
+  if(titleEl) titleEl.textContent = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fechaCalendarioActual);
+  
   grid.innerHTML = '';
   const primerDiaSemana = new Date(anio, mes, 1).getDay(); 
   const diasDelMes = new Date(anio, mes + 1, 0).getDate();
@@ -169,11 +181,15 @@ function abrirVistaDelDia(fechaString) {
   const viajes = eventosGuardados.filter(e => e.fecha === fechaString); 
   const [ano, mes, dia] = fechaString.split('-');
   
-  document.getElementById('dayViewTitle').textContent = `Movimientos del ${dia}/${mes}/${ano}`;
+  const title = document.getElementById('dayViewTitle');
+  if(title) title.textContent = `Movimientos del ${dia}/${mes}/${ano}`;
+  const body = document.getElementById('dayViewBody');
+  if(!body) return;
+
   if (viajes.length === 0) { 
-    document.getElementById('dayViewBody').innerHTML = '<p style="color:#71717a; text-align:center; margin-top:15px;">Sin agenda para este día.</p>'; 
+    body.innerHTML = '<p style="color:#71717a; text-align:center; margin-top:15px;">Sin agenda para este día.</p>'; 
   } else { 
-    document.getElementById('dayViewBody').innerHTML = viajes.map(v => {
+    body.innerHTML = viajes.map(v => {
       const estadoLimpio = String(v.estado || 'Posible').replace(/\s+/g, '');
       return `
       <div class="event-card ${estadoLimpio}">
@@ -187,19 +203,18 @@ function abrirVistaDelDia(fechaString) {
 }
 
 function calculateTotal() { 
-  const valor = (id) => parseFloat(document.getElementById(id).value) || 0; 
-  document.getElementById('ev-total').value = valor('ev-presupuesto') - (valor('ev-combustible') + valor('ev-peajes-costo') + valor('ev-viaticos') + valor('ev-ayudante-monto') + valor('ev-comision') + valor('ev-gastoext')); 
+  const valor = (id) => { const el = document.getElementById(id); return el ? parseFloat(el.value) || 0 : 0; }; 
+  const tot = document.getElementById('ev-total');
+  if(tot) tot.value = valor('ev-presupuesto') - (valor('ev-combustible') + valor('ev-peajes-costo') + valor('ev-viaticos') + valor('ev-ayudante-monto') + valor('ev-comision') + valor('ev-gastoext')); 
 }
 
 function openAddEventModal(fechaPredefinida = null) {
-  document.getElementById('eventForm').reset(); 
+  const form = document.getElementById('eventForm');
+  if(form) form.reset(); 
   document.getElementById('ev-id').value = 'MOV-' + Date.now(); 
   document.getElementById('ev-fecha').value = fechaPredefinida || new Date().toISOString().split('T')[0]; 
-  document.getElementById('btn-eliminar-evento').style.display = 'none'; 
-  document.getElementById('ev-nrodoc').value = ''; 
-  document.getElementById('ev-tarifa-hora').value = ''; 
-  document.getElementById('ev-base-minima').value = ''; 
-  document.getElementById('ev-detalle-tarifa').value = ''; 
+  const btnEliminar = document.getElementById('btn-eliminar-evento');
+  if(btnEliminar) btnEliminar.style.display = 'none'; 
   calculateTotal(); 
   cerrarModalesNativos(); 
   abrirModalNativo('modalEventForm');
@@ -220,9 +235,7 @@ function editEvent(idViaje) {
   document.getElementById('ev-destino').value = viaje.destino || ''; 
   document.getElementById('ev-distancia').value = viaje.distancia || 0; 
   
-  // FIX INVENTARIO: Mapeador amplio para evitar perder datos si se cambia el nombre de la columna.
   let textoInv = viaje.inventario || viaje.detalles || viaje.descripcion || viaje.detallecarga || '';
-  // Normalizar saltos de línea de HTML a Formato Móvil
   textoInv = textoInv.replace(/<br\s*[\/]?>/gi, "\n");
   document.getElementById('ev-inventario').value = textoInv; 
   
@@ -241,7 +254,8 @@ function editEvent(idViaje) {
   document.getElementById('ev-gastoext').value = viaje.gastoext || 0; 
   document.getElementById('ev-detallegastoext').value = viaje.detallegastoext || '';
   
-  document.getElementById('btn-eliminar-evento').style.display = 'inline-flex'; 
+  const btnEliminar = document.getElementById('btn-eliminar-evento');
+  if(btnEliminar) btnEliminar.style.display = 'inline-flex'; 
   calculateTotal(); 
   cerrarModalesNativos(); 
   abrirModalNativo('modalEventForm');
@@ -252,7 +266,7 @@ function saveEvent() {
   const cliente = document.getElementById('ev-cliente').value.trim(); 
   if(!fecha || !cliente) { alert("Error: Fecha y Cliente obligatorios."); return; } 
   calculateTotal(); 
-  const valorNum = (id) => parseFloat(document.getElementById(id).value) || 0;
+  const valorNum = (id) => { const el = document.getElementById(id); return el ? parseFloat(el.value) || 0 : 0; };
   
   const payload = { 
     id: document.getElementById('ev-id').value, 
@@ -302,6 +316,7 @@ function abrirWhatsAppFormulario() {
 // ==========================================
 function addDestinoCotizador() { 
   const c = document.getElementById('destinosContainer'); 
+  if(!c) return;
   const i = document.createElement('input'); 
   i.type = 'text'; i.className = 'cot-destino-input'; i.placeholder = 'Otra parada...'; i.style.marginTop = '8px'; 
   c.appendChild(i); 
@@ -389,6 +404,7 @@ function guardarCargasEnBase() {
   window.MotorNivel9.guardarCargaEnBase(payload);
 }
 
+// GUARDA TRANSPORTISTA INCLUYENDO MARCA/MODELO Y CARROCERÍA
 function guardarTransportistaEnBase() {
   const payload = { 
     id: document.getElementById('rt-id').value, 
@@ -396,6 +412,8 @@ function guardarTransportistaEnBase() {
     telefono: document.getElementById('rt-tel').value, 
     tipo: document.getElementById('rt-tipo').value, 
     ubicacion: document.getElementById('rt-ubicacion').value, 
+    marca_modelo: document.getElementById('rt-marca-modelo') ? document.getElementById('rt-marca-modelo').value : '',
+    carroceria: document.getElementById('rt-carroceria') ? document.getElementById('rt-carroceria').value : '',
     capacidad: document.getElementById('rt-capacidad').value, 
     patente: document.getElementById('rt-patente').value 
   };
@@ -403,6 +421,7 @@ function guardarTransportistaEnBase() {
   window.MotorNivel9.guardarTransportistaEnBase(payload);
 }
 
+// RENDERIZADO DE CARGAS CON BOTONES PDF & DIFUSIÓN WA
 function renderBolsaCargas() {
   const container = document.getElementById('bolsaCargasCardsContainer');
   if(!container) return;
@@ -427,20 +446,84 @@ function renderBolsaCargas() {
       <div style="font-size:0.88rem; color:#52525b;"><i class="fas fa-box"></i> <b>Carga:</b> ${c.descripcion || c.peso || 'Carga General'}</div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
         <div><span style="font-size:0.8rem; color:#71717a;">Tarifa Ofertada:</span><div class="broker-price">$${Number(c.tarifa||0).toLocaleString('es-AR')}</div></div>
-        <span class="status-badge status-${String(c.estado || 'Disponible').replace(/\s+/g,'')}" style="padding:4px 8px; border-radius:6px; font-weight:800; color:white;">${c.estado || 'Disponible'}</span>
+        
+        <select onchange="cambiarEstadoCargaRapido('${c.id}', this.value)" style="padding:4px 8px; border-radius:6px; font-weight:800; font-size:0.78rem; cursor:pointer;" class="status-badge status-${String(c.estado || 'Disponible').replace(/\s+/g,'')}">
+          <option value="Disponible" ${c.estado === 'Disponible' ? 'selected' : ''}>🔵 Disponible</option>
+          <option value="ASIGNADA" ${c.estado === 'ASIGNADA' ? 'selected' : ''}>🟡 Asignada</option>
+          <option value="En Tránsito" ${c.estado === 'En Tránsito' ? 'selected' : ''}>🟠 En Tránsito</option>
+          <option value="Entregada" ${c.estado === 'Entregada' ? 'selected' : ''}>🟢 Entregada</option>
+          <option value="Cancelada" ${c.estado === 'Cancelada' ? 'selected' : ''}>🔴 Cancelada</option>
+        </select>
       </div>
-      <div style="display:flex; gap:8px; margin-top:10px;">
-        <button class="btn btn-dark" style="flex:1;" onclick="abrirFichaOperacion('${c.id}')"><i class="fas fa-folder-open"></i> Ficha Dossier</button>
-        <button class="btn btn-success" style="flex:1;" onclick="window.open('https://wa.me/549${(c.telefono||'').replace(/\D/g,'')}?text=Hola%20${encodeURIComponent(c.contacto || 'Empresa')},%20te%20contacto%20desde%20Nivel%209%20por%20la%20carga%20de%20${encodeURIComponent(c.origen)}%20a%20${encodeURIComponent(c.destino)}')"><i class="fab fa-whatsapp"></i> Chat</button>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px; margin-top:10px;">
+        <button class="btn btn-dark" style="padding:6px 4px; font-size:0.75rem;" onclick="abrirFichaOperacion('${c.id}')"><i class="fas fa-folder-open"></i> Ficha</button>
+        <button class="btn btn-purple" style="padding:6px 4px; font-size:0.75rem;" onclick="generarPdfCarga('${c.id}')"><i class="fas fa-file-pdf"></i> PDF</button>
+        <button class="btn btn-success" style="padding:6px 4px; font-size:0.75rem;" onclick="difundirCargaWA('${c.id}')"><i class="fab fa-whatsapp"></i> Difundir</button>
       </div>
     </div>`).join('');
+}
+
+function cambiarEstadoCargaRapido(idCarga, nuevoEstado) {
+  const carga = bolsaCargasGuardadas.find(c => String(c.id) === String(idCarga));
+  if(!carga) return;
+  carga.estado = nuevoEstado;
+  window.MotorNivel9.guardarCargaEnBase(carga);
+}
+
+function generarPdfCarga(idCarga) {
+  const c = bolsaCargasGuardadas.find(item => String(item.id) === String(idCarga));
+  if(!c) return alert("Carga no encontrada.");
+
+  const html = `
+    <div style="padding: 30px; font-family: 'Outfit', sans-serif; color: #111; background: white; border: 2px solid #ea580c; border-radius: 12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #ea580c; padding-bottom:15px; margin-bottom:20px;">
+        <div>
+          <h1 style="color:#ea580c; margin:0; font-size:24px; font-weight:900;">NIVEL 9 LOGÍSTICA</h1>
+          <p style="margin:2px 0; font-size:12px; color:#555;">FICHA TÉCNICA DE REQUERIMIENTO LOGÍSTICO</p>
+        </div>
+        <div style="text-align:right;">
+          <span style="background:#111; color:white; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:12px;">${c.id}</span>
+          <p style="margin:5px 0 0; font-size:11px; color:#777;">Emisión: ${new Date().toLocaleDateString('es-AR')}</p>
+        </div>
+      </div>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold; width:30%;">Dador / Empresa:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${c.contacto || '-'}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Origen:</td><td style="padding:8px; border-bottom:1px solid #ddd; color:#0284c7; font-weight:bold;">${c.origen}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Destino:</td><td style="padding:8px; border-bottom:1px solid #ddd; color:#16a34a; font-weight:bold;">${c.destino}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Tipo de Unidad:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${c.vehiculo}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Detalle / Carga:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${c.descripcion || c.peso || 'Carga General'}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Tarifa Ofertada:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-size:16px; font-weight:bold; color:#ea580c;">$${Number(c.tarifa||0).toLocaleString('es-AR')}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Estado Operativo:</td><td style="padding:8px; border-bottom:1px solid #ddd;"><b>${c.estado || 'Disponible'}</b></td></tr>
+      </table>
+      <div style="margin-top:30px; font-size:10px; color:#777; text-align:center; border-top:1px solid #ddd; padding-top:10px;">
+        Nivel 9 Logística & Brokerage | Tel: +54 9 351 704 6541 | Lino Spilimbergo 7100, Córdoba, Argentina
+      </div>
+    </div>
+  `;
+
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  html2pdf().set({
+    margin: 10, filename: `FichaCarga_${c.id}.pdf`, image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(container).save().then(() => document.body.removeChild(container));
+}
+
+function difundirCargaWA(idCarga) {
+  const c = bolsaCargasGuardadas.find(item => String(item.id) === String(idCarga));
+  if(!c) return alert("Carga no encontrada.");
+
+  const msg = `🚚 *OFERTA DE CARGA - NIVEL 9 BROKERAGE* 📦\n\n📍 *Origen:* ${c.origen}\n🏁 *Destino:* ${c.destino}\n🚛 *Requerimiento:* ${c.vehiculo}\n📦 *Carga:* ${c.descripcion || c.peso || 'Carga General'}\n💵 *Tarifa Ofertada:* $${Number(c.tarifa||0).toLocaleString('es-AR')}\n\n📲 *Postulate o Consultá al Despacho:* https://wa.me/5493517046541?text=Hola,%20me%20interesa%20la%20carga%20${c.id}%20de%20${encodeURIComponent(c.origen)}%20a%20${encodeURIComponent(c.destino)}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
 }
 
 function abrirFichaOperacion(cargaId) {
   cargaAbiertaActual = bolsaCargasGuardadas.find(c => String(c.id) === String(cargaId));
   if(!cargaAbiertaActual) return;
   
-  // FIX Drive: Cargar links guardados en la BD de Google Sheets
   cargaAbiertaActual.drive_links = cargaAbiertaActual.drive_links || '';
   
   document.getElementById('fo-id-carga').innerText = cargaAbiertaActual.id;
@@ -450,7 +533,10 @@ function abrirFichaOperacion(cargaId) {
   document.getElementById('fo-desc').innerText = cargaAbiertaActual.descripcion || cargaAbiertaActual.peso || '';
   document.getElementById('fo-cobro').value = cargaAbiertaActual.tarifa || 0;
   
-  document.getElementById('fo-select-chofer').innerHTML = '<option value="">-- Buscar Camión en Red --</option>' + transportistasGuardados.map(t => `<option value="${t.id}">${t.nombre} - ${t.tipo} (${t.patente||'Sin Patente'})</option>`).join('');
+  document.getElementById('fo-select-chofer').innerHTML = '<option value="">-- Buscar Camión en Red --</option>' + transportistasGuardados.map(t => {
+    const detalleAuto = (t.marca_modelo || t.marcamodelo || '') + (t.carroceria ? ' | ' + t.carroceria : '');
+    return `<option value="${t.id}">${t.nombre} - ${t.tipo} ${detalleAuto ? '('+detalleAuto+')' : ''} [${t.patente||'Sin Patente'}]</option>`;
+  }).join('');
 
   if(String(cargaAbiertaActual.estado).toUpperCase() === 'ASIGNADA' || String(cargaAbiertaActual.estado).toUpperCase() === 'EN TRÁNSITO') {
     document.getElementById('fo-seccion-asignar').style.display = 'none';
@@ -475,7 +561,6 @@ function abrirFichaOperacion(cargaId) {
     calcularComisionDossier();
   }
   
-  // Renderizar enlaces de Drive guardados
   document.getElementById('fo-boveda-links').innerHTML = cargaAbiertaActual.drive_links; 
   abrirModalNativo('modalFichaOperacion');
 }
@@ -532,6 +617,27 @@ function enviarWhatsAppGPS() {
   window.open(`https://wa.me/549${telChoferAsignado.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
 }
 
+function enviarWhatsAppDador3PL() {
+  if(!cargaAbiertaActual) return;
+  const telDador = cargaAbiertaActual.telefono || '';
+  if(!telDador) return alert("El dador de carga no tiene teléfono registrado.");
+
+  const intm = intermediacionesGuardadas.find(i => String(i.id) === 'ITM-' + cargaAbiertaActual.id);
+  const nombreChofer = intm ? intm.transportista : 'Chofer Asignado';
+  const transpObj = transportistasGuardados.find(t => String(t.nombre) === String(nombreChofer));
+
+  let detalleVehiculo = cargaAbiertaActual.vehiculo;
+  if (transpObj) {
+    const mm = transpObj.marca_modelo || transpObj.marcamodelo || '';
+    const carroc = transpObj.carroceria || '';
+    if (mm || carroc) detalleVehiculo += ` (${mm} ${carroc ? '- ' + carroc : ''})`;
+  }
+
+  let msg = `🛡️ *CONFIRMACIÓN DE UNIDAD ASIGNADA - NIVEL 9* 🚚\n\nEstimado/a *${cargaAbiertaActual.contacto || 'Cliente'}*:\nNos complacemos en informar que la unidad requerida para el tramo *${cargaAbiertaActual.origen} ➔ ${cargaAbiertaActual.destino}* ha sido asignada y validada.\n\n👤 *Chofer / Transporte:* ${nombreChofer}\n🚛 *Especificación Unidad:* ${detalleVehiculo}\n🆔 *Patente:* ${transpObj ? (transpObj.patente || 'Validada') : 'Validada'}\n📋 *Estatus:* Chofer y Unidad Habilitados (LiNTI / Póliza Vigente)\n\nCualquier novedad sobre el arribo a planta será notificada de inmediato por esta vía. Gracias por confiar en Nivel 9.`;
+
+  window.open(`https://wa.me/549${telDador.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
+}
+
 async function subirArchivoBoveda(inputId, btnId) {
   const input = document.getElementById(inputId); 
   const btn = document.getElementById(btnId);
@@ -543,16 +649,16 @@ async function subirArchivoBoveda(inputId, btnId) {
     const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "uploadFileDrive", fileName: `${cargaAbiertaActual.id}_${file.name}`, mimeType: file.type, base64Data: base64 }) }); 
     const d = await res.json(); 
     if(d.success) { 
-      // FIX Fuga de Memoria Drive: Guarda el link en la variable actual y manda la actualización a la BD
       const linkHtml = `<div style="background:#e0f2fe; padding:8px; border-radius:6px; border:1px solid #7dd3fc;"><a href="${d.fileUrl}" target="_blank" style="color:#0284c7; font-weight:bold; text-decoration:none;"><i class="fas fa-external-link-alt"></i> Ver Documento / Foto Book: ${file.name}</a></div>`;
       cargaAbiertaActual.drive_links = (cargaAbiertaActual.drive_links || '') + linkHtml;
       document.getElementById('fo-boveda-links').innerHTML = cargaAbiertaActual.drive_links; 
       input.value = ""; 
-      window.MotorNivel9.guardarCargaEnBase(cargaAbiertaActual); // Actualiza Excel silenciosamente
+      window.MotorNivel9.guardarCargaEnBase(cargaAbiertaActual);
     } else alert("Error de Drive: " + d.error);
   } catch(e) { alert("Error de conexión al subir imagen."); } finally { btn.innerHTML = 'Subir a Drive'; btn.disabled = false; }
 }
 
+// RENDERIZADO DE TRANSPORTISTAS CON MARCA/MODELO Y CARROCERÍA
 function renderTransportistas() {
   const container = document.getElementById('transportistasCardsContainer');
   if(!container) return;
@@ -560,18 +666,86 @@ function renderTransportistas() {
   const t = document.getElementById('rt-filter-tipo')?.value || 'Todos';
 
   let arr = transportistasGuardados.filter(tr => (t === 'Todos' || tr.tipo === t) && (tr.ubicacion||'').toLowerCase().includes(u));
-  container.innerHTML = arr.length === 0 ? '<p style="color:#71717a; grid-column:span 2;">No hay transportistas registrados.</p>' : arr.map(tr => `
+  container.innerHTML = arr.length === 0 ? '<p style="color:#71717a; grid-column:span 2;">No hay transportistas registrados.</p>' : arr.map(tr => {
+    const marcaModelo = tr.marca_modelo || tr.marcamodelo || 'Sin especificar';
+    const carroceria = tr.carroceria || 'General / Estándar';
+
+    return `
     <div class="broker-card">
       <div class="broker-card-header">
         <div class="broker-route"><i class="fas fa-truck" style="color:#10b981;"></i> ${tr.nombre}</div>
         <span class="contact-badge" style="background:#dcfce7; color:#15803d;">${tr.tipo}</span>
       </div>
       <div style="font-size:0.88rem; color:#52525b;"><i class="fas fa-map-pin"></i> <b>Ubicación/Retorno:</b> ${tr.ubicacion}</div>
-      <div style="font-size:0.85rem; color:#71717a;"><i class="fas fa-weight-hanging"></i> Capacidad: ${tr.capacidad || 'No especificada'} | Patente: ${tr.patente || '-'}</div>
-      <div style="display:flex; gap:8px; margin-top:10px;">
-        <button class="btn btn-success" style="width:100%;" onclick="window.open('https://wa.me/549${(tr.telefono||'').replace(/\D/g,'')}?text=Hola%20${encodeURIComponent(tr.nombre)},%20te%20contacto%20desde%20Nivel%209%20por%20disponibilidad%20de%20tu%20${encodeURIComponent(tr.tipo)}')"><i class="fab fa-whatsapp"></i> Chat WhatsApp</button>
+      <div style="font-size:0.85rem; color:#111827; margin-top:4px;"><i class="fas fa-shuttle-van"></i> <b>Modelo:</b> ${marcaModelo}</div>
+      <div style="font-size:0.85rem; color:#ea580c; font-weight:700; margin-top:2px;"><i class="fas fa-box-open"></i> <b>Carrocería:</b> ${carroceria}</div>
+      <div style="font-size:0.82rem; color:#71717a; margin-top:2px;"><i class="fas fa-weight-hanging"></i> Capacidad: ${tr.capacidad || 'No especificada'} | Patente: ${tr.patente || '-'}</div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px; margin-top:10px;">
+        <button class="btn btn-success" style="padding:6px 4px; font-size:0.75rem;" onclick="window.open('https://wa.me/549${(tr.telefono||'').replace(/\D/g,'')}?text=Hola%20${encodeURIComponent(tr.nombre)},%20te%20contacto%20desde%20Nivel%209%20por%20tu%20${encodeURIComponent(tr.tipo)}')"><i class="fab fa-whatsapp"></i> Chat</button>
+        <button class="btn btn-purple" style="padding:6px 4px; font-size:0.75rem;" onclick="generarPdfTransportista('${tr.id}')"><i class="fas fa-file-pdf"></i> PDF</button>
+        <button class="btn btn-broker" style="padding:6px 4px; font-size:0.75rem;" onclick="presentarChoferWA('${tr.id}')"><i class="fas fa-share-alt"></i> Presentar</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+}
+
+// GENERADOR PDF DOSSIER TRANSPORTISTA DETALLADO
+function generarPdfTransportista(idTransp) {
+  const tr = transportistasGuardados.find(t => String(t.id) === String(idTransp));
+  if(!tr) return alert("Transportista no encontrado.");
+
+  const marcaModelo = tr.marca_modelo || tr.marcamodelo || 'No declarada';
+  const carroceria = tr.carroceria || 'General / Estándar';
+
+  const html = `
+    <div style="padding: 30px; font-family: 'Outfit', sans-serif; color: #111; background: white; border: 2px solid #10b981; border-radius: 12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #10b981; padding-bottom:15px; margin-bottom:20px;">
+        <div>
+          <h1 style="color:#10b981; margin:0; font-size:24px; font-weight:900;">NIVEL 9 RED DE TRANSPORTISTAS</h1>
+          <p style="margin:2px 0; font-size:12px; color:#555;">DOSSIER TÉCNICO DE UNIDAD Y CHOFER VALIDADO</p>
+        </div>
+        <div style="text-align:right;">
+          <span style="background:#111; color:white; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:12px;">${tr.id}</span>
+        </div>
+      </div>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold; width:35%;">Transportista / Titular:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${tr.nombre}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Teléfono de Contacto:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${tr.telefono}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Tipo de Unidad:</td><td style="padding:8px; border-bottom:1px solid #ddd; color:#0284c7; font-weight:bold;">${tr.tipo}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Marca / Modelo / Año:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">${marcaModelo}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Carrocería / Equipamiento:</td><td style="padding:8px; border-bottom:1px solid #ddd; color:#ea580c; font-weight:bold;">${carroceria}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Ubicación / Base:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${tr.ubicacion}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Capacidad / Especialidad:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${tr.capacidad || 'No declarada'}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Patente Identificatoria:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold; color:#111827;">${tr.patente || 'En trámite / Sin declarar'}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Validación Nivel 9:</td><td style="padding:8px; border-bottom:1px solid #ddd; color:#16a34a; font-weight:bold;">Conductores Validados / Documentación en Regla</td></tr>
+      </table>
+      <div style="margin-top:30px; font-size:10px; color:#777; text-align:center; border-top:1px solid #ddd; padding-top:10px;">
+        Nivel 9 Logística | Operador Verificado
+      </div>
+    </div>
+  `;
+
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  html2pdf().set({
+    margin: 10, filename: `DossierTransportista_${tr.nombre.replace(/\s+/g,'_')}.pdf`, image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(container).save().then(() => document.body.removeChild(container));
+}
+
+// PRESENTAR CHOFER COMPLETO POR WHATSAPP
+function presentarChoferWA(idTransp) {
+  const tr = transportistasGuardados.find(t => String(t.id) === String(idTransp));
+  if(!tr) return alert("Transportista no encontrado.");
+
+  const marcaModelo = tr.marca_modelo || tr.marcamodelo || 'A confirmar';
+  const carroceria = tr.carroceria || 'General';
+
+  const msg = `🚛 *PRESENTACIÓN DE UNIDAD Y CHOFER - NIVEL 9* 🛡️\n\n👤 *Transportista:* ${tr.nombre}\n🚚 *Tipo de Unidad:* ${tr.tipo}\n🏎️ *Modelo:* ${marcaModelo}\n📦 *Carrocería:* ${carroceria}\n🆔 *Patente:* ${tr.patente || 'A confirmar'}\n⚖️ *Capacidad:* ${tr.capacidad || 'General'}\n📍 *Ubicación Actual:* ${tr.ubicacion}\n\n📋 *Certificación:* Licencia Profesional LiNTI y Documentación al día.`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
 }
 
 function renderIntermediaciones() {
@@ -592,13 +766,61 @@ function renderIntermediaciones() {
       <td style="color:#0284c7; font-weight:700;">$${Number(im.tarifadador||0).toLocaleString('es-AR')}</td>
       <td style="color:#dc2626;">$${Number(im.tarifatransp||0).toLocaleString('es-AR')}</td>
       <td style="color:#8b5cf6; font-weight:900;">$${Number(im.comision||0).toLocaleString('es-AR')}</td>
-      <td><button class="btn btn-dark" style="padding:4px 8px; font-size:0.75rem;" onclick="imprimirOrdenFlete('${im.id}')"><i class="fas fa-print"></i> Orden Flete</button></td>
+      <td>
+        <div style="display:flex; gap:4px;">
+          <button class="btn btn-dark" style="padding:4px 8px; font-size:0.75rem;" onclick="imprimirOrdenFlete('${im.id}')"><i class="fas fa-print"></i> Orden</button>
+          <button class="btn btn-purple" style="padding:4px 8px; font-size:0.75rem;" onclick="generarExpediente3PL('${im.id}')"><i class="fas fa-file-pdf"></i> Expediente</button>
+        </div>
+      </td>
     </tr>`;
   }).join('');
 
-  document.getElementById('kpi-broker-comision').textContent = `$${totComision.toLocaleString('es-AR')}`;
-  document.getElementById('kpi-broker-ops').textContent = ops;
-  document.getElementById('kpi-broker-volumen').textContent = `$${totVolumen.toLocaleString('es-AR')}`;
+  const elCom = document.getElementById('kpi-broker-comision'); if(elCom) elCom.textContent = `$${totComision.toLocaleString('es-AR')}`;
+  const elOps = document.getElementById('kpi-broker-ops'); if(elOps) elOps.textContent = ops;
+  const elVol = document.getElementById('kpi-broker-volumen'); if(elVol) elVol.textContent = `$${totVolumen.toLocaleString('es-AR')}`;
+}
+
+function generarExpediente3PL(idOp) {
+  const op = intermediacionesGuardadas.find(i => String(i.id) === String(idOp));
+  if(!op) return alert("Operación 3PL no encontrada.");
+
+  const html = `
+    <div style="padding: 30px; font-family: 'Outfit', sans-serif; color: #111; background: white; border: 2px solid #8b5cf6; border-radius: 12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #8b5cf6; padding-bottom:15px; margin-bottom:20px;">
+        <div>
+          <h1 style="color:#8b5cf6; margin:0; font-size:24px; font-weight:900;">EXPEDIENTE DE BROKERAGE 3PL</h1>
+          <p style="margin:2px 0; font-size:12px; color:#555;">NIVEL 9 LOGÍSTICA & CONSOLIDACIÓN DE CARGAS</p>
+        </div>
+        <div style="text-align:right;">
+          <span style="background:#111; color:white; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:12px;">${op.id}</span>
+        </div>
+      </div>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold; width:35%;">Fecha de Operación:</td><td style="padding:8px; border-bottom:1px solid #ddd;">${(op.fecha||'').split('-').reverse().join('/')}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Empresa Dadora de Carga:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">${op.dador}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Transportista / Chofer:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">${op.transportista}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Tramo / Recorrido:</td><td style="padding:8px; border-bottom:1px solid #ddd; color:#0284c7; font-weight:bold;">${op.tramo}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Tarifa Facturada a Dador:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold; color:#0284c7;">$${Number(op.tarifadador||0).toLocaleString('es-AR')}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Tarifa Liquidada a Chofer:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold; color:#dc2626;">$${Number(op.tarifatransp||0).toLocaleString('es-AR')}</td></tr>
+        <tr><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold;">Margen Bruto Intermediación:</td><td style="padding:8px; border-bottom:1px solid #ddd; font-weight:bold; color:#8b5cf6; font-size:16px;">$${Number(op.comision||0).toLocaleString('es-AR')}</td></tr>
+      </table>
+      <div style="background:#f4f4f5; padding:12px; border-radius:8px; font-size:11px; margin-bottom:15px;">
+        <b>Acuerdo Comercial Fijo:</b> ${ACUERDO_FIJO_CHOFER}
+      </div>
+      <div style="margin-top:20px; font-size:10px; color:#777; text-align:center; border-top:1px solid #ddd; padding-top:10px;">
+        Expediente generado por Plataforma Nivel 9 | Documento Interno Confidencial
+      </div>
+    </div>
+  `;
+
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  html2pdf().set({
+    margin: 10, filename: `Expediente3PL_${op.id}.pdf`, image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(container).save().then(() => document.body.removeChild(container));
 }
 
 function calcularComisionBroker() {
@@ -661,7 +883,9 @@ function renderContactos() {
   const cat = document.getElementById('cnt-filter-categoria')?.value || 'Todas';
   const arr = contactosGuardados.filter(c => (cat === 'Todas' || c.categoria === cat) && ((c.nombre||'').toLowerCase().includes(q) || String(c.telefono||'').includes(q)));
   
-  document.getElementById('contactListContainer').innerHTML = arr.length === 0 ? '<p style="color:#71717a;">Sin contactos en el directorio.</p>' : arr.map(c => `
+  const container = document.getElementById('contactListContainer');
+  if(!container) return;
+  container.innerHTML = arr.length === 0 ? '<p style="color:#71717a;">Sin contactos en el directorio.</p>' : arr.map(c => `
     <div class="contact-card" style="background:white; padding:15px; border-radius:12px; border:1px solid #d4d4d8;">
       <div style="display:flex; justify-content:space-between; align-items:center;"><strong style="font-size:1.05rem;">${c.nombre}</strong><span class="contact-badge">${c.categoria}</span></div>
       <div style="color:#52525b; margin-top:5px; font-size:0.9rem;"><i class="fas fa-phone"></i> ${c.telefono}</div>
@@ -673,7 +897,8 @@ function renderContactos() {
 
 function inyectarFiltrosDeInformes() { 
   const cnt = document.getElementById('rep-tipos-container'); 
-  const tipos = configuracionNivel9.tipos && configuracionNivel9.tipos.length > 0 ? configuracionNivel9.tipos : ["Mudanza Local"]; 
+  if(!cnt) return;
+  const tipos = configuracionNivel9.tipos && configuracionNivel9.tipos.length > 0 ? configuracionNivel9.tipos : ["Cargas Generales"]; 
   cnt.innerHTML = tipos.map(t => `<label class="checkbox-group"><input type="checkbox" class="chk-filtro-tipo" value="${t}" checked style="width:15px; height:15px;"> ${t}</label>`).join(''); 
 }
 
@@ -725,10 +950,10 @@ function recalcularTotalesPanelKpi() {
     c += (parseFloat(x.dataset.c) + parseFloat(x.dataset.e)); 
     n += parseFloat(x.dataset.n); 
   });
-  document.getElementById('kpi-tot-viajes').textContent = v; 
-  document.getElementById('kpi-tot-ingresos').textContent = `$${b.toLocaleString('es-AR')}`; 
-  document.getElementById('kpi-tot-costos').textContent = `$${c.toLocaleString('es-AR')}`; 
-  document.getElementById('kpi-tot-utilidad').textContent = `$${n.toLocaleString('es-AR')}`;
+  const elV = document.getElementById('kpi-tot-viajes'); if(elV) elV.textContent = v; 
+  const elB = document.getElementById('kpi-tot-ingresos'); if(elB) elB.textContent = `$${b.toLocaleString('es-AR')}`; 
+  const elC = document.getElementById('kpi-tot-costos'); if(elC) elC.textContent = `$${c.toLocaleString('es-AR')}`; 
+  const elN = document.getElementById('kpi-tot-utilidad'); if(elN) elN.textContent = `$${n.toLocaleString('es-AR')}`;
 }
 
 function exportarExcelPuroNumeros() {
@@ -778,7 +1003,6 @@ function imprimirReporte() {
     
     document.getElementById('pdf-report-tbody').innerHTML = filasHtml;
 
-    // FIX PDF ENGINE: Usa la boveda oculta
     html2pdf().set({
       margin: 12, filename: `Reporte_Nivel9_Finanzas_${Date.now()}.pdf`, image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, windowWidth: 1122 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, pagebreak: { mode: 'avoid-all' }
@@ -786,10 +1010,10 @@ function imprimirReporte() {
 }
 
 function openConfigModal() { dibujarListasConfig(); abrirModalNativo('modalConfig'); }
-function dibujarListasConfig() { const iny = (arr, id, clv) => { document.getElementById(id).innerHTML = arr.map((item, i) => `<div class="settings-item">${item} <button class="btn btn-danger" style="padding:4px 8px;" onclick="eliminarItemAjustes('${clv}', ${i})"><i class="fas fa-trash"></i></button></div>`).join(''); }; iny(configuracionNivel9.flota, 'lista-unidades-config', 'flota'); iny(configuracionNivel9.tipos, 'lista-tipos-config', 'tipos'); }
-function agregarItemAjustes(c, i) { const v = document.getElementById(i).value.trim(); if(v) { configuracionNivel9[c].push(v); document.getElementById(i).value = ''; dibujarListasConfig(); } }
+function dibujarListasConfig() { const iny = (arr, id, clv) => { const el = document.getElementById(id); if(el) el.innerHTML = arr.map((item, i) => `<div class="settings-item">${item} <button class="btn btn-danger" style="padding:4px 8px;" onclick="eliminarItemAjustes('${clv}', ${i})"><i class="fas fa-trash"></i></button></div>`).join(''); }; iny(configuracionNivel9.flota, 'lista-unidades-config', 'flota'); iny(configuracionNivel9.tipos, 'lista-tipos-config', 'tipos'); }
+function agregarItemAjustes(c, i) { const el = document.getElementById(i); if(!el) return; const v = el.value.trim(); if(v) { configuracionNivel9[c].push(v); el.value = ''; dibujarListasConfig(); } }
 function eliminarItemAjustes(c, i) { configuracionNivel9[c].splice(i, 1); dibujarListasConfig(); }
-function guardarAjustes() { configuracionNivel9.diesel = document.getElementById('cfg-diesel').value; localStorage.setItem('nivel9_config', JSON.stringify(configuracionNivel9)); actualizarListasDesplegables(); document.getElementById('rep-tipos-container').innerHTML = ''; cerrarModalesNativos(); alert("Ajustes guardados exitosamente."); }
+function guardarAjustes() { configuracionNivel9.diesel = document.getElementById('cfg-diesel').value; localStorage.setItem('nivel9_config', JSON.stringify(configuracionNivel9)); actualizarListasDesplegables(); const el = document.getElementById('rep-tipos-container'); if(el) el.innerHTML = ''; cerrarModalesNativos(); alert("Ajustes guardados exitosamente."); }
 function actualizarListasDesplegables() { const opF = configuracionNivel9.flota.map(f => `<option value="${f}">${f}</option>`).join(''); const opT = configuracionNivel9.tipos.map(t => `<option value="${t}">${t}</option>`).join(''); document.querySelectorAll('.dinamico-flota').forEach(e => e.innerHTML = opF); document.querySelectorAll('.dinamico-tipos').forEach(e => e.innerHTML = opT); }
 
 // ==========================================
@@ -863,7 +1087,6 @@ function generarPDFBase(tipoDocumento) {
   document.getElementById('pdf-origen').innerText = document.getElementById('pres-origen').value; 
   document.getElementById('pdf-destino').innerText = document.getElementById('pres-destino').value; 
   
-  // FIX SALTO DE LÍNEA MOBILE: Convierte \n a <br>
   let inventarioTexto = document.getElementById('pres-desc').value || '';
   document.getElementById('pdf-desc').innerHTML = inventarioTexto.replace(/\n/g, '<br>'); 
   
@@ -910,7 +1133,6 @@ function generarPDFBase(tipoDocumento) {
   if (document.getElementById('modalEventForm').style.display === 'flex') { document.getElementById('ev-nrodoc').value = document.getElementById('pres-nro').value; }
 
   setTimeout(() => {
-    // FIX PDF ENGINE: Renderiza desde la boveda oculta obligando a celular a leer 793px de ancho
     html2pdf().set({ margin: 0, filename: nombreFinal, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, windowWidth: 793 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdf-template-content')).save(); 
   }, 300);
 }
@@ -970,7 +1192,6 @@ window.MotorNivel9 = {
     try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveIntermediacion', ...payload }) }); } catch(e) {}
   },
 
-  /* MARINA IA PARSER, CHAT Y ESCÁNER VISUAL */
   parsearMensajeWhatsappCarga: async function() {
     const txt = document.getElementById('bc-raw-text').value.trim();
     if(!txt) return alert("Pegá un texto de WhatsApp para analizar.");
@@ -1019,7 +1240,7 @@ window.MotorNivel9 = {
   },
 
   reconocimientoVoz: function() { 
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return alert("Reconocimiento de voz no soportado en este navegador."); 
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return alert("Reconocimiento de voz no soportado."); 
     const r = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); 
     r.lang = 'es-AR'; 
     r.start(); 
