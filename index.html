@@ -458,23 +458,76 @@
  </div>
 
  <!-- MODAL 4: REGISTRAR TRANSPORTISTA -->
- <div class="modal-overlay" id="modalPublicarTransportista" onmousedown="if(event.target===this) cerrarModalesNativos()">
-    <div class="modal-content" style="max-width:600px;">
-      <div class="modal-header"><h2 style="font-size:1.2rem; color:#10b981;"><i class="fas fa-truck"></i> Empadronar Transportista</h2><button class="btn btn-outline-dark" style="border:none;" onclick="cerrarModalesNativos()"><i class="fas fa-times"></i></button></div>
-      <div class="modal-body">
-        <form id="formTransportista" class="form-grid" onsubmit="return false;">
-          <input type="hidden" id="rt-id">
-          <div class="form-group"><label>Titular / Chofer (*)</label><input type="text" id="rt-nombre" required placeholder="Ej: Mario Gómez"></div>
-          <div class="form-group"><label>WhatsApp (*)</label><input type="tel" id="rt-tel" required placeholder="Ej: 3512233444"></div>
-          <div class="form-group"><label>Vehículo / Chasis</label><select id="rt-tipo"><option value="Furgón">Furgón</option><option value="Chasis">Chasis</option><option value="Camión Semi">Camión Semi</option><option value="Sider">Sider</option><option value="Balancín">Balancín</option></select></div>
-          <div class="form-group"><label>Base / Ciudad Actual (*)</label><input type="text" id="rt-ubicacion" required placeholder="Ej: Mendoza (Vuelve a Cba)"></div>
-          <div class="form-group"><label>Capacidad Carga (Tn)</label><input type="text" id="rt-capacidad" placeholder="Ej: 28 Tn / 80 m3"></div>
-          <div class="form-group"><label>Patente Tractora</label><input type="text" id="rt-patente" placeholder="Ej: AA123CD"></div>
-        </form>
-      </div>
-      <div class="modal-footer"><button class="btn btn-success" onclick="guardarTransportistaEnBase()"><i class="fas fa-save"></i> Guardar Transportista</button></div>
+ <!-- MODAL REGISTRO MANUAL DE TRANSPORTISTA -->
+<div class="modal-overlay" id="modalPublicarTransportista" onmousedown="if(event.target===this) cerrarModalesNativos()">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2><i class="fas fa-truck-moving"></i> Registrar Transportista en Red</h2>
+      <button class="btn-close" onclick="cerrarModalesNativos()">&times;</button>
     </div>
- </div>
+    <div class="modal-body">
+      <form id="formTransportista" onsubmit="event.preventDefault(); guardarTransportistaEnBase();">
+        <input type="hidden" id="rt-id">
+        
+        <div class="form-group">
+          <label>Nombre del Titular / Chofer *</label>
+          <input type="text" id="rt-nombre" required placeholder="Ej: Mario Gómez">
+        </div>
+        
+        <div style="display:flex; gap:15px; flex-wrap:wrap;">
+          <div class="form-group" style="flex:1; min-width:200px;">
+            <label>WhatsApp / Teléfono *</label>
+            <input type="tel" id="rt-tel" required placeholder="Ej: 3512233444">
+          </div>
+          <div class="form-group" style="flex:1; min-width:200px;">
+            <label>Ubicación / Base *</label>
+            <input type="text" id="rt-ubicacion" required placeholder="Ej: Mendoza Capital">
+          </div>
+        </div>
+
+        <div style="display:flex; gap:15px; flex-wrap:wrap;">
+          <div class="form-group" style="flex:1; min-width:200px;">
+            <label>Tipo de Vehículo *</label>
+            <select id="rt-tipo" class="dinamico-flota" required></select>
+          </div>
+          <div class="form-group" style="flex:1; min-width:200px;">
+            <label>Marca / Modelo / Año</label>
+            <input type="text" id="rt-marca-modelo" placeholder="Ej: Mercedes Benz 710 (2004)">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de Carrocería / Equipamiento</label>
+          <select id="rt-carroceria">
+            <option value="Furgón Cerrado / Paquetero">Furgón Cerrado / Paquetero</option>
+            <option value="Furgón Térmico / Refrigerado">Furgón Térmico / Refrigerado</option>
+            <option value="Sider / Arcos y Lona">Sider / Arcos y Lona</option>
+            <option value="Baranda Volcadora / Lateral Desmontable">Baranda Volcadora / Lateral Desmontable</option>
+            <option value="Camión Abierto / Playo">Camión Abierto / Playo</option>
+            <option value="Con Pala Hidráulica / Elevadora">Con Pala Hidráulica / Elevadora</option>
+            <option value="Plancha de Auxilio / Camilla">Plancha de Auxilio / Camilla</option>
+            <option value="Carretón / Plataforma Baja">Carretón / Plataforma Baja</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:15px;">
+          <div class="form-group" style="flex:1;">
+            <label>Capacidad / Especialidad</label>
+            <input type="text" id="rt-capacidad" placeholder="Ej: 28 Tn | Cargas Generales">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Patente Tractora</label>
+            <input type="text" id="rt-patente" placeholder="Ej: AF123XY">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-giant" style="background:var(--brand); color:white; width:100%; margin-top:15px;">
+          <i class="fas fa-save"></i> Guardar Transportista en Base
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
 
  <!-- MODAL 5: FICHA DOSSIER 3PL Y BÓVEDA DRIVE -->
  <div class="modal-overlay" id="modalFichaOperacion" onmousedown="if(event.target===this) cerrarModalesNativos()">
