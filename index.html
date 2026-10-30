@@ -458,7 +458,7 @@
  </div>
 
  <!-- MODAL 4: REGISTRAR TRANSPORTISTA -->
- <!-- MODAL REGISTRO MANUAL DE TRANSPORTISTA -->
+<!-- MODAL REGISTRO MANUAL DE TRANSPORTISTA -->
 <div class="modal-overlay" id="modalPublicarTransportista" onmousedown="if(event.target===this) cerrarModalesNativos()">
   <div class="modal-content" style="max-width: 600px;">
     <div class="modal-header">
@@ -488,7 +488,13 @@
         <div style="display:flex; gap:15px; flex-wrap:wrap;">
           <div class="form-group" style="flex:1; min-width:200px;">
             <label>Tipo de Vehículo *</label>
-            <select id="rt-tipo" class="dinamico-flota" required></select>
+            <select id="rt-tipo" required>
+              <option value="Furgón">Furgón</option>
+              <option value="Chasis">Chasis</option>
+              <option value="Camión Semi">Camión Semi</option>
+              <option value="Sider">Sider</option>
+              <option value="Balancín">Balancín</option>
+            </select>
           </div>
           <div class="form-group" style="flex:1; min-width:200px;">
             <label>Marca / Modelo / Año</label>
@@ -497,8 +503,8 @@
         </div>
 
         <div class="form-group">
-          <label>Tipo de Carrocería / Equipamiento</label>
-          <select id="rt-carroceria">
+          <label>Tipo de Carrocería / Equipamiento *</label>
+          <select id="rt-carroceria" required>
             <option value="Furgón Cerrado / Paquetero">Furgón Cerrado / Paquetero</option>
             <option value="Furgón Térmico / Refrigerado">Furgón Térmico / Refrigerado</option>
             <option value="Sider / Arcos y Lona">Sider / Arcos y Lona</option>
@@ -510,14 +516,18 @@
           </select>
         </div>
 
-        <div style="display:flex; gap:15px;">
-          <div class="form-group" style="flex:1;">
+        <div style="display:flex; gap:15px; flex-wrap:wrap;">
+          <div class="form-group" style="flex:1; min-width:140px;">
             <label>Capacidad / Especialidad</label>
             <input type="text" id="rt-capacidad" placeholder="Ej: 28 Tn | Cargas Generales">
           </div>
-          <div class="form-group" style="flex:1;">
+          <div class="form-group" style="flex:1; min-width:140px;">
             <label>Patente Tractora</label>
             <input type="text" id="rt-patente" placeholder="Ej: AF123XY">
+          </div>
+          <div class="form-group" style="flex:1; min-width:140px;">
+            <label>Patente Acoplado / Semi</label>
+            <input type="text" id="rt-patente-acoplado" placeholder="Ej: AA987ZZ">
           </div>
         </div>
 
