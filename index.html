@@ -457,8 +457,7 @@
     </div>
  </div>
 
- <!-- MODAL 4: REGISTRAR TRANSPORTISTA -->
-<!-- MODAL REGISTRO MANUAL DE TRANSPORTISTA -->
+<!-- MODAL 4: REGISTRAR TRANSPORTISTA -->
 <div class="modal-overlay" id="modalPublicarTransportista" onmousedown="if(event.target===this) cerrarModalesNativos()">
   <div class="modal-content" style="max-width: 600px;">
     <div class="modal-header">
@@ -542,12 +541,13 @@
  <!-- MODAL 5: FICHA DOSSIER 3PL Y BÓVEDA DRIVE -->
 <div class="modal-overlay" id="modalFichaOperacion" onmousedown="if(event.target===this) cerrarModalesNativos()">
   <div class="modal-content" style="max-width: 850px;">
+    
     <div class="modal-header">
       <h2><i class="fas fa-folder-open"></i> Ficha de Operación 3PL <span id="fo-id-carga-display" style="font-size:0.9rem; color:#a1a1aa; margin-left:10px;"></span></h2>
       <button class="btn-close" onclick="cerrarModalesNativos()">&times;</button>
     </div>
+    
     <div class="modal-body" style="background:#f4f4f5; color:#111; padding:20px;">
-      
       <!-- Input oculto para rastrear ID -->
       <input type="hidden" id="fo-id-carga-hidden">
       
@@ -557,7 +557,6 @@
         <div style="background:white; padding:15px; border-radius:10px; border:1px solid #d4d4d8; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
           <h3 style="color:var(--brand); border-bottom:2px solid var(--brand); padding-bottom:5px; margin-bottom:15px; font-size:1.1rem;"><i class="fas fa-building"></i> Datos del Dador</h3>
           
-          <!-- SEMÁFORO ESTADO -->
           <div class="form-group" style="margin-bottom:10px;">
             <label style="color:#52525b; font-size:0.8rem; margin-bottom:4px;">Estado Operativo (Semáforo)</label>
             <select id="fo-estado" style="background:#fff; color:#111; border:1px solid #a1a1aa; padding:10px; width:100%; border-radius:6px; font-weight:800;">
@@ -568,24 +567,21 @@
               <option value="Cancelada">🔴 Cancelada</option>
             </select>
           </div>
-
-          <div class="form-group" style="margin-bottom:10px;"><label style="color:#52525b; font-size:0.8rem; margin-bottom:4px;">Empresa Dadora</label><input type="text" id="fo-dador" style="background:#fff; color:#111; border:1px solid #a1a1aa; padding:10px;"></div>
-          <div class="form-group" style="margin-bottom:10px;"><label style="color:#52525b; font-size:0.8rem; margin-bottom:4px;">Origen de Carga</label><input type="text" id="fo-origen" style="background:#fff; color:#111; border:1px solid #a1a1aa; padding:10px;"></div>
-          <div class="form-group" style="margin-bottom:10px;"><label style="color:#52525b; font-size:0.8rem; margin-bottom:4px;">Destino Final</label><input type="text" id="fo-destino" style="background:#fff; color:#111; border:1px solid #a1a1aa; padding:10px;"></div>
-          <div class="form-group" style="margin-bottom:10px;"><label style="color:#52525b; font-size:0.8rem; margin-bottom:4px;">Detalle de Carga</label><textarea id="fo-desc" rows="2" style="background:#fff; color:#111; border:1px solid #a1a1aa; padding:10px;"></textarea></div>
-          <div class="form-group" style="margin-bottom:10px;"><label style="color:#52525b; font-size:0.8rem; margin-bottom:4px;">Tarifa Cobrada a Dador ($)</label><input type="number" id="fo-cobro" oninput="calcularComisionDossier()" style="background:#fff; border:1px solid #0284c7; color:#0284c7; font-weight:900; font-size:1.1rem; padding:10px;"></div>
+          <div class="form-group" style="margin-bottom:10px;"><label style="color:#52525b; font-size:0.8rem; margin-bottom:4px;">Empresa Dadora</label><input type="text" id="fo-dador" style="background:#fff; color:#111; border:1px solid #a1a1aa; padding:10px; width:100%; border-radius:6px;"></div>
+          <div class="form-group" style="margin-bottom:10px;"><label style="color:#52525b; font-size:0.8rem; margin-bottom:4px;">Origen de Carga</label><input type="text" id="fo-origen" style="background:#fff; color:#111; border:1px solid #a1a1aa; padding:10px; width:100%; border-radius:6px;"></div>
+          <div class="form-group" style="margin-bottom:10px;"><label style="color:#52525b; font-size:0.8rem; margin-bottom:4px;">Destino Final</label><input type="text" id="fo-destino" style="background:#fff; color:#111; border:1px solid #a1a1aa; padding:10px; width:100%; border-radius:6px;"></div>
+          <div class="form-group" style="margin-bottom:10px;"><label style="color:#52525b; font-size:0.8rem; margin-bottom:4px;">Detalle de Carga</label><textarea id="fo-desc" rows="2" style="background:#fff; color:#111; border:1px solid #a1a1aa; padding:10px; width:100%; border-radius:6px;"></textarea></div>
+          <div class="form-group" style="margin-bottom:10px;"><label style="color:#52525b; font-size:0.8rem; margin-bottom:4px;">Tarifa Cobrada a Dador ($)</label><input type="number" id="fo-cobro" oninput="calcularComisionDossier()" style="background:#fff; border:1px solid #0284c7; color:#0284c7; font-weight:900; font-size:1.1rem; padding:10px; width:100%; border-radius:6px;"></div>
           
-          <!-- Acuerdos Dador -->
           <div style="background:#fefce8; padding:12px; border-radius:6px; border:1px solid #fef08a; margin-top:15px;">
             <label style="font-size:0.85rem; font-weight:800; color:#854d0e;">Acuerdos Fijos (Dador):</label>
-            <p style="font-size:0.75rem; color:#713f12; margin:6px 0; line-height:1.4;">1. Deslinde de responsabilidad en tránsito.<br>2. Control de Estadías (2hs libres permitidas).<br>3. Falsas Escuadras liquidadas al 30%.</p>
-            <input type="text" id="fo-cond-dador-libre" placeholder="Escribir acuerdo extra (opcional)..." style="width:100%; padding:8px; font-size:0.85rem; border:1px solid #fde047; border-radius:4px; margin-top:5px; background:#fff; color:#111;">
+            <p style="font-size:0.75rem; color:#713f12; margin:6px 0; line-height:1.4;">1. Deslinde de responsabilidad en tránsito.<br>2. Control de Estadías (2hs libres).<br>3. Falsas Escuadras al 30%.</p>
+            <input type="text" id="fo-cond-dador-libre" placeholder="Acuerdo extra..." style="width:100%; padding:8px; font-size:0.85rem; border:1px solid #fde047; border-radius:4px; margin-top:5px; background:#fff; color:#111;">
           </div>
           
-          <!-- Botones Acción Dador -->
           <div style="display:flex; gap:10px; margin-top:15px;">
-            <button class="btn btn-success" style="flex:1; padding:10px; font-size:0.85rem;" onclick="enviarFichaWADador()"><i class="fab fa-whatsapp"></i> Info WA Dador</button>
-            <button class="btn btn-purple" style="flex:1; padding:10px; font-size:0.85rem;" onclick="generarPdfDador()"><i class="fas fa-file-pdf"></i> PDF Dador</button>
+            <button class="btn btn-success" style="flex:1; padding:10px; font-size:0.85rem; border-radius:6px;" onclick="enviarFichaWADador()"><i class="fab fa-whatsapp"></i> WA Dador</button>
+            <button class="btn btn-purple" style="flex:1; padding:10px; font-size:0.85rem; border-radius:6px; background:#9333ea; color:white; border:none;" onclick="generarPdfDador()"><i class="fas fa-file-pdf"></i> PDF Dador</button>
           </div>
         </div>
 
@@ -596,32 +592,30 @@
           <div id="fo-seccion-asignar">
             <div class="form-group" style="margin-bottom:10px;">
               <label style="color:#52525b; font-size:0.8rem; margin-bottom:4px;">Buscar Unidad en Red</label>
-              <select id="fo-select-chofer" style="background:#fff; color:#111; border:1px solid #a1a1aa; padding:10px;"></select>
+              <select id="fo-select-chofer" style="background:#fff; color:#111; border:1px solid #a1a1aa; padding:10px; width:100%; border-radius:6px;"></select>
             </div>
-            <button class="btn btn-giant" style="background:#10b981; color:white; width:100%; padding:12px; font-size:0.95rem; margin-top:5px;" onclick="asignarTransportistaDossier()"><i class="fas fa-link"></i> Confirmar Asignación</button>
+            <button class="btn btn-giant" style="background:#10b981; color:white; width:100%; padding:12px; font-size:0.95rem; margin-top:5px; border:none; border-radius:6px; font-weight:800;" onclick="asignarTransportistaDossier()"><i class="fas fa-link"></i> Confirmar Asignación</button>
           </div>
 
           <div id="fo-seccion-chofer" style="display:none; background:#ecfdf5; padding:15px; border-radius:8px; border:1px solid #a7f3d0; margin-bottom:15px;">
             <div style="font-weight:900; color:#065f46; font-size:1.1rem; margin-bottom:15px;" id="fo-chofer-nombre"></div>
-            <div class="form-group" style="margin-bottom:0;"><label style="color:#065f46; font-size:0.8rem; margin-bottom:4px;">Tarifa a Liquidar al Chofer ($)</label>
-              <input type="number" id="fo-pago" oninput="calcularComisionDossier()" style="background:#fff; color:#dc2626; font-weight:900; font-size:1.1rem; border:1px solid #fca5a5; padding:10px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="color:#065f46; font-size:0.8rem; margin-bottom:4px;">Tarifa a Liquidar al Chofer ($)</label>
+              <input type="number" id="fo-pago" oninput="calcularComisionDossier()" style="background:#fff; color:#dc2626; font-weight:900; font-size:1.1rem; border:1px solid #fca5a5; padding:10px; width:100%; border-radius:6px;">
             </div>
           </div>
 
-          <!-- Acuerdos Transportista -->
           <div style="background:#fef2f2; padding:12px; border-radius:6px; border:1px solid #fecaca; margin-top:15px;">
             <label style="font-size:0.85rem; font-weight:800; color:#991b1b;">Acuerdos Fijos (Chofer):</label>
-            <p style="font-size:0.75rem; color:#7f1d1d; margin:6px 0; line-height:1.4;">1. Liberación de pago estricta contra foto nítida de Remito Conformado (Firma, DNI, Sello).<br>2. Transportista asume 100% resp. por daños/faltantes.</p>
-            <input type="text" id="fo-cond-chofer-libre" placeholder="Escribir acuerdo extra (opcional)..." style="width:100%; padding:8px; font-size:0.85rem; border:1px solid #fca5a5; border-radius:4px; margin-top:5px; background:#fff; color:#111;">
+            <p style="font-size:0.75rem; color:#7f1d1d; margin:6px 0; line-height:1.4;">1. Pago estricto contra Remito Conformado.<br>2. Transportista asume 100% resp. en tránsito.</p>
+            <input type="text" id="fo-cond-chofer-libre" placeholder="Acuerdo extra..." style="width:100%; padding:8px; font-size:0.85rem; border:1px solid #fca5a5; border-radius:4px; margin-top:5px; background:#fff; color:#111;">
           </div>
 
-          <!-- Botones Acción Chofer -->
           <div style="display:flex; gap:10px; margin-top:15px;">
-            <button class="btn btn-success" style="flex:1; padding:10px; font-size:0.85rem;" onclick="enviarFichaWAChofer()"><i class="fab fa-whatsapp"></i> Orden Chofer</button>
-            <button class="btn btn-dark" style="flex:1; padding:10px; font-size:0.85rem;" onclick="generarPdfChofer()"><i class="fas fa-file-pdf"></i> PDF Chofer</button>
+            <button class="btn btn-success" style="flex:1; padding:10px; font-size:0.85rem; border-radius:6px;" onclick="enviarFichaWAChofer()"><i class="fab fa-whatsapp"></i> Orden Chofer</button>
+            <button class="btn btn-dark" style="flex:1; padding:10px; font-size:0.85rem; border-radius:6px; background:#27272a; color:white; border:none;" onclick="generarPdfChofer()"><i class="fas fa-file-pdf"></i> PDF Chofer</button>
           </div>
           
-          <!-- Margen Broker -->
           <div style="margin-top:20px; padding-top:15px; border-top:2px dashed #d4d4d8;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span style="font-weight:700; color:#52525b; font-size:1.1rem;">Comisión Broker:</span>
@@ -629,14 +623,14 @@
             </div>
           </div>
         </div>
-      </div>
-      
-      <!-- BOTON MAESTRO GUARDAR -->
-      <button class="btn btn-giant" style="background:var(--brand); color:white; width:100%; margin-top:20px; padding:16px; font-size:1.1rem;" onclick="guardarCambiosFichaOperacion()"><i class="fas fa-save"></i> Guardar Modificaciones de Carga / 3PL</button>
 
-      <!-- BOVEDA DRIVE -->
+      </div> <!-- Cierre del Grid de Columnas -->
+      
+      <!-- BOTONES Y DRIVE (Ahora contenidos DENTRO del modal hermético) -->
+      <button class="btn btn-giant" style="background:var(--brand); color:white; width:100%; margin-top:20px; padding:16px; font-size:1.1rem; border:none; border-radius:8px; font-weight:800; cursor:pointer;" onclick="guardarCambiosFichaOperacion()"><i class="fas fa-save"></i> Guardar Modificaciones de Carga / 3PL</button>
+
       <div style="background:white; padding:15px; border-radius:10px; border:1px solid #d4d4d8; box-shadow:0 4px 6px rgba(0,0,0,0.05); margin-top:20px;">
-        <h3 style="color:#0284c7; font-size:1rem; margin-bottom:10px;"><i class="fab fa-google-drive"></i> Documentación Asociada (Remitos / Polizas)</h3>
+        <h3 style="color:#0284c7; font-size:1rem; margin-bottom:10px;"><i class="fab fa-google-drive"></i> Documentación Asociada (Remitos / Pólizas)</h3>
         <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
           <input type="file" id="fo-file-drive" style="flex:1; min-width:200px; border:1px solid #a1a1aa; padding:10px; border-radius:6px; background:#fff; color:#111;">
           <button class="btn btn-primary" id="btn-fo-drive" style="background:#0284c7; color:white; border:none; border-radius:6px; padding:0 25px; cursor:pointer; font-weight:700;" onclick="subirArchivoBoveda('fo-file-drive','btn-fo-drive')"><i class="fas fa-cloud-upload-alt"></i> Subir a Drive</button>
@@ -644,26 +638,9 @@
         <div id="fo-boveda-links" style="display:flex; flex-direction:column; gap:8px;"></div>
       </div>
       
-    </div>
-  </div>
-</div>
-      
-      <!-- BOTON MAESTRO GUARDAR -->
-      <button class="btn btn-giant" style="background:var(--brand); color:white; width:100%; margin-top:20px; padding:16px; font-size:1.1rem;" onclick="guardarCambiosFichaOperacion()"><i class="fas fa-save"></i> Guardar Modificaciones de Carga / 3PL</button>
-
-      <!-- BOVEDA DRIVE -->
-      <div style="background:white; padding:15px; border-radius:10px; border:1px solid #d4d4d8; box-shadow:0 4px 6px rgba(0,0,0,0.05); margin-top:20px;">
-        <h3 style="color:#0284c7; font-size:1rem; margin-bottom:10px;"><i class="fab fa-google-drive"></i> Documentación Asociada (Remitos / Polizas)</h3>
-        <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
-          <input type="file" id="fo-file-drive" style="flex:1; min-width:200px; border:1px solid #a1a1aa; padding:10px; border-radius:6px; background:#fff; color:#111;">
-          <button class="btn btn-primary" id="btn-fo-drive" style="background:#0284c7; color:white; border:none; border-radius:6px; padding:0 25px; cursor:pointer; font-weight:700;" onclick="subirArchivoBoveda('fo-file-drive','btn-fo-drive')"><i class="fas fa-cloud-upload-alt"></i> Subir a Drive</button>
-        </div>
-        <div id="fo-boveda-links" style="display:flex; flex-direction:column; gap:8px;"></div>
-      </div>
-      
-    </div>
-  </div>
-</div>
+    </div> <!-- Cierre del Modal Body -->
+  </div> <!-- Cierre del Modal Content -->
+</div> <!-- Cierre del Modal Overlay -->
 
  <!-- MODAL 6: INTERMEDIACIÓN MANUAL -->
  <div class="modal-overlay" id="modalIntermediacion" onmousedown="if(event.target===this) cerrarModalesNativos()">
