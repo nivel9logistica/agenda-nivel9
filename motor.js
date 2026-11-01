@@ -1,5 +1,5 @@
 // =========================================================================
-// MOTOR JAVASCRIPT MAESTRO: NIVEL 9 ERP & BROKERAGE 3PL - MARK 90 PRO
+// MOTOR JAVASCRIPT MAESTRO: NIVEL 9 ERP & BROKERAGE 3PL - MARK 90 PRO V2
 // =========================================================================
 
 // ⚠️ URL DEL WEBHOOK DE GOOGLE APPS SCRIPT
@@ -439,6 +439,19 @@ function guardarCargasEnBase() {
   window.MotorNivel9.guardarCargaEnBase(payload);
 }
 
+// ⚠️ FUNCIONES GLOBALES DE BORRADO - CABLEADO CORREGIDO
+function eliminarCarga(idCarga) {
+  if(confirm("¿Estás seguro de eliminar esta Carga/Operación de forma definitiva?")) {
+    window.MotorNivel9.eliminarCargaEnBase(idCarga);
+  }
+}
+
+function eliminarTransportista(idTransp) {
+  if(confirm("¿Estás seguro de eliminar a este Transportista de tu red?")) {
+    window.MotorNivel9.eliminarTransportistaEnBase(idTransp);
+  }
+}
+
 function editarTransportista(idTransp) {
   const tr = transportistasGuardados.find(t => String(t.id) === String(idTransp));
   if(!tr) return alert("Transportista no encontrado.");
@@ -525,6 +538,7 @@ function cambiarEstadoCargaRapido(idCarga, nuevoEstado) {
   window.MotorNivel9.guardarCargaEnBase(carga);
 }
 
+// ⚠️ FIX RENDER PDF
 function generarPdfCarga(idCarga) {
   const c = bolsaCargasGuardadas.find(item => String(item.id) === String(idCarga));
   if(!c) return;
@@ -555,7 +569,15 @@ function generarPdfCarga(idCarga) {
 
   const container = document.createElement('div');
   container.innerHTML = html;
-  container.style.position = 'absolute'; container.style.left = '-9999px';
+  
+  // SOLUCIÓN HOJA BLANCA: Fixed e invisible, pero el navegador lo dibuja.
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.zIndex = '-1000';
+  container.style.opacity = '0';
+  container.style.pointerEvents = 'none';
+  
   document.body.appendChild(container);
 
   html2pdf().set({ margin: 10, filename: `FichaCarga_${c.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => document.body.removeChild(container));
@@ -657,11 +679,13 @@ function asignarTransportistaDossier() {
   alert("¡Unidad asignada exitosamente!");
 }
 
+// ⚠️ FIX RELOJ SUIZO BIDIRECCIONAL
 function guardarCambiosFichaOperacion() {
     if(!cargaAbiertaActual) return;
     
     // 1. Guardar Carga
-    cargaAbiertaActual.estado = document.getElementById('fo-estado').value;
+    const nuevoEstadoCarga = document.getElementById('fo-estado').value;
+    cargaAbiertaActual.estado = nuevoEstadoCarga;
     cargaAbiertaActual.contacto = document.getElementById('fo-dador').value;
     cargaAbiertaActual.origen = document.getElementById('fo-origen').value;
     cargaAbiertaActual.destino = document.getElementById('fo-destino').value;
@@ -669,7 +693,7 @@ function guardarCambiosFichaOperacion() {
     cargaAbiertaActual.tarifa = parseFloat(document.getElementById('fo-cobro').value) || 0;
     window.MotorNivel9.guardarCargaEnBase(cargaAbiertaActual);
 
-    // 2. Si está asignada, actualizar la Intermediación financiera
+    // 2. Si está asignada, actualizar la Intermediación financiera (Sincronización Total)
     const intm = intermediacionesGuardadas.find(i => String(i.id) === 'ITM-' + cargaAbiertaActual.id);
     if (intm) {
         intm.tarifadador = parseFloat(document.getElementById('fo-cobro').value) || 0;
@@ -679,9 +703,17 @@ function guardarCambiosFichaOperacion() {
         intm.condDadorLibre = document.getElementById('fo-cond-dador-libre').value;
         intm.tramo = `${cargaAbiertaActual.origen} -> ${cargaAbiertaActual.destino}`;
         intm.dador = cargaAbiertaActual.contacto;
+        
+        // Mapeo automático de estados
+        let estadoIntm = 'En Curso';
+        if (nuevoEstadoCarga === 'Entregada') estadoIntm = 'Entregado';
+        if (nuevoEstadoCarga === 'Cancelada') estadoIntm = 'Cancelado';
+        if (nuevoEstadoCarga === 'Cerrada') estadoIntm = 'Liquidado';
+        intm.estado = estadoIntm;
+
         window.MotorNivel9.guardarIntermediacionEnBase(intm);
     }
-    alert("✅ Ficha de Operación 3PL y Finanzas actualizadas correctamente.");
+    alert("✅ Ficha 3PL y Finanzas sincronizadas y guardadas correctamente.");
 }
 
 // BOTÓN 1: WHATSAPP DADOR (Mensaje de Asignación)
@@ -749,13 +781,21 @@ ${condExtra ? '\n*Condición Extraordinaria:* ' + condExtra : ''}</div>
 
   const container = document.createElement('div');
   container.innerHTML = html;
-  container.style.position = 'absolute'; container.style.left = '-9999px';
+  
+  // ⚠️ FIX RENDER PDF
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.zIndex = '-1000';
+  container.style.opacity = '0';
+  container.style.pointerEvents = 'none';
+  
   document.body.appendChild(container);
 
   html2pdf().set({ margin: 10, filename: `Confirmacion_Dador_${cargaAbiertaActual.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => document.body.removeChild(container));
 }
 
-// BOTÓN 3: WHATSAPP CHOFER (Orden de GPS sin destinatario forzado)
+// BOTÓN 3: WHATSAPP CHOFER
 function enviarFichaWAChofer() {
   if(!cargaAbiertaActual) return;
   const orig = document.getElementById('fo-origen').value; 
@@ -767,11 +807,10 @@ function enviarFichaWAChofer() {
 
   let msg = `🚚 *ORDEN DE CARGA OFICIAL - NIVEL 9* 📦\n\n📍 *Retira en:* ${orig}\n🌐 *GPS:* ${linkO}\n\n📍 *Entrega en:* ${dest}\n🌐 *GPS:* ${linkD}\n\n📋 *Carga:* ${document.getElementById('fo-desc').value}\n💵 *Tarifa Chofer Liquidada:* $${Number(pago).toLocaleString('es-AR')}\n\n⚖️ *ACUERDOS DE TRÁNSITO Y PAGO:*\n${ACUERDO_FIJO_CHOFER}\n${condLibre ? '\n*Acuerdo Específico:* ' + condLibre + '\n' : ''}\nFavor de confirmar recepción. Buen viaje.`;
   
-  // Al no poner el número, abre WhatsApp Web/App para que Rodri elija a quién enviárselo
   window.open('https://wa.me/?text=' + encodeURIComponent(msg));
 }
 
-// BOTÓN 4: PDF CHOFER (Orden de Flete 3PL A4)
+// BOTÓN 4: PDF CHOFER
 function generarPdfChofer() {
   if(!cargaAbiertaActual) return;
   const condLibre = document.getElementById('fo-cond-chofer-libre').value;
@@ -811,7 +850,15 @@ ${condLibre ? '\n*Acuerdo Extra:* ' + condLibre : ''}</div>
 
   const container = document.createElement('div');
   container.innerHTML = html;
-  container.style.position = 'absolute'; container.style.left = '-9999px';
+  
+  // ⚠️ FIX RENDER PDF
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.zIndex = '-1000';
+  container.style.opacity = '0';
+  container.style.pointerEvents = 'none';
+
   document.body.appendChild(container);
 
   html2pdf().set({ margin: 10, filename: `OrdenFlete_${cargaAbiertaActual.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => document.body.removeChild(container));
@@ -913,7 +960,15 @@ function generarPdfTransportista(idTransp) {
 
   const container = document.createElement('div');
   container.innerHTML = html;
-  container.style.position = 'absolute'; container.style.left = '-9999px';
+
+  // ⚠️ FIX RENDER PDF
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.zIndex = '-1000';
+  container.style.opacity = '0';
+  container.style.pointerEvents = 'none';
+
   document.body.appendChild(container);
 
   html2pdf().set({ margin: 10, filename: `DossierTransportista_${tr.nombre.replace(/\s+/g,'_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => document.body.removeChild(container));
@@ -992,7 +1047,15 @@ function generarExpediente3PL(idOp) {
 
   const container = document.createElement('div');
   container.innerHTML = html;
-  container.style.position = 'absolute'; container.style.left = '-9999px';
+  
+  // ⚠️ FIX RENDER PDF
+  container.style.position = 'fixed';
+  container.style.top = '0';
+  container.style.left = '0';
+  container.style.zIndex = '-1000';
+  container.style.opacity = '0';
+  container.style.pointerEvents = 'none';
+  
   document.body.appendChild(container);
 
   html2pdf().set({ margin: 10, filename: `Expediente3PL_${op.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => document.body.removeChild(container));
@@ -1143,6 +1206,7 @@ function exportarExcelPuroNumeros() {
   XLSX.writeFile(wb, "Reporte_Nivel9_Finanzas.xlsx");
 }
 
+// ⚠️ FIX RENDER PDF - TEMPLATE NATIVO
 function imprimirReporte() {
     const cb = document.querySelectorAll('.chk-linea-informe:checked');
     if(cb.length === 0) { alert("No hay movimientos seleccionados para imprimir."); return; }
@@ -1166,6 +1230,17 @@ function imprimirReporte() {
     });
     
     document.getElementById('pdf-report-tbody').innerHTML = filasHtml;
+
+    // Obligamos al navegador a renderizar aplicando fixed y opacity
+    const wrapper = document.getElementById('pdf-master-wrapper');
+    if(wrapper) {
+      wrapper.style.position = 'fixed';
+      wrapper.style.top = '0';
+      wrapper.style.left = '0';
+      wrapper.style.zIndex = '-1000';
+      wrapper.style.opacity = '0';
+      wrapper.style.pointerEvents = 'none';
+    }
 
     html2pdf().set({
       margin: 12, filename: `Reporte_Nivel9_Finanzas_${Date.now()}.pdf`, image: { type: 'jpeg', quality: 0.98 },
@@ -1243,6 +1318,7 @@ function mapearDatosFichaHaciaDocumento() {
   document.getElementById('pres-detalle-tarifa').value = document.getElementById('ev-detalle-tarifa').value;
 }
 
+// ⚠️ FIX RENDER PDF - TEMPLATE NATIVO
 function generarPDFBase(tipoDocumento) { 
   document.getElementById('pdf-nro').innerText = document.getElementById('pres-nro').value; 
   document.getElementById('pdf-lugar-fecha').innerText = `Córdoba, ${document.getElementById('pres-fecha').value.split('-').reverse().join('/')}`; 
@@ -1296,6 +1372,17 @@ function generarPDFBase(tipoDocumento) {
   if (tipoDocumento === 'Presupuesto') { incrementarNumeroDoc(document.getElementById('pres-tipo-cliente-doc').value); }
   if (document.getElementById('modalEventForm').style.display === 'flex') { document.getElementById('ev-nrodoc').value = document.getElementById('pres-nro').value; }
 
+  // Obligamos al navegador a renderizar aplicando fixed y opacity
+  const wrapper = document.getElementById('pdf-master-wrapper');
+  if(wrapper) {
+    wrapper.style.position = 'fixed';
+    wrapper.style.top = '0';
+    wrapper.style.left = '0';
+    wrapper.style.zIndex = '-1000';
+    wrapper.style.opacity = '0';
+    wrapper.style.pointerEvents = 'none';
+  }
+
   setTimeout(() => {
     html2pdf().set({ margin: 0, filename: nombreFinal, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, windowWidth: 793 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdf-template-content')).save(); 
   }, 300);
@@ -1340,7 +1427,6 @@ window.MotorNivel9 = {
     try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveCarga', ...payload }) }); } catch(e) {}
   },
 
-  // BORRADO FÍSICO DE CARGA 
   eliminarCargaEnBase: async function(id) {
     bolsaCargasGuardadas = bolsaCargasGuardadas.filter(c => String(c.id) !== String(id));
     cerrarModalesNativos();
@@ -1360,7 +1446,6 @@ window.MotorNivel9 = {
     try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveTransportista', ...payload }) }); } catch(e) {}
   },
 
-  // BORRADO FÍSICO DE TRANSPORTISTA
   eliminarTransportistaEnBase: async function(id) {
     transportistasGuardados = transportistasGuardados.filter(t => String(t.id) !== String(id));
     cerrarModalesNativos();
