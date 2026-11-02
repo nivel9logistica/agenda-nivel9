@@ -1,5 +1,5 @@
 // =========================================================================
-// MOTOR JAVASCRIPT MAESTRO: NIVEL 9 ERP & BROKERAGE 3PL - MARK 90 PRO V2
+// MOTOR JAVASCRIPT MAESTRO: NIVEL 9 ERP & BROKERAGE 3PL - MARK 90 PRO V3
 // =========================================================================
 
 // ⚠️ URL DEL WEBHOOK DE GOOGLE APPS SCRIPT
@@ -538,7 +538,7 @@ function cambiarEstadoCargaRapido(idCarga, nuevoEstado) {
   window.MotorNivel9.guardarCargaEnBase(carga);
 }
 
-// ⚠️ FIX RENDER PDF
+// ⚠️ FIX DEFINITIVO DE RENDER PDF PARA CARGAS
 function generarPdfCarga(idCarga) {
   const c = bolsaCargasGuardadas.find(item => String(item.id) === String(idCarga));
   if(!c) return;
@@ -570,23 +570,24 @@ function generarPdfCarga(idCarga) {
   const container = document.createElement('div');
   container.innerHTML = html;
   
-  // SOLUCIÓN HOJA BLANCA: Fixed e invisible, pero el navegador lo dibuja.
-  container.style.position = 'fixed';
-  container.style.top = '0';
+  // Posicionamiento seguro anti-cortes
+  container.style.position = 'absolute';
+  container.style.top = '-9999px';
   container.style.left = '0';
-  container.style.zIndex = '-1000';
-  container.style.opacity = '0';
-  container.style.pointerEvents = 'none';
-  
   document.body.appendChild(container);
 
-  html2pdf().set({ margin: 10, filename: `FichaCarga_${c.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => document.body.removeChild(container));
+  // El windowWidth: 800 evita que se corte a la mitad en los celulares
+  html2pdf().set({ 
+    margin: 10, filename: `FichaCarga_${c.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, 
+    html2canvas: { scale: 2, useCORS: true, windowWidth: 800 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+  }).from(container).save().then(() => document.body.removeChild(container));
 }
 
+// ⚠️ FIX EMOJIS WHATSAPP (Codificación Unicode Anti-ANSI)
 function difundirCargaWA(idCarga) {
   const c = bolsaCargasGuardadas.find(item => String(item.id) === String(idCarga));
   if(!c) return;
-  const msg = `🚚 *OFERTA DE CARGA - NIVEL 9 BROKERAGE* 📦\n\n📍 *Origen:* ${c.origen}\n🏁 *Destino:* ${c.destino}\n🚛 *Requerimiento:* ${c.vehiculo}\n📦 *Carga:* ${c.descripcion || c.peso || 'Carga General'}\n💵 *Tarifa Ofertada:* $${Number(c.tarifa||0).toLocaleString('es-AR')}\n\n👉 *Postulate o Consultá al Despacho:* https://nivel9logistica.github.io/portal-publico.html/`;
+  const msg = `\uD83D\uDE9A *OFERTA DE CARGA - NIVEL 9 BROKERAGE* \uD83D\uDCE6\n\n\uD83D\uDCCD *Origen:* ${c.origen}\n\uD83C\uDFC1 *Destino:* ${c.destino}\n\uD83D\uDE9B *Requerimiento:* ${c.vehiculo}\n\uD83D\uDCE6 *Carga:* ${c.descripcion || c.peso || 'Carga General'}\n\uD83D\uDCB5 *Tarifa Ofertada:* $${Number(c.tarifa||0).toLocaleString('es-AR')}\n\n\uD83D\uDC49 *Postulate o Consultá al Despacho:* https://nivel9logistica.github.io/portal-publico.html/`;
   window.open('https://wa.me/?text=' + encodeURIComponent(msg));
 }
 
@@ -679,7 +680,6 @@ function asignarTransportistaDossier() {
   alert("¡Unidad asignada exitosamente!");
 }
 
-// ⚠️ FIX RELOJ SUIZO BIDIRECCIONAL
 function guardarCambiosFichaOperacion() {
     if(!cargaAbiertaActual) return;
     
@@ -739,7 +739,8 @@ function enviarFichaWADador() {
   }
 
   let condDador = document.getElementById('fo-cond-dador-libre').value;
-  let msg = `🛡️ *CONFIRMACIÓN DE SERVICIO 3PL - NIVEL 9* 🚚\n\nEstimado/a *${document.getElementById('fo-dador').value}*:\nNos complacemos en informar que la unidad requerida para el tramo *${document.getElementById('fo-origen').value} ➔ ${document.getElementById('fo-destino').value}* ha sido confirmada.\n\n👤 *Transporte:* ${nombreChofer}\n🚛 *Unidad:* ${detalleVehiculo}\n🆔 *Dominio:* ${patTractora}\n${patAcoplado ? '🆔 *Semi:* ' + patAcoplado + '\n' : ''}📋 *Estatus:* Operador Validado (LiNTI / Seguros).\n\n⚖️ *Condiciones del Servicio:*\n${ACUERDO_FIJO_DADOR}\n${condDador ? '\n*Extra:* ' + condDador : ''}\n\nGracias por confiar en la red Nivel 9.`;
+  // Emojis en código Unicode
+  let msg = `\uD83D\uDEE1\uFE0F *CONFIRMACIÓN DE SERVICIO 3PL - NIVEL 9* \uD83D\uDE9A\n\nEstimado/a *${document.getElementById('fo-dador').value}*:\nNos complacemos en informar que la unidad requerida para el tramo *${document.getElementById('fo-origen').value} ➔ ${document.getElementById('fo-destino').value}* ha sido confirmada.\n\n\uD83D\uDC64 *Transporte:* ${nombreChofer}\n\uD83D\uDE9B *Unidad:* ${detalleVehiculo}\n\uD83C\uDD94 *Dominio:* ${patTractora}\n${patAcoplado ? '\uD83C\uDD94 *Semi:* ' + patAcoplado + '\n' : ''}\uD83D\uDCCB *Estatus:* Operador Validado (LiNTI / Seguros).\n\n\u2696\uFE0F *Condiciones del Servicio:*\n${ACUERDO_FIJO_DADOR}\n${condDador ? '\n*Extra:* ' + condDador : ''}\n\nGracias por confiar en la red Nivel 9.`;
 
   window.open('https://wa.me/549' + telDador.replace(/\D/g,'') + '?text=' + encodeURIComponent(msg));
 }
@@ -781,18 +782,13 @@ ${condExtra ? '\n*Condición Extraordinaria:* ' + condExtra : ''}</div>
 
   const container = document.createElement('div');
   container.innerHTML = html;
-  
-  // ⚠️ FIX RENDER PDF
-  container.style.position = 'fixed';
-  container.style.top = '0';
-  container.style.left = '0';
-  container.style.zIndex = '-1000';
-  container.style.opacity = '0';
-  container.style.pointerEvents = 'none';
-  
+  container.style.position = 'absolute'; container.style.top = '-9999px'; container.style.left = '0';
   document.body.appendChild(container);
 
-  html2pdf().set({ margin: 10, filename: `Confirmacion_Dador_${cargaAbiertaActual.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => document.body.removeChild(container));
+  html2pdf().set({ 
+    margin: 10, filename: `Confirmacion_Dador_${cargaAbiertaActual.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, 
+    html2canvas: { scale: 2, useCORS: true, windowWidth: 800 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+  }).from(container).save().then(() => document.body.removeChild(container));
 }
 
 // BOTÓN 3: WHATSAPP CHOFER
@@ -805,7 +801,7 @@ function enviarFichaWAChofer() {
   const condLibre = document.getElementById('fo-cond-chofer-libre').value;
   const pago = document.getElementById('fo-pago').value;
 
-  let msg = `🚚 *ORDEN DE CARGA OFICIAL - NIVEL 9* 📦\n\n📍 *Retira en:* ${orig}\n🌐 *GPS:* ${linkO}\n\n📍 *Entrega en:* ${dest}\n🌐 *GPS:* ${linkD}\n\n📋 *Carga:* ${document.getElementById('fo-desc').value}\n💵 *Tarifa Chofer Liquidada:* $${Number(pago).toLocaleString('es-AR')}\n\n⚖️ *ACUERDOS DE TRÁNSITO Y PAGO:*\n${ACUERDO_FIJO_CHOFER}\n${condLibre ? '\n*Acuerdo Específico:* ' + condLibre + '\n' : ''}\nFavor de confirmar recepción. Buen viaje.`;
+  let msg = `\uD83D\uDE9A *ORDEN DE CARGA OFICIAL - NIVEL 9* \uD83D\uDCE6\n\n\uD83D\uDCCD *Retira en:* ${orig}\n\uD83C\uDF10 *GPS:* ${linkO}\n\n\uD83D\uDCCD *Entrega en:* ${dest}\n\uD83C\uDF10 *GPS:* ${linkD}\n\n\uD83D\uDCCB *Carga:* ${document.getElementById('fo-desc').value}\n\uD83D\uDCB5 *Tarifa Chofer Liquidada:* $${Number(pago).toLocaleString('es-AR')}\n\n\u2696\uFE0F *ACUERDOS DE TRÁNSITO Y PAGO:*\n${ACUERDO_FIJO_CHOFER}\n${condLibre ? '\n*Acuerdo Específico:* ' + condLibre + '\n' : ''}\nFavor de confirmar recepción. Buen viaje.`;
   
   window.open('https://wa.me/?text=' + encodeURIComponent(msg));
 }
@@ -850,18 +846,13 @@ ${condLibre ? '\n*Acuerdo Extra:* ' + condLibre : ''}</div>
 
   const container = document.createElement('div');
   container.innerHTML = html;
-  
-  // ⚠️ FIX RENDER PDF
-  container.style.position = 'fixed';
-  container.style.top = '0';
-  container.style.left = '0';
-  container.style.zIndex = '-1000';
-  container.style.opacity = '0';
-  container.style.pointerEvents = 'none';
-
+  container.style.position = 'absolute'; container.style.top = '-9999px'; container.style.left = '0';
   document.body.appendChild(container);
 
-  html2pdf().set({ margin: 10, filename: `OrdenFlete_${cargaAbiertaActual.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => document.body.removeChild(container));
+  html2pdf().set({ 
+    margin: 10, filename: `OrdenFlete_${cargaAbiertaActual.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, 
+    html2canvas: { scale: 2, useCORS: true, windowWidth: 800 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+  }).from(container).save().then(() => document.body.removeChild(container));
 }
 
 // BÓVEDA DRIVE
@@ -960,18 +951,13 @@ function generarPdfTransportista(idTransp) {
 
   const container = document.createElement('div');
   container.innerHTML = html;
-
-  // ⚠️ FIX RENDER PDF
-  container.style.position = 'fixed';
-  container.style.top = '0';
-  container.style.left = '0';
-  container.style.zIndex = '-1000';
-  container.style.opacity = '0';
-  container.style.pointerEvents = 'none';
-
+  container.style.position = 'absolute'; container.style.top = '-9999px'; container.style.left = '0';
   document.body.appendChild(container);
 
-  html2pdf().set({ margin: 10, filename: `DossierTransportista_${tr.nombre.replace(/\s+/g,'_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => document.body.removeChild(container));
+  html2pdf().set({ 
+    margin: 10, filename: `DossierTransportista_${tr.nombre.replace(/\s+/g,'_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, 
+    html2canvas: { scale: 2, useCORS: true, windowWidth: 800 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+  }).from(container).save().then(() => document.body.removeChild(container));
 }
 
 function presentarChoferWA(idTransp) {
@@ -980,7 +966,7 @@ function presentarChoferWA(idTransp) {
   const marcaModelo = tr.marca_modelo || tr.marcamodelo || 'A confirmar';
   const carroceria = tr.carroceria || 'General';
   const patAcoplado = tr.patente_acoplado || tr.patenteacoplado || 'No aplica';
-  const msg = `🚛 *PRESENTACIÓN DE UNIDAD Y CHOFER - NIVEL 9* 🛡️\n\n👤 *Transportista:* ${tr.nombre}\n🚚 *Tipo de Unidad:* ${tr.tipo}\n🏎️ *Modelo:* ${marcaModelo}\n📦 *Carrocería:* ${carroceria}\n🆔 *Patente Tractor:* ${tr.patente || 'A confirmar'}\n🆔 *Patente Semi/Acoplado:* ${patAcoplado}\n⚖️ *Capacidad:* ${tr.capacidad || 'General'}\n📍 *Ubicación Actual:* ${tr.ubicacion}\n\n📋 *Certificación:* Licencia Profesional LiNTI y Documentación al día.`;
+  const msg = `\uD83D\uDE9B *PRESENTACIÓN DE UNIDAD Y CHOFER - NIVEL 9* \uD83D\uDEE1\uFE0F\n\n\uD83D\uDC64 *Transportista:* ${tr.nombre}\n\uD83D\uDE9A *Tipo de Unidad:* ${tr.tipo}\n\uD83C\uDFCE\uFE0F *Modelo:* ${marcaModelo}\n\uD83D\uDCE6 *Carrocería:* ${carroceria}\n\uD83C\uDD94 *Patente Tractor:* ${tr.patente || 'A confirmar'}\n\uD83C\uDD94 *Patente Semi/Acoplado:* ${patAcoplado}\n\u2696\uFE0F *Capacidad:* ${tr.capacidad || 'General'}\n\uD83D\uDCCD *Ubicación Actual:* ${tr.ubicacion}\n\n\uD83D\uDCCB *Certificación:* Licencia Profesional LiNTI y Documentación al día.`;
   window.open('https://wa.me/?text=' + encodeURIComponent(msg));
 }
 
@@ -1047,18 +1033,13 @@ function generarExpediente3PL(idOp) {
 
   const container = document.createElement('div');
   container.innerHTML = html;
-  
-  // ⚠️ FIX RENDER PDF
-  container.style.position = 'fixed';
-  container.style.top = '0';
-  container.style.left = '0';
-  container.style.zIndex = '-1000';
-  container.style.opacity = '0';
-  container.style.pointerEvents = 'none';
-  
+  container.style.position = 'absolute'; container.style.top = '-9999px'; container.style.left = '0';
   document.body.appendChild(container);
 
-  html2pdf().set({ margin: 10, filename: `Expediente3PL_${op.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => document.body.removeChild(container));
+  html2pdf().set({ 
+    margin: 10, filename: `Expediente3PL_${op.id}.pdf`, image: { type: 'jpeg', quality: 0.98 }, 
+    html2canvas: { scale: 2, useCORS: true, windowWidth: 800 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+  }).from(container).save().then(() => document.body.removeChild(container));
 }
 
 function calcularComisionBroker() {
@@ -1206,7 +1187,6 @@ function exportarExcelPuroNumeros() {
   XLSX.writeFile(wb, "Reporte_Nivel9_Finanzas.xlsx");
 }
 
-// ⚠️ FIX RENDER PDF - TEMPLATE NATIVO
 function imprimirReporte() {
     const cb = document.querySelectorAll('.chk-linea-informe:checked');
     if(cb.length === 0) { alert("No hay movimientos seleccionados para imprimir."); return; }
@@ -1231,15 +1211,11 @@ function imprimirReporte() {
     
     document.getElementById('pdf-report-tbody').innerHTML = filasHtml;
 
-    // Obligamos al navegador a renderizar aplicando fixed y opacity
     const wrapper = document.getElementById('pdf-master-wrapper');
     if(wrapper) {
-      wrapper.style.position = 'fixed';
-      wrapper.style.top = '0';
+      wrapper.style.position = 'absolute';
+      wrapper.style.top = '-9999px';
       wrapper.style.left = '0';
-      wrapper.style.zIndex = '-1000';
-      wrapper.style.opacity = '0';
-      wrapper.style.pointerEvents = 'none';
     }
 
     html2pdf().set({
@@ -1318,7 +1294,6 @@ function mapearDatosFichaHaciaDocumento() {
   document.getElementById('pres-detalle-tarifa').value = document.getElementById('ev-detalle-tarifa').value;
 }
 
-// ⚠️ FIX RENDER PDF - TEMPLATE NATIVO
 function generarPDFBase(tipoDocumento) { 
   document.getElementById('pdf-nro').innerText = document.getElementById('pres-nro').value; 
   document.getElementById('pdf-lugar-fecha').innerText = `Córdoba, ${document.getElementById('pres-fecha').value.split('-').reverse().join('/')}`; 
@@ -1372,19 +1347,21 @@ function generarPDFBase(tipoDocumento) {
   if (tipoDocumento === 'Presupuesto') { incrementarNumeroDoc(document.getElementById('pres-tipo-cliente-doc').value); }
   if (document.getElementById('modalEventForm').style.display === 'flex') { document.getElementById('ev-nrodoc').value = document.getElementById('pres-nro').value; }
 
-  // Obligamos al navegador a renderizar aplicando fixed y opacity
   const wrapper = document.getElementById('pdf-master-wrapper');
   if(wrapper) {
-    wrapper.style.position = 'fixed';
+    wrapper.style.position = 'absolute'; // Vuelve a absolute (Anti-corte)
+    wrapper.style.left = '-9999px';
     wrapper.style.top = '0';
-    wrapper.style.left = '0';
-    wrapper.style.zIndex = '-1000';
-    wrapper.style.opacity = '0';
-    wrapper.style.pointerEvents = 'none';
   }
 
   setTimeout(() => {
-    html2pdf().set({ margin: 0, filename: nombreFinal, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, windowWidth: 793 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('pdf-template-content')).save(); 
+    html2pdf().set({ 
+        margin: 0, 
+        filename: nombreFinal, 
+        image: { type: 'jpeg', quality: 0.98 }, 
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 793 }, 
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+    }).from(document.getElementById('pdf-template-content')).save(); 
   }, 300);
 }
 
@@ -1401,14 +1378,14 @@ window.MotorNivel9 = {
     } 
     cerrarModalesNativos(); 
     dibujarCalendarioMes(); 
-    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify(payload) }); } catch(e) {} 
+    try { await fetch(webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) }); } catch(e) {} 
   },
   
   eliminarViajeEnBaseDeDatos: async function(id) { 
     eventosGuardados = eventosGuardados.filter(e => String(e.id) !== String(id)); 
     cerrarModalesNativos(); 
     dibujarCalendarioMes(); 
-    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'deleteEvent', id: id }) }); } catch(e) {} 
+    try { await fetch(webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'deleteEvent', id: id }) }); } catch(e) {} 
   },
   
   crearContactoEnBaseDeDatos: async function(payload) { 
@@ -1416,7 +1393,7 @@ window.MotorNivel9 = {
     if(idx >= 0) { contactosGuardados[idx] = payload; } else { contactosGuardados.push(payload); } 
     cerrarModalesNativos(); 
     renderContactos(); 
-    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveContact', ...payload }) }); } catch(e) {} 
+    try { await fetch(webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'saveContact', ...payload }) }); } catch(e) {} 
   },
   
   guardarCargaEnBase: async function(payload) {
@@ -1424,7 +1401,7 @@ window.MotorNivel9 = {
     if(idx >= 0) { bolsaCargasGuardadas[idx] = payload; } else { bolsaCargasGuardadas.push(payload); }
     cerrarModalesNativos(); 
     renderBolsaCargas();
-    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveCarga', ...payload }) }); } catch(e) {}
+    try { await fetch(webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'saveCarga', ...payload }) }); } catch(e) {}
   },
 
   eliminarCargaEnBase: async function(id) {
@@ -1432,9 +1409,9 @@ window.MotorNivel9 = {
     cerrarModalesNativos();
     renderBolsaCargas();
     try { 
-      await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'deleteCarga', id: id }) }); 
+      await fetch(webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'deleteCarga', id: id }) }); 
     } catch(e) {
-      alert("Error de red al borrar. Reintentá.");
+      alert("Error de red al enviar comando de borrado.");
     }
   },
   
@@ -1443,7 +1420,7 @@ window.MotorNivel9 = {
     if(idx >= 0) { transportistasGuardados[idx] = payload; } else { transportistasGuardados.push(payload); }
     cerrarModalesNativos(); 
     renderTransportistas();
-    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveTransportista', ...payload }) }); } catch(e) {}
+    try { await fetch(webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'saveTransportista', ...payload }) }); } catch(e) {}
   },
 
   eliminarTransportistaEnBase: async function(id) {
@@ -1451,9 +1428,9 @@ window.MotorNivel9 = {
     cerrarModalesNativos();
     renderTransportistas();
     try { 
-      await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'deleteTransportista', id: id }) }); 
+      await fetch(webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'deleteTransportista', id: id }) }); 
     } catch(e) {
-      alert("Error de red al borrar. Reintentá.");
+      alert("Error de red al enviar comando de borrado.");
     }
   },
   
@@ -1462,7 +1439,7 @@ window.MotorNivel9 = {
     if(idx >= 0) { intermediacionesGuardadas[idx] = payload; } else { intermediacionesGuardadas.push(payload); }
     cerrarModalesNativos(); 
     renderIntermediaciones();
-    try { await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: 'saveIntermediacion', ...payload }) }); } catch(e) {}
+    try { await fetch(webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'saveIntermediacion', ...payload }) }); } catch(e) {}
   },
 
   parsearMensajeWhatsappCarga: async function() {
@@ -1472,7 +1449,7 @@ window.MotorNivel9 = {
     
     const promptParser = `Extrae datos de esta solicitud de flete de WhatsApp: "${txt}". Responde en JSON estricto con campos: origen, destino, vehiculo, peso, contacto, telefono.`;
     try {
-      const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "consultaMarina", prompt: promptParser }) });
+      const res = await fetch(webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: "consultaMarina", prompt: promptParser }) });
       const data = await res.json();
       if(data.success) {
         abrirModalNuevaCarga();
@@ -1490,7 +1467,7 @@ window.MotorNivel9 = {
     const t = i.value.trim(); 
     if(!t) return; 
     
-    b.innerHTML = `<strong>Rodri:</strong> ${t}<br><br>⏳ <em>Marina evaluando solicitud...</em>`; 
+    b.innerHTML = `<strong>Rodri:</strong> ${t}<br><br>\u23F3 <em>Marina evaluando solicitud...</em>`; 
     i.value = ""; 
     
     const contextoFlota = configuracionNivel9.flota.join(', ');
@@ -1500,15 +1477,15 @@ window.MotorNivel9 = {
     const promptDirectivo = `Eres Marina, secretaria ejecutiva y asesora experta en logística/brokerage de Nivel 9 en Córdoba, Argentina. Tu jefe es el Lic. Rodrigo Castro. Sé amable, directa y resolutiva.\nFlota: ${contextoFlota}. Diésel: $${costoDiesel}/L. Agenda: ${resumenAgenda}.\nSolicitud de Rodri: "${t}"`;
 
     try { 
-        const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "consultaMarina", prompt: promptDirectivo }) }); 
+        const res = await fetch(webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: "consultaMarina", prompt: promptDirectivo }) }); 
         const inf = await res.json(); 
         if (inf.success) {
             b.innerHTML = inf.result;
         } else {
-            b.innerHTML = `⚠️ <strong>Error Servidor:</strong><br><br>${inf.error}`; 
+            b.innerHTML = `\u26A0\uFE0F <strong>Error Servidor:</strong><br><br>${inf.error}`; 
         }
     } catch(e) { 
-        b.innerHTML = "⚠️ Error de conexión con el servidor."; 
+        b.innerHTML = "\u26A0\uFE0F Error de conexión con el servidor."; 
     } 
   },
 
@@ -1517,7 +1494,7 @@ window.MotorNivel9 = {
     const r = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); 
     r.lang = 'es-AR'; 
     r.start(); 
-    document.getElementById('marina-chat-response').innerHTML = "🎙️ <em>Escuchando orden...</em>"; 
+    document.getElementById('marina-chat-response').innerHTML = "\uD83C\uDF99\uFE0F <em>Escuchando orden...</em>"; 
     r.onresult = (e) => { 
       document.getElementById('marina-prompt-input').value = e.results[0][0].transcript; 
       this.procesarChatMarina(); 
@@ -1536,12 +1513,12 @@ window.MotorNivel9 = {
         const c = await new Promise((rs, rj) => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => rs(rd.result.split(',')[1]); rd.onerror = err => rj(err); }); 
         p.push({ mimeType: f.type, base64Data: c }); 
       } 
-      const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ action: "escaneoMarina", archivos: p }) }); 
+      const res = await fetch(webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: "escaneoMarina", archivos: p }) }); 
       const d = await res.json(); 
       if(d.success && d.result) { 
         const inv = document.getElementById('ev-inventario'); 
         inv.value = inv.value ? inv.value + "\n\n--- MARINA IA ---\n" + d.result : d.result; 
-      } else { alert("❌ Escáner falló: " + (d.error || "")); }
+      } else { alert("\u274C Escáner falló: " + (d.error || "")); }
     } catch(e) { alert("Fallo de conexión con IA."); } finally { b.innerHTML = '<i class="fas fa-camera"></i> Extraer'; b.disabled = false; } 
   }
 };
